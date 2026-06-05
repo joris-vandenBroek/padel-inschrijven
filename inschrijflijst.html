@@ -494,7 +494,10 @@
 <!-- Admin panel modal -->
 <div class="modal-overlay" id="adminPanel">
   <div class="modal">
-    <h2>⚙️ Beheer</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h2 style="margin-bottom:0;">⚙️ Beheer</h2>
+      <button onclick="openAdminHelp()" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:28px;height:28px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink-light);">?</button>
+    </div>
 
     <button class="btn-confirm" style="width:100%;margin-bottom:16px;" onclick="beheerHuidigeLijst()">
       📋 Beheer huidige lijst
@@ -550,6 +553,42 @@
           <button class="btn-confirm" style="background:var(--ink-light);width:100%;" onclick="vulTestdata()">Vul 19 random leden in</button>
         </div>
       </details>
+    </div>
+  </div>
+</div>
+
+<!-- Admin help modal -->
+<div class="modal-overlay" id="adminHelpModal">
+  <div class="modal">
+    <h2>⚙️ Beheer – uitleg</h2>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px;font-size:13px;line-height:1.5;color:var(--ink);">
+      <div>
+        <strong>📋 Beheer huidige lijst</strong><br>
+        Sluit dit paneel en ga naar de actieve lijst. Je kunt dan deelnemers verwijderen (✕) of toevoegen via "+ Doe mee".
+      </div>
+      <div>
+        <strong>Nieuwe lege lijst aanmaken</strong><br>
+        Maak een lege inschrijflijst aan voor de gekozen vrijdag. Als er al een lijst bestaat voor die datum krijg je een waarschuwing. Na aanmaken wordt die lijst direct de actieve lijst voor iedereen.
+      </div>
+      <div>
+        <strong>📂 Andere lijst openen</strong><br>
+        Bekijk een eerdere lijst zonder dat dit de actieve lijst voor andere gebruikers wijzigt. Een blauwe banner verschijnt bovenaan — klik "← Terug" om terug te gaan naar de actieve lijst.
+      </div>
+      <div>
+        <strong>↻ Ledenlijst verversen</strong><br>
+        Haalt de meest recente ledenlijst op uit de KNLTB-registratie. De lijst wordt gebruikt als dropdown bij inschrijven. Wordt automatisch gecacht — verversen is alleen nodig als er nieuwe leden zijn bijgekomen.
+      </div>
+      <div>
+        <strong>🔑 Beheerders</strong><br>
+        Toont de huidige beheerders. Voeg een nieuwe beheerder toe via naam (uit de ledenlijst) en een wachtwoord naar keuze. Wachtwoord wijzigen doe je bij het inloggen via "🔑 Wachtwoord wijzigen".
+      </div>
+      <div>
+        <strong>🧪 Testdata</strong><br>
+        Vult de huidige lijst met 19 willekeurige namen uit de ledenlijst. Alleen bedoeld voor testen.
+      </div>
+    </div>
+    <div style="margin-top:20px;">
+      <button class="btn-confirm" style="width:100%;" onclick="closeModal('adminHelpModal')">Sluiten</button>
     </div>
   </div>
 </div>
@@ -1132,6 +1171,10 @@ function renderBeheerderLijst() {
     row.innerHTML = `<span>${naam}${jij}</span>`;
     el.appendChild(row);
   });
+}
+
+function openAdminHelp() {
+  document.getElementById("adminHelpModal").classList.add("open");
 }
 
 function beheerHuidigeLijst() {
