@@ -406,12 +406,8 @@
 </div>
 <div class="list" id="reserveList"></div>
 
-<div class="share-bar">
-  <p>Deel deze pagina of kopieer de lijst voor WhatsApp</p>
-  <div class="share-btns">
-    <button class="btn-share" onclick="shareLink()">🔗 Link delen</button>
-    <button class="btn-share copy" onclick="openAdminModal()">⚙️ Beheer</button>
-  </div>
+<div style="margin:20px 16px 0;text-align:center;">
+  <button class="btn-share copy" onclick="openAdminModal()" style="border-radius:10px;padding:10px 24px;">⚙️ Beheer</button>
 </div>
 
 <!-- Admin toevoeg modal -->
@@ -511,6 +507,7 @@
       <div class="modal-buttons" style="margin-top:0;">
         <button class="btn-confirm" style="width:100%;" onclick="nieuweLijstAanmaken()">Aanmaken ✓</button>
       </div>
+      <button class="btn-share" style="width:100%;border-radius:10px;padding:11px;" onclick="closeModal('adminPanel');shareLink()">🔗 Deel in WhatsApp</button>
     </div>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
