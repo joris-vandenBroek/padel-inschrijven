@@ -469,12 +469,24 @@
 <div class="modal-overlay" id="adminPwModal">
   <div class="modal">
     <h2>Beheer</h2>
-    <p>Voer het beheerderswachtwoord in.</p>
+    <p>Voer je wachtwoord in.</p>
     <input type="password" id="adminPwInput" placeholder="Wachtwoord…" maxlength="40" autocomplete="off" />
     <div id="adminPwError" style="color:var(--accent);font-size:13px;margin-top:8px;min-height:18px;"></div>
     <div class="modal-buttons">
       <button class="btn-cancel" onclick="closeModal('adminPwModal')">Annuleer</button>
       <button class="btn-confirm" onclick="checkAdminPw()">Inloggen ✓</button>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <details>
+        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🔑 Wachtwoord wijzigen</summary>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <input type="password" id="nieuwWwInput" placeholder="Nieuw wachtwoord…" maxlength="40"
+            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+          <input type="password" id="nieuwWwBevestig" placeholder="Bevestig nieuw wachtwoord…" maxlength="40"
+            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+          <button class="btn-confirm" onclick="checkAdminPwEnWijzig()">Inloggen & wachtwoord opslaan ✓</button>
+        </div>
+      </details>
     </div>
   </div>
 </div>
@@ -515,12 +527,6 @@
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
       <label style="font-size:13px;font-weight:600;color:var(--ink-light);">🔑 Beheerders</label>
       <div id="beheerderLijst"></div>
-      <label style="font-size:12px;color:var(--ink-light);margin-top:4px;">Mijn wachtwoord wijzigen</label>
-      <input type="password" id="nieuwWwInput" placeholder="Nieuw wachtwoord…" maxlength="40"
-        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
-      <input type="password" id="nieuwWwBevestig" placeholder="Bevestig wachtwoord…" maxlength="40"
-        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
-      <button class="btn-confirm" onclick="wijzigWachtwoord()">Wachtwoord opslaan ✓</button>
       <label style="font-size:12px;color:var(--ink-light);margin-top:4px;">Nieuwe beheerder toevoegen</label>
       <input type="text" id="nieuwBeheerderNaam" placeholder="Naam…" maxlength="40" list="ledenList"
         style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
@@ -1038,6 +1044,30 @@ function confirmAndereInschrijven() {
     const inReserve = Object.values(data.reserve || {}).some(n => (n || "").trim().toLowerCase() === naam.toLowerCase());
     closeModal("andereModal");
     showToast(inReserve ? `✓ ${naam} op de reservelijst gezet` : `✓ ${naam} ingeschreven!`);
+  });
+}
+
+function checkAdminPwEnWijzig() {
+  const pw     = document.getElementById("adminPwInput").value;
+  const nieuw  = document.getElementById("nieuwWwInput").value;
+  const bevestig = document.getElementById("nieuwWwBevestig").value;
+  const gevonden = Object.entries(ADMINS).find(([, ww]) => ww === pw);
+  if (!gevonden) { document.getElementById("adminPwError").textContent = "Onjuist wachtwoord."; return; }
+  if (!nieuw)             { showToast("Voer een nieuw wachtwoord in"); return; }
+  if (nieuw !== bevestig) { showToast("⚠️ Wachtwoorden komen niet overeen"); return; }
+  if (nieuw.length < 4)   { showToast("⚠️ Minimaal 4 tekens"); return; }
+  adminNaam = gevonden[0];
+  ADMINS[adminNaam] = nieuw;
+  db.ref("instellingen/admins").set(ADMINS).then(() => {
+    isAdmin = true;
+    document.getElementById("adminBanner").style.display = "flex";
+    document.getElementById("adminBannerNaam").textContent = adminNaam;
+    document.getElementById("nieuwWwInput").value = "";
+    document.getElementById("nieuwWwBevestig").value = "";
+    closeModal("adminPwModal");
+    render();
+    showToast(`✓ Wachtwoord gewijzigd en ingelogd als ${adminNaam}`);
+    setTimeout(() => openAdminPanel(), 50);
   });
 }
 
