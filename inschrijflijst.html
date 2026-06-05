@@ -460,7 +460,7 @@
     </button>
 
     <div style="padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
-      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">Nieuwe lijst aanmaken</label>
+      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">Nieuwe lege lijst aanmaken</label>
       <select id="adminFriday"
         style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
       </select>
@@ -913,6 +913,7 @@ function checkAdminPw() {
   document.getElementById("adminBanner").style.display = "flex";
   closeModal("adminPwModal");
   render();
+  openAdminPanel();
 }
 
 function logoutAdmin() {
@@ -962,18 +963,31 @@ function andereLijstOpenen() {
 function nieuweLijstAanmaken() {
   const datum = document.getElementById("adminFriday").value;
   const title = datumNaarTitel(datum);
-  document.getElementById("confirmTitle").textContent = "Nieuwe lijst aanmaken?";
-  document.getElementById("confirmMsg").textContent = `Er wordt een lege lijst aangemaakt voor ${title}.`;
-  document.getElementById("confirmModal").classList.add("open");
-  document.getElementById("confirmOkBtn").textContent = "Aanmaken ✓";
-  document.getElementById("confirmOkBtn").onclick = () => {
-    closeModal("confirmModal");
-    initialiseerSessie(datum, title, "9:00 – 10:30 uur").then(() => {
-      db.ref("instellingen/huidigeDatum").set(datum);
-    });
-    closeModal("adminPanel");
-    showToast(`✓ Nieuwe lijst aangemaakt voor ${title}`);
-  };
+
+  db.ref(`sessies/${datum}`).once("value").then(snap => {
+    if (snap.exists()) {
+      const s = snap.val();
+      const aantalMain    = Object.values(s.main    || {}).filter(n => n && n.trim()).length;
+      const aantalReserve = Object.values(s.reserve || {}).filter(n => n && n.trim()).length;
+      const reserveTekst  = aantalReserve > 0 ? ` + ${aantalReserve} reserve` : "";
+      document.getElementById("confirmTitle").textContent = "Lijst bestaat al!";
+      document.getElementById("confirmMsg").textContent =
+        `${title} heeft al ${aantalMain} deelnemer${aantalMain !== 1 ? "s" : ""}${reserveTekst}. Wil je de bestaande lijst overschrijven met een lege lijst?`;
+    } else {
+      document.getElementById("confirmTitle").textContent = "Nieuwe lege lijst aanmaken?";
+      document.getElementById("confirmMsg").textContent = `Er wordt een lege lijst aangemaakt voor ${title}.`;
+    }
+    document.getElementById("confirmModal").classList.add("open");
+    document.getElementById("confirmOkBtn").textContent = "Aanmaken ✓";
+    document.getElementById("confirmOkBtn").onclick = () => {
+      closeModal("confirmModal");
+      initialiseerSessie(datum, title, "9:00 – 10:30 uur").then(() => {
+        db.ref("instellingen/huidigeDatum").set(datum);
+      });
+      closeModal("adminPanel");
+      showToast(`✓ Lege lijst aangemaakt voor ${title}`);
+    };
+  });
 }
 
 // ═══ LEDENLIJST ═════════════════════════════════════════
