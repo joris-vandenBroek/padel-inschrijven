@@ -965,6 +965,7 @@ function nieuweLijstAanmaken() {
   const datum = document.getElementById("adminFriday").value;
   const title = datumNaarTitel(datum);
 
+  closeModal("adminPanel");
   db.ref(`sessies/${datum}`).once("value").then(snap => {
     if (snap.exists()) {
       const s = snap.val();
@@ -985,7 +986,6 @@ function nieuweLijstAanmaken() {
       initialiseerSessie(datum, title, "9:00 – 10:30 uur").then(() => {
         db.ref("instellingen/huidigeDatum").set(datum);
       });
-      closeModal("adminPanel");
       showToast(`✓ Lege lijst aangemaakt voor ${title}`);
     };
   });
