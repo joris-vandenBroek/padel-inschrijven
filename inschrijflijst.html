@@ -1377,10 +1377,17 @@ function copyWhatsApp() {
 }
 
 function shareLink() {
+  const titel  = currentSession?.title || "Padel";
+  const tijd   = currentSession?.time  || "";
+  const main   = slotArray(currentSession?.main, MAIN_SIZE);
+  const filled = main.filter(n => n && n.trim()).length;
+  const tekst  = `🎾 ${titel} · ${tijd}\nInschrijving geopend – ${filled}/${MAIN_SIZE} deelnemers. Schrijf je snel in!`;
+  const url    = "https://tinyurl.com/padel-inschrijven";
+
   if (navigator.share) {
-    navigator.share({ title: currentSession?.title || "Inschrijflijst", url: window.location.href });
+    navigator.share({ text: tekst, url });
   } else {
-    navigator.clipboard.writeText(window.location.href)
+    navigator.clipboard.writeText(tekst + '\n' + url)
       .then(() => showToast("🔗 Link gekopieerd!"));
   }
 }
