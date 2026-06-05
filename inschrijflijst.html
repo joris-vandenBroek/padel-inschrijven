@@ -382,7 +382,7 @@
 </div>
 
 <div id="adminBanner" style="display:none;margin:8px 16px 0;background:#fff8e8;border:1.5px solid var(--gold);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--gold);font-weight:600;align-items:center;justify-content:space-between;">
-  <span>⚙️ Beheermodus actief</span>
+  <span>⚙️ Beheer: <span id="adminBannerNaam"></span></span>
   <button class="btn-switch" style="border-color:var(--gold);color:var(--gold);" onclick="logoutAdmin()">Uitloggen</button>
 </div>
 <div id="viewBanner" style="display:none;margin:8px 16px 0;background:#e8f0ff;border:1.5px solid var(--mine);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--mine);font-weight:600;align-items:center;justify-content:space-between;gap:10px;">
@@ -513,12 +513,20 @@
     </div>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
-      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">🔑 Wachtwoord wijzigen</label>
+      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">🔑 Beheerders</label>
+      <div id="beheerderLijst"></div>
+      <label style="font-size:12px;color:var(--ink-light);margin-top:4px;">Mijn wachtwoord wijzigen</label>
       <input type="password" id="nieuwWwInput" placeholder="Nieuw wachtwoord…" maxlength="40"
-        style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
       <input type="password" id="nieuwWwBevestig" placeholder="Bevestig wachtwoord…" maxlength="40"
-        style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
       <button class="btn-confirm" onclick="wijzigWachtwoord()">Wachtwoord opslaan ✓</button>
+      <label style="font-size:12px;color:var(--ink-light);margin-top:4px;">Nieuwe beheerder toevoegen</label>
+      <input type="text" id="nieuwBeheerderNaam" placeholder="Naam…" maxlength="40"
+        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+      <input type="password" id="nieuwBeheerderWw" placeholder="Wachtwoord…" maxlength="40"
+        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+      <button class="btn-confirm" style="background:var(--green);" onclick="voegBeheerderToe()">+ Beheerder toevoegen</button>
     </div>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
@@ -549,7 +557,7 @@ const FIREBASE_CONFIG = {
 // ═══ CONSTANTEN ═════════════════════════════════════════
 const MAIN_SIZE    = 20;
 const RESERVE_SIZE = 4;
-let   ADMIN_PW     = "padel"; // wordt overschreven vanuit Firebase
+let   ADMINS       = { "Beheerder": "padel" }; // naam → wachtwoord, geladen vanuit Firebase
 const LEDEN_URL    = "https://raw.githubusercontent.com/joris-vandenBroek/knltb-autoboek/main/leden.json";
 const LEDEN_CACHE  = "padel_leden_cache";
 const IDENTITY_KEY = "padel_identity";
@@ -558,6 +566,7 @@ const MAANDEN      = ["januari","februari","maart","april","mei","juni","juli","
 // ═══ STATE ══════════════════════════════════════════════
 let identity       = localStorage.getItem(IDENTITY_KEY) || "";
 let isAdmin        = false;
+let adminNaam      = null;   // naam van de ingelogde beheerder
 let activeDatum    = null;   // actieve datum in Firebase (voor alle gebruikers)
 let currentDate    = null;   // datum die de beheerder lokaal bekijkt
 let currentSession = null;   // { title, time, main:{0..19:name}, reserve:{0..3:name} }
@@ -571,8 +580,8 @@ let ledenTimestamp = null;
 firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
 
-db.ref("instellingen/adminWachtwoord").once("value", snap => {
-  if (snap.val()) ADMIN_PW = snap.val();
+db.ref("instellingen/admins").once("value", snap => {
+  if (snap.val()) ADMINS = snap.val();
 });
 
 db.ref("instellingen/huidigeDatum").on("value", snap => {
@@ -954,15 +963,20 @@ function openAdminPanel() {
   });
   document.getElementById("adminPanel").classList.add("open");
   laadBestaandeLijsten();
+  renderBeheerderLijst();
 }
 
 function checkAdminPw() {
-  if (document.getElementById("adminPwInput").value !== ADMIN_PW) {
+  const pw = document.getElementById("adminPwInput").value;
+  const gevonden = Object.entries(ADMINS).find(([, ww]) => ww === pw);
+  if (!gevonden) {
     document.getElementById("adminPwError").textContent = "Onjuist wachtwoord.";
     return;
   }
+  adminNaam = gevonden[0];
   isAdmin = true;
   document.getElementById("adminBanner").style.display = "flex";
+  document.getElementById("adminBannerNaam").textContent = adminNaam;
   closeModal("adminPwModal");
   render();
   setTimeout(() => openAdminPanel(), 50);
@@ -1019,16 +1033,61 @@ function confirmAndereInschrijven() {
 }
 
 function wijzigWachtwoord() {
-  const nieuw     = document.getElementById("nieuwWwInput").value;
-  const bevestig  = document.getElementById("nieuwWwBevestig").value;
-  if (!nieuw) { showToast("Voer een nieuw wachtwoord in"); return; }
-  if (nieuw !== bevestig) { showToast("⚠️ Wachtwoorden komen niet overeen"); return; }
+  const nieuw    = document.getElementById("nieuwWwInput").value;
+  const bevestig = document.getElementById("nieuwWwBevestig").value;
+  if (!nieuw)              { showToast("Voer een nieuw wachtwoord in"); return; }
+  if (nieuw !== bevestig)  { showToast("⚠️ Wachtwoorden komen niet overeen"); return; }
   if (nieuw.length < 4)   { showToast("⚠️ Minimaal 4 tekens"); return; }
-  db.ref("instellingen/adminWachtwoord").set(nieuw).then(() => {
-    ADMIN_PW = nieuw;
+  ADMINS[adminNaam] = nieuw;
+  db.ref("instellingen/admins").set(ADMINS).then(() => {
     document.getElementById("nieuwWwInput").value = "";
     document.getElementById("nieuwWwBevestig").value = "";
-    showToast("✓ Wachtwoord opgeslagen");
+    showToast(`✓ Wachtwoord van ${adminNaam} opgeslagen`);
+  });
+}
+
+function voegBeheerderToe() {
+  const naam = document.getElementById("nieuwBeheerderNaam").value.trim();
+  const ww   = document.getElementById("nieuwBeheerderWw").value;
+  if (!naam) { showToast("Voer een naam in"); return; }
+  if (!ww || ww.length < 4) { showToast("⚠️ Wachtwoord minimaal 4 tekens"); return; }
+  if (ADMINS[naam]) { showToast(`⚠️ '${naam}' bestaat al`); return; }
+  ADMINS[naam] = ww;
+  db.ref("instellingen/admins").set(ADMINS).then(() => {
+    document.getElementById("nieuwBeheerderNaam").value = "";
+    document.getElementById("nieuwBeheerderWw").value = "";
+    showToast(`✓ ${naam} toegevoegd als beheerder`);
+    renderBeheerderLijst();
+  });
+}
+
+function verwijderBeheerder(naam) {
+  if (naam === adminNaam) { showToast("Je kunt jezelf niet verwijderen"); return; }
+  delete ADMINS[naam];
+  db.ref("instellingen/admins").set(ADMINS).then(() => {
+    showToast(`✓ ${naam} verwijderd`);
+    renderBeheerderLijst();
+  });
+}
+
+function renderBeheerderLijst() {
+  const el = document.getElementById("beheerderLijst");
+  if (!el) return;
+  el.innerHTML = "";
+  Object.keys(ADMINS).forEach(naam => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:14px;";
+    const jij = naam === adminNaam ? " <span style='font-size:10px;color:var(--mine);font-weight:700;'>(jij)</span>" : "";
+    row.innerHTML = `<span>${naam}${jij}</span>`;
+    if (naam !== adminNaam) {
+      const btn = document.createElement("button");
+      btn.className = "btn-leave";
+      btn.style.cssText = "border-color:var(--accent);color:var(--accent);font-size:11px;padding:3px 8px;";
+      btn.textContent = "Verwijder";
+      btn.onclick = () => verwijderBeheerder(naam);
+      row.appendChild(btn);
+    }
+    el.appendChild(row);
   });
 }
 
