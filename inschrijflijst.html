@@ -643,7 +643,13 @@ function renderList(containerId, arr, listType) {
     action.className = "slot-action";
     action.style.cssText = "display:flex;align-items:center;gap:8px;";
 
-    if (isAdmin && filled && !mine) {
+    if (isAdmin && filled) {
+      if (mine) {
+        const tag = document.createElement("span");
+        tag.className = "mine-tag";
+        tag.textContent = "jij";
+        action.appendChild(tag);
+      }
       const btn = document.createElement("button");
       btn.className = "btn-leave";
       btn.style.cssText = "border-color:var(--gold);color:var(--gold);";
@@ -694,22 +700,22 @@ function joinFirstFree() {
   if (!identity) { pendingJoin = true; openIdentityModal(); return; }
   if (!currentSession) return;
 
-  // Al op de lijst?
-  const alles = [
-    ...Object.values(currentSession.main    || {}),
-    ...Object.values(currentSession.reserve || {})
-  ];
-  if (alles.some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase())) {
-    showToast("Je staat al op de lijst");
-    return;
-  }
-
   if (isAdmin) {
     pendingAdminSlot = { listType: "auto" };
     document.getElementById("adminAddDesc").textContent = "Schrijf iemand in op de lijst";
     document.getElementById("adminAddInput").value = "";
     document.getElementById("adminAddModal").classList.add("open");
     setTimeout(() => document.getElementById("adminAddInput").focus(), 100);
+    return;
+  }
+
+  // Al op de lijst? (alleen voor gewone gebruikers)
+  const alles = [
+    ...Object.values(currentSession.main    || {}),
+    ...Object.values(currentSession.reserve || {})
+  ];
+  if (alles.some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase())) {
+    showToast("Je staat al op de lijst");
     return;
   }
 
