@@ -510,13 +510,17 @@
       </div>
     </div>
 
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
-      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">Andere lijst openen</label>
-      <select id="andereListSelect"
-        style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;">
-        <option value="">Laden…</option>
-      </select>
-      <button class="btn-confirm" style="background:var(--ink);" onclick="andereLijstOpenen()">Openen →</button>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <details>
+        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📂 Andere lijst openen</summary>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <select id="andereListSelect"
+            style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;">
+            <option value="">Laden…</option>
+          </select>
+          <button class="btn-confirm" style="background:var(--ink);" onclick="andereLijstOpenen()">Openen →</button>
+        </div>
+      </details>
     </div>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
@@ -524,20 +528,28 @@
       <button class="btn-confirm" style="background:var(--green);" onclick="verversLeden()">↻ Ledenlijst verversen</button>
     </div>
 
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
-      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">🔑 Beheerders</label>
-      <div id="beheerderLijst"></div>
-      <label style="font-size:12px;color:var(--ink-light);margin-top:4px;">Nieuwe beheerder toevoegen</label>
-      <input type="text" id="nieuwBeheerderNaam" placeholder="Naam…" maxlength="40" list="ledenList"
-        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
-      <input type="password" id="nieuwBeheerderWw" placeholder="Wachtwoord…" maxlength="40"
-        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
-      <button class="btn-confirm" style="background:var(--green);" onclick="voegBeheerderToe()">+ Beheerder toevoegen</button>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <details>
+        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🔑 Beheerders</summary>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <div id="beheerderLijst"></div>
+          <label style="font-size:12px;color:var(--ink-light);margin-top:4px;">Nieuwe beheerder toevoegen</label>
+          <input type="text" id="nieuwBeheerderNaam" placeholder="Naam…" maxlength="40" list="ledenList"
+            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+          <input type="password" id="nieuwBeheerderWw" placeholder="Wachtwoord…" maxlength="40"
+            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+          <button class="btn-confirm" style="background:var(--green);" onclick="voegBeheerderToe()">+ Beheerder toevoegen</button>
+        </div>
+      </details>
     </div>
 
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
-      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">🧪 Testdata</label>
-      <button class="btn-confirm" style="background:var(--ink-light);" onclick="vulTestdata()">Vul 19 random leden in</button>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <details>
+        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🧪 Testdata</summary>
+        <div style="margin-top:12px;">
+          <button class="btn-confirm" style="background:var(--ink-light);width:100%;" onclick="vulTestdata()">Vul 19 random leden in</button>
+        </div>
+      </details>
     </div>
   </div>
 </div>
