@@ -514,6 +514,15 @@
     </div>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">🔑 Wachtwoord wijzigen</label>
+      <input type="password" id="nieuwWwInput" placeholder="Nieuw wachtwoord…" maxlength="40"
+        style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+      <input type="password" id="nieuwWwBevestig" placeholder="Bevestig wachtwoord…" maxlength="40"
+        style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+      <button class="btn-confirm" onclick="wijzigWachtwoord()">Wachtwoord opslaan ✓</button>
+    </div>
+
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
       <label style="font-size:13px;font-weight:600;color:var(--ink-light);">🧪 Testdata</label>
       <button class="btn-confirm" style="background:var(--ink-light);" onclick="vulTestdata()">Vul 19 random leden in</button>
     </div>
@@ -541,7 +550,7 @@ const FIREBASE_CONFIG = {
 // ═══ CONSTANTEN ═════════════════════════════════════════
 const MAIN_SIZE    = 20;
 const RESERVE_SIZE = 4;
-const ADMIN_PW     = "padel";
+let   ADMIN_PW     = "padel"; // wordt overschreven vanuit Firebase
 const LEDEN_URL    = "https://raw.githubusercontent.com/joris-vandenBroek/knltb-autoboek/main/leden.json";
 const LEDEN_CACHE  = "padel_leden_cache";
 const IDENTITY_KEY = "padel_identity";
@@ -562,6 +571,10 @@ let ledenTimestamp = null;
 // ═══ FIREBASE ═══════════════════════════════════════════
 firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
+
+db.ref("instellingen/adminWachtwoord").once("value", snap => {
+  if (snap.val()) ADMIN_PW = snap.val();
+});
 
 db.ref("instellingen/huidigeDatum").on("value", snap => {
   const datum = snap.val() || volgendeVrijdag();
@@ -1003,6 +1016,20 @@ function confirmAndereInschrijven() {
     const inReserve = Object.values(data.reserve || {}).some(n => (n || "").trim().toLowerCase() === naam.toLowerCase());
     closeModal("andereModal");
     showToast(inReserve ? `✓ ${naam} op de reservelijst gezet` : `✓ ${naam} ingeschreven!`);
+  });
+}
+
+function wijzigWachtwoord() {
+  const nieuw     = document.getElementById("nieuwWwInput").value;
+  const bevestig  = document.getElementById("nieuwWwBevestig").value;
+  if (!nieuw) { showToast("Voer een nieuw wachtwoord in"); return; }
+  if (nieuw !== bevestig) { showToast("⚠️ Wachtwoorden komen niet overeen"); return; }
+  if (nieuw.length < 4)   { showToast("⚠️ Minimaal 4 tekens"); return; }
+  db.ref("instellingen/adminWachtwoord").set(nieuw).then(() => {
+    ADMIN_PW = nieuw;
+    document.getElementById("nieuwWwInput").value = "";
+    document.getElementById("nieuwWwBevestig").value = "";
+    showToast("✓ Wachtwoord opgeslagen");
   });
 }
 
