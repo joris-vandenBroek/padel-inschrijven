@@ -1379,9 +1379,7 @@ function copyWhatsApp() {
 function shareLink() {
   const titel  = currentSession?.title || "Padel";
   const tijd   = currentSession?.time  || "";
-  const main   = slotArray(currentSession?.main, MAIN_SIZE);
-  const filled = main.filter(n => n && n.trim()).length;
-  const tekst  = `🎾 ${titel} · ${tijd}\nInschrijving geopend – ${filled}/${MAIN_SIZE} deelnemers. Schrijf je snel in!`;
+  const tekst  = `🎾 ${titel} · ${tijd}\nDe inschrijving is geopend – schrijf je snel in, vol = vol!`;
   const url    = "https://tinyurl.com/padel-inschrijven";
 
   if (navigator.share) {
