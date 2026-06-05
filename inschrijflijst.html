@@ -394,7 +394,10 @@
 
 <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px;">
   <span style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--ink-light);">Deelnemers</span>
-  <button class="btn-join" style="font-size:12px;padding:6px 14px;" onclick="joinFirstFree()">+ Doe mee</button>
+  <div style="display:flex;gap:8px;">
+    <button class="btn-join" style="font-size:12px;padding:6px 14px;background:var(--ink-light);" onclick="openAndereInschrijvenModal()">+ Iemand anders</button>
+    <button class="btn-join" style="font-size:12px;padding:6px 14px;" onclick="joinFirstFree()">+ Doe mee</button>
+  </div>
 </div>
 <div class="list" id="mainList"></div>
 
@@ -420,6 +423,19 @@
     <div class="modal-buttons">
       <button class="btn-cancel" onclick="closeModal('adminAddModal')">Annuleer</button>
       <button class="btn-confirm" onclick="confirmAdminAdd()">Inschrijven ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Iemand anders inschrijven modal -->
+<div class="modal-overlay" id="andereModal">
+  <div class="modal">
+    <h2>Iemand anders inschrijven</h2>
+    <p>Kies de naam van degene die je wilt inschrijven.</p>
+    <input type="text" id="andereInput" placeholder="Naam…" maxlength="40" autocomplete="off" list="ledenList" />
+    <div class="modal-buttons">
+      <button class="btn-cancel" onclick="closeModal('andereModal')">Annuleer</button>
+      <button class="btn-confirm" onclick="confirmAndereInschrijven()">Inschrijven ✓</button>
     </div>
   </div>
 </div>
@@ -950,6 +966,46 @@ function logoutAdmin() {
   showToast("Beheermodus uitgeschakeld");
 }
 
+function openAndereInschrijvenModal() {
+  document.getElementById("andereInput").value = "";
+  document.getElementById("andereModal").classList.add("open");
+  setTimeout(() => document.getElementById("andereInput").focus(), 100);
+}
+
+function confirmAndereInschrijven() {
+  const naam = document.getElementById("andereInput").value.trim();
+  if (!naam) { document.getElementById("andereInput").focus(); return; }
+
+  const alles = [
+    ...Object.values(currentSession?.main    || {}),
+    ...Object.values(currentSession?.reserve || {})
+  ];
+  if (alles.some(n => (n || "").trim().toLowerCase() === naam.toLowerCase())) {
+    const inp = document.getElementById("andereInput");
+    inp.style.borderColor = "var(--accent)";
+    showToast(`⚠️ '${naam}' staat al op de lijst`);
+    setTimeout(() => { inp.style.borderColor = ""; }, 2000);
+    inp.focus();
+    return;
+  }
+
+  db.ref(`sessies/${currentDate}`).transaction(session => {
+    if (!session) return;
+    for (let i = 0; i < MAIN_SIZE; i++) {
+      if (!session.main[i] || !session.main[i].trim()) { session.main[i] = naam; return session; }
+    }
+    for (let i = 0; i < RESERVE_SIZE; i++) {
+      if (!session.reserve[i] || !session.reserve[i].trim()) { session.reserve[i] = naam; return session; }
+    }
+  }, (error, committed, snapshot) => {
+    if (!committed) { showToast("Geen vrije plekken meer!"); return; }
+    const data = snapshot.val();
+    const inReserve = Object.values(data.reserve || {}).some(n => (n || "").trim().toLowerCase() === naam.toLowerCase());
+    closeModal("andereModal");
+    showToast(inReserve ? `✓ ${naam} op de reservelijst gezet` : `✓ ${naam} ingeschreven!`);
+  });
+}
+
 function beheerHuidigeLijst() {
   closeModal("adminPanel");
 }
@@ -1111,7 +1167,7 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2500);
 }
 
-["identityModal","confirmModal","adminPwModal","adminPanel","adminAddModal"].forEach(id => {
+["identityModal","confirmModal","adminPwModal","adminPanel","adminAddModal","andereModal"].forEach(id => {
   const m = document.getElementById(id);
   if (m) m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); });
 });
@@ -1127,6 +1183,10 @@ document.getElementById("adminPwInput").addEventListener("keydown", e => {
 document.getElementById("adminAddInput").addEventListener("keydown", e => {
   if (e.key === "Enter")  confirmAdminAdd();
   if (e.key === "Escape") closeModal("adminAddModal");
+});
+document.getElementById("andereInput").addEventListener("keydown", e => {
+  if (e.key === "Enter")  confirmAndereInschrijven();
+  if (e.key === "Escape") closeModal("andereModal");
 });
 
 // ═══ SHARE ══════════════════════════════════════════════
