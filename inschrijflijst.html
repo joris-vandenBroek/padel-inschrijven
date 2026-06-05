@@ -847,7 +847,7 @@ function confirmAdminAdd() {
 function confirmClearList() {
   closeModal("adminPanel");
   document.getElementById("confirmTitle").textContent = "Lijst leegmaken?";
-  document.getElementById("confirmMsg").textContent = "Alle deelnemers en reservelijst worden gewist.";
+  document.getElementById("confirmMsg").textContent = `Alle deelnemers en reservelijst van ${currentSession?.title || currentDate} worden gewist.`;
   document.getElementById("confirmModal").classList.add("open");
   document.getElementById("confirmOkBtn").textContent = "Leegmaken";
   document.getElementById("confirmOkBtn").onclick = () => {
