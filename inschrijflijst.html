@@ -913,7 +913,7 @@ function checkAdminPw() {
   document.getElementById("adminBanner").style.display = "flex";
   closeModal("adminPwModal");
   render();
-  openAdminPanel();
+  setTimeout(() => openAdminPanel(), 50);
 }
 
 function logoutAdmin() {
