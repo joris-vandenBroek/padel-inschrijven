@@ -1085,17 +1085,9 @@ function renderBeheerderLijst() {
   el.innerHTML = "";
   Object.keys(ADMINS).forEach(naam => {
     const row = document.createElement("div");
-    row.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:14px;";
+    row.style.cssText = "padding:5px 0;font-size:14px;";
     const jij = naam === adminNaam ? " <span style='font-size:10px;color:var(--mine);font-weight:700;'>(jij)</span>" : "";
     row.innerHTML = `<span>${naam}${jij}</span>`;
-    if (naam !== adminNaam) {
-      const btn = document.createElement("button");
-      btn.className = "btn-leave";
-      btn.style.cssText = "border-color:var(--accent);color:var(--accent);font-size:11px;padding:3px 8px;";
-      btn.textContent = "Verwijder";
-      btn.onclick = () => verwijderBeheerder(naam);
-      row.appendChild(btn);
-    }
     el.appendChild(row);
   });
 }
