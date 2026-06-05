@@ -484,6 +484,11 @@
       <div style="font-size:12px;color:var(--ink-light);" id="ledenInfo">Leden: laden…</div>
       <button class="btn-confirm" style="background:var(--green);" onclick="verversLeden()">↻ Ledenlijst verversen</button>
     </div>
+
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">🧪 Testdata</label>
+      <button class="btn-confirm" style="background:var(--ink-light);" onclick="vulTestdata()">Vul 19 random leden in</button>
+    </div>
   </div>
 </div>
 
@@ -926,6 +931,21 @@ function logoutAdmin() {
 
 function beheerHuidigeLijst() {
   closeModal("adminPanel");
+}
+
+async function vulTestdata() {
+  closeModal("adminPanel");
+  await laadLeden();
+  if (!leden.length) { showToast("Ledenlijst nog niet geladen"); return; }
+  const shuffled = [...leden].sort(() => Math.random() - 0.5).slice(0, 19);
+  db.ref(`sessies/${currentDate}`).transaction(session => {
+    if (!session) return;
+    for (let i = 0; i < MAIN_SIZE; i++) session.main[i] = shuffled[i] || "";
+    for (let i = 0; i < RESERVE_SIZE; i++) session.reserve[i] = "";
+    return session;
+  }, (error, committed) => {
+    if (committed) showToast("✓ 19 testleden ingevuld");
+  });
 }
 
 async function laadBestaandeLijsten() {
