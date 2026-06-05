@@ -614,7 +614,7 @@ const FIREBASE_CONFIG = {
 // ═══ CONSTANTEN ═════════════════════════════════════════
 const MAIN_SIZE    = 20;
 const RESERVE_SIZE = 4;
-let   ADMINS       = { "Beheerder": "padel" }; // naam → wachtwoord, geladen vanuit Firebase
+let   ADMINS       = null; // geladen vanuit Firebase — null = nog niet klaar
 const LEDEN_URL    = "https://raw.githubusercontent.com/joris-vandenBroek/knltb-autoboek/main/leden.json";
 const LEDEN_CACHE  = "padel_leden_cache";
 const IDENTITY_KEY = "padel_identity";
@@ -1033,6 +1033,7 @@ function openAdminPanel() {
 }
 
 function checkAdminPw() {
+  if (!ADMINS) { document.getElementById("adminPwError").textContent = "Verbinding nog niet gereed, probeer opnieuw."; return; }
   const pw = document.getElementById("adminPwInput").value;
   const gevonden = Object.entries(ADMINS).find(([, ww]) => ww === pw);
   if (!gevonden) {
@@ -1099,6 +1100,7 @@ function confirmAndereInschrijven() {
 }
 
 function checkAdminPwEnWijzig() {
+  if (!ADMINS) { showToast("Verbinding nog niet gereed, probeer opnieuw."); return; }
   const pw     = document.getElementById("adminPwInput").value;
   const nieuw  = document.getElementById("nieuwWwInput").value;
   const bevestig = document.getElementById("nieuwWwBevestig").value;
