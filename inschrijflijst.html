@@ -502,7 +502,7 @@ const MAANDEN      = ["januari","februari","maart","april","mei","juni","juli","
 
 // ═══ STATE ══════════════════════════════════════════════
 let identity       = localStorage.getItem(IDENTITY_KEY) || "";
-let isAdmin        = true;
+let isAdmin        = false;
 let currentDate    = null;   // "YYYY-MM-DD"
 let currentSession = null;   // { title, time, main:{0..19:name}, reserve:{0..3:name} }
 let pendingJoin    = false;  // true = wacht op identiteit, dan inschrijven
@@ -1012,7 +1012,6 @@ function shareLink() {
 
 // ═══ INIT ═══════════════════════════════════════════════
 window.addEventListener("load", () => {
-  document.getElementById("adminBanner").style.display = "flex";
   laadLeden();
   if (!identity) openIdentityModal();
   else document.getElementById("whoLabel").textContent = identity;
