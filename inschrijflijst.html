@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inschrijflijst – Padel</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #f5f0e8;
+    --surface: #fffef9;
+    --ink: #1a1810;
+    --ink-light: #6b6555;
+    --accent: #c8410a;
+    --green: #2d7a3a;
+    --green-light: #e4f2e6;
+    --mine: #1a4f8a;
+    --mine-light: #e0eaf7;
+    --border: #ddd8cc;
+    --gold: #b8963a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  header {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 28px 24px 22px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(200,65,10,0.18);
+  }
+  header .eyebrow {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+  header .meta { font-size: 13px; color: #b0a890; margin-top: 4px; }
+  .count-badge {
+    display: inline-block;
+    margin-top: 12px;
+    background: var(--accent);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 14px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .identity-bar {
+    margin: 14px 16px 0;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .identity-bar .label { font-size: 12px; color: var(--ink-light); flex: 1; }
+  .identity-bar .who { font-size: 14px; font-weight: 600; color: var(--mine); }
+  .btn-switch {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    padding: 5px 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+    color: var(--ink-light);
+    transition: all 0.15s;
+  }
+  .btn-switch:hover { border-color: var(--mine); color: var(--mine); }
+
+  .list {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .slot {
+    display: flex;
+    align-items: center;
+    padding: 13px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 14px;
+    position: relative;
+    transition: background 0.15s;
+  }
+  .slot:last-child { border-bottom: none; }
+  .slot.is-mine { background: var(--mine-light); }
+
+  .slot-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    color: var(--ink-light);
+    width: 22px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .slot-name { flex: 1; font-size: 15px; font-weight: 500; }
+  .slot.filled .slot-name { color: var(--ink); }
+  .slot.is-mine .slot-name { color: var(--mine); font-weight: 600; }
+  .slot.empty .slot-name { color: var(--border); font-style: italic; font-weight: 300; }
+  .slot.reserve .slot-name { color: var(--ink-light); }
+
+  .mine-tag {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--mine);
+    background: white;
+    border: 1.5px solid var(--mine);
+    border-radius: 5px;
+    padding: 2px 7px;
+    text-transform: uppercase;
+  }
+
+  .slot-action { flex-shrink: 0; }
+
+  .btn-join {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn-join:active { transform: scale(0.96); }
+  .btn-join:hover { background: #a83508; }
+
+  .btn-leave {
+    background: transparent;
+    color: var(--mine);
+    border: 1.5px solid var(--mine);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-leave:hover { background: var(--mine); color: white; }
+
+  .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .avatar.filled  { background: var(--green-light); color: var(--green); }
+  .avatar.is-mine { background: var(--mine); color: white; }
+  .avatar.empty   { background: var(--border); color: #aaa; }
+  .avatar.reserve { background: #ede8dc; color: var(--gold); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(20,18,12,0.55);
+    backdrop-filter: blur(3px);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; animation: fadeIn 0.2s; }
+
+  @keyframes fadeIn  { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes slideUp { from { transform: translateY(30px); opacity:0 } to { transform: translateY(0); opacity:1 } }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 28px 24px 40px;
+    width: 100%;
+    max-width: 480px;
+    animation: slideUp 0.25s ease;
+  }
+  .modal h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    margin-bottom: 6px;
+  }
+  .modal p { font-size: 14px; color: var(--ink-light); margin-bottom: 20px; }
+  .modal input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .modal input:focus { border-color: var(--accent); }
+  .modal-buttons { display: flex; gap: 10px; margin-top: 14px; }
+  .btn-confirm {
+    flex: 1;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-confirm:hover { background: #a83508; }
+  .btn-cancel {
+    background: transparent;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    cursor: pointer;
+    color: var(--ink-light);
+  }
+
+  .share-bar {
+    margin: 20px 16px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .share-bar p { font-size: 13px; color: var(--ink-light); margin-bottom: 10px; }
+  .share-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-share {
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-share:hover { background: #333; }
+  .btn-share.copy {
+    background: transparent;
+    color: var(--ink);
+    border: 1.5px solid var(--border);
+  }
+  .btn-share.copy:hover { border-color: var(--ink); }
+
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--green);
+    color: white;
+    padding: 10px 22px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  .divider-reserve {
+    background: #ede8dc;
+    padding: 8px 20px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .confirm-modal .modal h2 { font-size: 20px; margin-bottom: 8px; }
+  .confirm-modal .modal .sub { font-size: 13px; color: var(--ink-light); margin-bottom: 20px; line-height: 1.5; }
+  .btn-danger {
+    flex: 1;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-danger:hover { background: #a83508; }
+
+  #loadingOverlay {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 999;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--ink-light);
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <span>Verbinden…</span>
+</div>
+
+<header>
+  <div class="eyebrow">Inschrijflijst</div>
+  <h1 id="headerTitle">Padel</h1>
+  <div class="meta" id="headerTime"></div>
+  <div class="count-badge" id="countBadge">— / — deelnemers</div>
+</header>
+
+<div class="identity-bar" id="identityBar">
+  <span class="label">Jij bent:</span>
+  <span class="who" id="whoLabel">—</span>
+  <button class="btn-switch" onclick="openIdentityModal()">Wijzig</button>
+</div>
+
+<div id="adminBanner" style="display:none;margin:8px 16px 0;background:#fff8e8;border:1.5px solid var(--gold);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--gold);font-weight:600;align-items:center;justify-content:space-between;">
+  <span>⚙️ Beheermodus actief</span>
+  <button class="btn-switch" style="border-color:var(--gold);color:var(--gold);" onclick="logoutAdmin()">Uitloggen</button>
+</div>
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px;">
+  <span style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--ink-light);">Deelnemers</span>
+  <button class="btn-join" style="font-size:12px;padding:6px 14px;" onclick="joinFirstFree()">+ Doe mee</button>
+</div>
+<div class="list" id="mainList"></div>
+
+<div class="divider-reserve">
+  <span>Reserve (max 4)</span>
+</div>
+<div class="list" id="reserveList"></div>
+
+<div class="share-bar">
+  <p>Deel deze pagina of kopieer de lijst voor WhatsApp</p>
+  <div class="share-btns">
+    <button class="btn-share" onclick="shareLink()">🔗 Link delen</button>
+    <button class="btn-share copy" onclick="copyWhatsApp()">📋 Kopieer voor WhatsApp</button>
+    <button class="btn-share copy" onclick="openAdminModal()">⚙️ Beheer</button>
+  </div>
+</div>
+
+<!-- Admin toevoeg modal -->
+<div class="modal-overlay" id="adminAddModal">
+  <div class="modal">
+    <h2>Inschrijven als beheerder</h2>
+    <p id="adminAddDesc"></p>
+    <input type="text" id="adminAddInput" placeholder="Naam van deelnemer…" maxlength="40" autocomplete="off" list="ledenList" />
+    <div class="modal-buttons">
+      <button class="btn-cancel" onclick="closeModal('adminAddModal')">Annuleer</button>
+      <button class="btn-confirm" onclick="confirmAdminAdd()">Inschrijven ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Identiteit modal -->
+<div class="modal-overlay" id="identityModal">
+  <div class="modal">
+    <h2>Wie ben jij?</h2>
+    <p>Kies je naam zodat je jouw inschrijving kunt beheren.</p>
+    <input type="text" id="identityInput" placeholder="Jouw naam…" maxlength="40" autocomplete="off" list="ledenList" />
+    <div class="modal-buttons">
+      <button class="btn-cancel" onclick="closeModal('identityModal')">Annuleer</button>
+      <button class="btn-confirm" onclick="confirmIdentity()">Bevestigen ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bevestig modal (inschrijven + uitschrijven) -->
+<div class="modal-overlay confirm-modal" id="confirmModal">
+  <div class="modal">
+    <h2 id="confirmTitle"></h2>
+    <p class="sub" id="confirmMsg"></p>
+    <div class="modal-buttons">
+      <button class="btn-cancel" onclick="closeModal('confirmModal')">Annuleer</button>
+      <button class="btn-danger" id="confirmOkBtn">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin wachtwoord modal -->
+<div class="modal-overlay" id="adminPwModal">
+  <div class="modal">
+    <h2>Beheer</h2>
+    <p>Voer het beheerderswachtwoord in.</p>
+    <input type="password" id="adminPwInput" placeholder="Wachtwoord…" maxlength="40" autocomplete="off" />
+    <div id="adminPwError" style="color:var(--accent);font-size:13px;margin-top:8px;min-height:18px;"></div>
+    <div class="modal-buttons">
+      <button class="btn-cancel" onclick="closeModal('adminPwModal')">Annuleer</button>
+      <button class="btn-confirm" onclick="checkAdminPw()">Inloggen ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin panel modal -->
+<div class="modal-overlay" id="adminPanel">
+  <div class="modal">
+    <h2>⚙️ Beheer</h2>
+    <p>Kies de volgende vrijdag.</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">Datum</label>
+      <select id="adminFriday"
+        style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
+      </select>
+    </div>
+    <div class="modal-buttons" style="margin-top:16px;">
+      <button class="btn-cancel" onclick="closeModal('adminPanel')">Annuleer</button>
+      <button class="btn-confirm" onclick="saveAdminSettings()">Opslaan ✓</button>
+    </div>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
+      <div style="font-size:12px;color:var(--ink-light);" id="ledenInfo">Leden: laden…</div>
+      <button class="btn-confirm" style="background:var(--green);" onclick="verversLeden()">↻ Ledenlijst verversen</button>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="btn-danger" style="width:100%;" onclick="confirmClearList()">🗑 Lijst leegmaken</button>
+    </div>
+  </div>
+</div>
+
+<datalist id="ledenList"></datalist>
+<div class="toast" id="toast"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONFIGURATIE — vul in na Firebase project aanmaken
+// ═══════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "VERVANG_MIJ",
+  authDomain:        "VERVANG_MIJ.firebaseapp.com",
+  databaseURL:       "https://VERVANG_MIJ-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "VERVANG_MIJ",
+  storageBucket:     "VERVANG_MIJ.appspot.com",
+  messagingSenderId: "VERVANG_MIJ",
+  appId:             "VERVANG_MIJ"
+};
+
+// ═══ CONSTANTEN ═════════════════════════════════════════
+const MAIN_SIZE    = 20;
+const RESERVE_SIZE = 4;
+const ADMIN_PW     = "padel";
+const LEDEN_URL    = "https://raw.githubusercontent.com/joris-vandenBroek/knltb-autoboek/main/leden.json";
+const LEDEN_CACHE  = "padel_leden_cache";
+const IDENTITY_KEY = "padel_identity";
+const MAANDEN      = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
+
+// ═══ STATE ══════════════════════════════════════════════
+let identity       = localStorage.getItem(IDENTITY_KEY) || "";
+let isAdmin        = true;
+let currentDate    = null;   // "YYYY-MM-DD"
+let currentSession = null;   // { title, time, main:{0..19:name}, reserve:{0..3:name} }
+let pendingJoin    = false;  // true = wacht op identiteit, dan inschrijven
+let pendingAdminSlot = null;
+let sessieListenerRef = null;
+let leden          = [];
+let ledenTimestamp = null;
+
+// ═══ FIREBASE ═══════════════════════════════════════════
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.database();
+
+db.ref("instellingen/huidigeDatum").on("value", snap => {
+  const datum = snap.val() || volgendeVrijdag();
+  if (!snap.val()) db.ref("instellingen/huidigeDatum").set(datum);
+  if (datum !== currentDate) switchToDatum(datum);
+});
+
+function switchToDatum(datum) {
+  if (sessieListenerRef) sessieListenerRef.off();
+  currentDate = datum;
+  sessieListenerRef = db.ref(`sessies/${datum}`);
+  sessieListenerRef.on("value", snap => {
+    const data = snap.val();
+    if (!data) {
+      initialiseerSessie(datum, datumNaarTitel(datum), "9:00 – 10:30 uur");
+    } else {
+      currentSession = data;
+      document.getElementById("headerTitle").textContent = data.title || datum;
+      document.getElementById("headerTime").textContent  = data.time  || "";
+      document.getElementById("loadingOverlay").style.display = "none";
+      render();
+    }
+  });
+}
+
+async function initialiseerSessie(datum, title, time) {
+  const main = {}, reserve = {};
+  for (let i = 0; i < MAIN_SIZE; i++)    main[i]    = "";
+  for (let i = 0; i < RESERVE_SIZE; i++) reserve[i] = "";
+  await db.ref(`sessies/${datum}`).set({
+    title, time, main, reserve,
+    aangemaaktOp: firebase.database.ServerValue.TIMESTAMP
+  });
+}
+
+// ═══ HULPFUNCTIES ═══════════════════════════════════════
+function slotArray(obj, size) {
+  const arr = [];
+  for (let i = 0; i < size; i++) arr.push(obj && obj[i] != null ? obj[i] : "");
+  return arr;
+}
+
+function isMine(name) {
+  return !!(identity && name && name.trim().toLowerCase() === identity.trim().toLowerCase());
+}
+
+function initials(name) {
+  if (!name) return "–";
+  return name.trim().split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 2);
+}
+
+function volgendeVrijdag() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  const daysUntilFriday = (5 - d.getDay() + 7) % 7 || 7;
+  d.setDate(d.getDate() + daysUntilFriday);
+  return d.toISOString().split("T")[0];
+}
+
+function datumNaarTitel(datum) {
+  const d = new Date(datum + "T12:00:00");
+  return `Vrijdag ${d.getDate()} ${MAANDEN[d.getMonth()]}`;
+}
+
+function getUpcomingFridays(count) {
+  const fridays = [];
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  const daysUntilFriday = (5 - d.getDay() + 7) % 7 || 7;
+  d.setDate(d.getDate() + daysUntilFriday);
+  for (let i = 0; i < count; i++) {
+    const datum = d.toISOString().split("T")[0];
+    fridays.push({ datum, label: datumNaarTitel(datum) });
+    d.setDate(d.getDate() + 7);
+  }
+  return fridays;
+}
+
+// ═══ RENDER ═════════════════════════════════════════════
+function render() {
+  if (!currentSession) return;
+  const main    = slotArray(currentSession.main,    MAIN_SIZE);
+  const reserve = slotArray(currentSession.reserve, RESERVE_SIZE);
+  renderList("mainList",    main,    "main");
+  renderList("reserveList", reserve, "reserve");
+  const filled = main.filter(n => n && n.trim()).length;
+  document.getElementById("countBadge").textContent = `${filled} / ${MAIN_SIZE} deelnemers`;
+  document.getElementById("whoLabel").textContent   = identity || "Nog niet ingesteld";
+}
+
+function renderList(containerId, arr, listType) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = "";
+  arr.forEach((name, i) => {
+    const filled = name && name.trim();
+    const mine   = isMine(name);
+
+    const div = document.createElement("div");
+    div.className = ["slot",
+      filled ? (mine ? "is-mine" : listType === "reserve" ? "reserve" : "filled") : "empty"
+    ].join(" ");
+
+    const num = document.createElement("span");
+    num.className = "slot-num";
+    num.textContent = i + 1;
+
+    const av = document.createElement("div");
+    av.className = `avatar ${mine ? "is-mine" : filled ? (listType === "reserve" ? "reserve" : "filled") : "empty"}`;
+    av.textContent = filled ? initials(name) : "?";
+
+    const nm = document.createElement("span");
+    nm.className = "slot-name";
+    nm.textContent = filled ? name : "Vrij";
+
+    const action = document.createElement("div");
+    action.className = "slot-action";
+    action.style.cssText = "display:flex;align-items:center;gap:8px;";
+
+    if (isAdmin && filled && !mine) {
+      const btn = document.createElement("button");
+      btn.className = "btn-leave";
+      btn.style.cssText = "border-color:var(--gold);color:var(--gold);";
+      btn.textContent = "✕";
+      btn.title = `${name} uitschrijven`;
+      btn.onclick = () => adminRemove(listType, i, name);
+      action.appendChild(btn);
+    } else if (mine) {
+      const tag = document.createElement("span");
+      tag.className = "mine-tag";
+      tag.textContent = "jij";
+      const btn = document.createElement("button");
+      btn.className = "btn-leave";
+      btn.textContent = "Uitschrijven";
+      btn.onclick = () => confirmRemove(name, listType, i);
+      action.appendChild(tag);
+      action.appendChild(btn);
+    }
+
+    div.appendChild(num);
+    div.appendChild(av);
+    div.appendChild(nm);
+    div.appendChild(action);
+    el.appendChild(div);
+  });
+}
+
+// ═══ IDENTITEIT ═════════════════════════════════════════
+function openIdentityModal() {
+  document.getElementById("identityInput").value = identity;
+  document.getElementById("identityModal").classList.add("open");
+  setTimeout(() => document.getElementById("identityInput").focus(), 100);
+}
+
+function confirmIdentity() {
+  const name = document.getElementById("identityInput").value.trim();
+  if (!name) { document.getElementById("identityInput").focus(); return; }
+  identity = name;
+  localStorage.setItem(IDENTITY_KEY, name);
+  closeModal("identityModal");
+  render();
+  showToast(`Welkom, ${name}!`);
+  if (pendingJoin) { pendingJoin = false; joinFirstFree(); }
+}
+
+// ═══ INSCHRIJVEN ════════════════════════════════════════
+function joinFirstFree() {
+  if (!identity) { pendingJoin = true; openIdentityModal(); return; }
+  if (!currentSession) return;
+
+  // Al op de lijst?
+  const alles = [
+    ...Object.values(currentSession.main    || {}),
+    ...Object.values(currentSession.reserve || {})
+  ];
+  if (alles.some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase())) {
+    showToast("Je staat al op de lijst");
+    return;
+  }
+
+  if (isAdmin) {
+    pendingAdminSlot = { listType: "auto" };
+    document.getElementById("adminAddDesc").textContent = "Schrijf iemand in op de lijst";
+    document.getElementById("adminAddInput").value = "";
+    document.getElementById("adminAddModal").classList.add("open");
+    setTimeout(() => document.getElementById("adminAddInput").focus(), 100);
+    return;
+  }
+
+  const mainVrij    = slotArray(currentSession.main,    MAIN_SIZE).some(n    => !n || !n.trim());
+  const reserveVrij = slotArray(currentSession.reserve, RESERVE_SIZE).some(n => !n || !n.trim());
+
+  if (!mainVrij && !reserveVrij) { showToast("Geen vrije plekken meer!"); return; }
+
+  const isReserve = !mainVrij;
+  document.getElementById("confirmTitle").textContent = "Inschrijven?";
+  document.getElementById("confirmMsg").textContent =
+    `${identity} · ${currentSession.title} · ${currentSession.time}` +
+    (isReserve ? " · reservelijst" : "");
+  document.getElementById("confirmModal").classList.add("open");
+  document.getElementById("confirmOkBtn").textContent = "Inschrijven ✓";
+  document.getElementById("confirmOkBtn").onclick = () => {
+    closeModal("confirmModal");
+    doJoinTransaction();
+  };
+}
+
+function doJoinTransaction() {
+  db.ref(`sessies/${currentDate}`).transaction(session => {
+    if (!session) return;
+    for (let i = 0; i < MAIN_SIZE; i++) {
+      if (!session.main[i] || !session.main[i].trim()) {
+        session.main[i] = identity; return session;
+      }
+    }
+    for (let i = 0; i < RESERVE_SIZE; i++) {
+      if (!session.reserve[i] || !session.reserve[i].trim()) {
+        session.reserve[i] = identity; return session;
+      }
+    }
+    // Geen plek — aborteer transactie
+  }, (error, committed, snapshot) => {
+    if (error)     { showToast("Fout bij inschrijven, probeer opnieuw"); return; }
+    if (!committed) { showToast("Geen vrije plekken meer!"); return; }
+    const data = snapshot.val();
+    const inReserve = Object.values(data.reserve || {})
+      .some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase());
+    showToast(inReserve ? `✓ Op de reservelijst gezet` : `✓ Ingeschreven!`);
+  });
+}
+
+// ═══ UITSCHRIJVEN ═══════════════════════════════════════
+function confirmRemove(naam, listType, idx) {
+  const eersteRKey = Object.keys(currentSession.reserve || {})
+    .sort((a, b) => +a - +b)
+    .find(k => currentSession.reserve[k] && currentSession.reserve[k].trim());
+  const promotee = (listType === "main" && eersteRKey !== undefined)
+    ? currentSession.reserve[eersteRKey] : null;
+
+  document.getElementById("confirmTitle").textContent = `${naam} uitschrijven?`;
+  document.getElementById("confirmMsg").textContent = promotee
+    ? `'${promotee}' schuift dan door naar de hoofdlijst.`
+    : "Weet je het zeker?";
+  document.getElementById("confirmModal").classList.add("open");
+  document.getElementById("confirmOkBtn").textContent = "Uitschrijven";
+  document.getElementById("confirmOkBtn").onclick = () => {
+    closeModal("confirmModal");
+    doRemoveTransaction(naam, listType, idx);
+  };
+}
+
+function doRemoveTransaction(naam, listType, fromIdx) {
+  db.ref(`sessies/${currentDate}`).transaction(session => {
+    if (!session) return;
+    if (listType === "main") {
+      session.main = shiftUp(session.main, fromIdx, MAIN_SIZE);
+      // Promoveer eerste reservist
+      const eersteRKey = Object.keys(session.reserve || {})
+        .sort((a, b) => +a - +b)
+        .find(k => session.reserve[k] && session.reserve[k].trim());
+      if (eersteRKey !== undefined) {
+        const leegMKey = Object.keys(session.main)
+          .sort((a, b) => +a - +b)
+          .find(k => !session.main[k] || !session.main[k].trim());
+        if (leegMKey !== undefined) {
+          session.main[leegMKey] = session.reserve[eersteRKey];
+          session.reserve = shiftUp(session.reserve, +eersteRKey, RESERVE_SIZE);
+        }
+      }
+    } else {
+      session.reserve = shiftUp(session.reserve, fromIdx, RESERVE_SIZE);
+    }
+    return session;
+  }, (error, committed) => {
+    if (committed) showToast(`${naam} uitgeschreven`);
+  });
+}
+
+function shiftUp(obj, fromIdx, size) {
+  const result = Object.assign({}, obj);
+  for (let i = fromIdx; i < size - 1; i++) {
+    result[i] = result[i + 1] || "";
+  }
+  result[size - 1] = "";
+  return result;
+}
+
+// ═══ ADMIN ══════════════════════════════════════════════
+function adminRemove(listType, idx, naam) {
+  document.getElementById("confirmTitle").textContent = `${naam} uitschrijven?`;
+  document.getElementById("confirmMsg").textContent = "Je schrijft deze persoon uit als beheerder.";
+  document.getElementById("confirmModal").classList.add("open");
+  document.getElementById("confirmOkBtn").textContent = "Uitschrijven";
+  document.getElementById("confirmOkBtn").onclick = () => {
+    closeModal("confirmModal");
+    doRemoveTransaction(naam, listType, idx);
+  };
+}
+
+function confirmAdminAdd() {
+  const naam = document.getElementById("adminAddInput").value.trim();
+  if (!naam) { document.getElementById("adminAddInput").focus(); return; }
+
+  const alles = [
+    ...Object.values(currentSession?.main    || {}),
+    ...Object.values(currentSession?.reserve || {})
+  ];
+  if (alles.some(n => (n || "").trim().toLowerCase() === naam.toLowerCase())) {
+    const inp = document.getElementById("adminAddInput");
+    inp.style.borderColor = "var(--accent)";
+    showToast(`⚠️ '${naam}' staat al op de lijst`);
+    setTimeout(() => { inp.style.borderColor = ""; }, 2000);
+    inp.focus();
+    return;
+  }
+
+  db.ref(`sessies/${currentDate}`).transaction(session => {
+    if (!session) return;
+    for (let i = 0; i < MAIN_SIZE; i++) {
+      if (!session.main[i] || !session.main[i].trim()) { session.main[i] = naam; return session; }
+    }
+    for (let i = 0; i < RESERVE_SIZE; i++) {
+      if (!session.reserve[i] || !session.reserve[i].trim()) { session.reserve[i] = naam; return session; }
+    }
+  }, (error, committed) => {
+    if (!committed) { showToast("Geen vrije plekken"); return; }
+    closeModal("adminAddModal");
+    showToast(`✓ ${naam} ingeschreven`);
+  });
+}
+
+function confirmClearList() {
+  closeModal("adminPanel");
+  document.getElementById("confirmTitle").textContent = "Lijst leegmaken?";
+  document.getElementById("confirmMsg").textContent = "Alle deelnemers en reservelijst worden gewist.";
+  document.getElementById("confirmModal").classList.add("open");
+  document.getElementById("confirmOkBtn").textContent = "Leegmaken";
+  document.getElementById("confirmOkBtn").onclick = () => {
+    closeModal("confirmModal");
+    const main = {}, reserve = {};
+    for (let i = 0; i < MAIN_SIZE; i++)    main[i]    = "";
+    for (let i = 0; i < RESERVE_SIZE; i++) reserve[i] = "";
+    db.ref(`sessies/${currentDate}`).update({ main, reserve });
+    showToast("✓ Lijst leeggemaakt");
+  };
+}
+
+function openAdminModal() {
+  document.getElementById("adminPwInput").value = "";
+  document.getElementById("adminPwError").textContent = "";
+  document.getElementById("adminPwModal").classList.add("open");
+  setTimeout(() => document.getElementById("adminPwInput").focus(), 100);
+}
+
+function checkAdminPw() {
+  if (document.getElementById("adminPwInput").value !== ADMIN_PW) {
+    document.getElementById("adminPwError").textContent = "Onjuist wachtwoord.";
+    return;
+  }
+  isAdmin = true;
+  document.getElementById("adminBanner").style.display = "flex";
+  closeModal("adminPwModal");
+  const sel = document.getElementById("adminFriday");
+  sel.innerHTML = "";
+  getUpcomingFridays(8).forEach(f => {
+    const opt = document.createElement("option");
+    opt.value = f.datum;
+    opt.textContent = f.label;
+    if (f.datum === currentDate) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  document.getElementById("adminPanel").classList.add("open");
+  render();
+}
+
+function logoutAdmin() {
+  isAdmin = false;
+  document.getElementById("adminBanner").style.display = "none";
+  render();
+  showToast("Beheermodus uitgeschakeld");
+}
+
+function saveAdminSettings() {
+  const datum = document.getElementById("adminFriday").value;
+  db.ref(`sessies/${datum}`).once("value").then(snap => {
+    if (!snap.exists()) {
+      initialiseerSessie(datum, datumNaarTitel(datum), "9:00 – 10:30 uur");
+    }
+    db.ref("instellingen/huidigeDatum").set(datum);
+  });
+  closeModal("adminPanel");
+  showToast("✓ Datum opgeslagen");
+}
+
+// ═══ LEDENLIJST ═════════════════════════════════════════
+function vulDatalist() {
+  const dl = document.getElementById("ledenList");
+  dl.innerHTML = "";
+  leden.forEach(naam => {
+    const opt = document.createElement("option");
+    opt.value = naam;
+    dl.appendChild(opt);
+  });
+}
+
+function updateLedenInfo() {
+  const el = document.getElementById("ledenInfo");
+  if (!el) return;
+  if (!leden.length) { el.textContent = "Leden: niet geladen"; return; }
+  const tijdStr = ledenTimestamp
+    ? new Date(ledenTimestamp).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    : "onbekend";
+  el.textContent = `${leden.length} leden · bijgewerkt ${tijdStr}`;
+}
+
+async function laadLeden(forceFetch = false) {
+  if (!forceFetch) {
+    try {
+      const cached = localStorage.getItem(LEDEN_CACHE);
+      if (cached) {
+        const { namen, timestamp } = JSON.parse(cached);
+        leden = namen; ledenTimestamp = timestamp;
+        vulDatalist(); updateLedenInfo(); return;
+      }
+    } catch(e) {}
+  }
+  try {
+    const resp = await fetch(LEDEN_URL);
+    if (!resp.ok) throw new Error();
+    leden = await resp.json();
+    ledenTimestamp = Date.now();
+    localStorage.setItem(LEDEN_CACHE, JSON.stringify({ namen: leden, timestamp: ledenTimestamp }));
+    vulDatalist(); updateLedenInfo();
+  } catch(e) { updateLedenInfo(); }
+}
+
+async function verversLeden() {
+  const btn = document.querySelector("#adminPanel button[onclick='verversLeden()']");
+  if (btn) btn.textContent = "↻ Verversen…";
+  await laadLeden(true);
+  if (btn) btn.textContent = "↻ Ledenlijst verversen";
+  showToast(`✓ ${leden.length} leden geladen`);
+}
+
+// ═══ MODALS & TOAST ═════════════════════════════════════
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+
+["identityModal","confirmModal","adminPwModal","adminPanel","adminAddModal"].forEach(id => {
+  const m = document.getElementById(id);
+  if (m) m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); });
+});
+
+document.getElementById("identityInput").addEventListener("keydown", e => {
+  if (e.key === "Enter")  confirmIdentity();
+  if (e.key === "Escape") closeModal("identityModal");
+});
+document.getElementById("adminPwInput").addEventListener("keydown", e => {
+  if (e.key === "Enter")  checkAdminPw();
+  if (e.key === "Escape") closeModal("adminPwModal");
+});
+document.getElementById("adminAddInput").addEventListener("keydown", e => {
+  if (e.key === "Enter")  confirmAdminAdd();
+  if (e.key === "Escape") closeModal("adminAddModal");
+});
+
+// ═══ SHARE ══════════════════════════════════════════════
+function copyWhatsApp() {
+  if (!currentSession) return;
+  const main    = slotArray(currentSession.main,    MAIN_SIZE);
+  const reserve = slotArray(currentSession.reserve, RESERVE_SIZE);
+  let lines = [`${currentSession.title} · ${currentSession.time}:`, ""];
+  main.forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+  lines.push("— reserve —");
+  reserve.forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+  navigator.clipboard.writeText(lines.join("\n"))
+    .then(() => showToast("📋 Gekopieerd voor WhatsApp!"))
+    .catch(() => showToast("Kopiëren mislukt"));
+}
+
+function shareLink() {
+  if (navigator.share) {
+    navigator.share({ title: currentSession?.title || "Inschrijflijst", url: window.location.href });
+  } else {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => showToast("🔗 Link gekopieerd!"));
+  }
+}
+
+// ═══ INIT ═══════════════════════════════════════════════
+window.addEventListener("load", () => {
+  document.getElementById("adminBanner").style.display = "flex";
+  laadLeden();
+  if (!identity) openIdentityModal();
+  else document.getElementById("whoLabel").textContent = identity;
+});
+</script>
+</body>
+</html>
