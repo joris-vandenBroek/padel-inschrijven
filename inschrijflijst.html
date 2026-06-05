@@ -452,23 +452,25 @@
 <div class="modal-overlay" id="adminPanel">
   <div class="modal">
     <h2>⚙️ Beheer</h2>
-    <p>Kies de volgende vrijdag.</p>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">Datum</label>
+
+    <button class="btn-confirm" style="width:100%;margin-bottom:16px;" onclick="beheerHuidigeLijst()">
+      📋 Beheer huidige lijst
+    </button>
+
+    <div style="padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-light);">Nieuwe lijst aanmaken</label>
       <select id="adminFriday"
         style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
       </select>
+      <div class="modal-buttons" style="margin-top:0;">
+        <button class="btn-cancel" onclick="closeModal('adminPanel')">Annuleer</button>
+        <button class="btn-confirm" onclick="nieuweLijstAanmaken()">Aanmaken ✓</button>
+      </div>
     </div>
-    <div class="modal-buttons" style="margin-top:16px;">
-      <button class="btn-cancel" onclick="closeModal('adminPanel')">Annuleer</button>
-      <button class="btn-confirm" onclick="saveAdminSettings()">Opslaan ✓</button>
-    </div>
+
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;">
       <div style="font-size:12px;color:var(--ink-light);" id="ledenInfo">Leden: laden…</div>
       <button class="btn-confirm" style="background:var(--green);" onclick="verversLeden()">↻ Ledenlijst verversen</button>
-    </div>
-    <div style="margin-top:10px;">
-      <button class="btn-danger" style="width:100%;" onclick="confirmClearList()">🗑 Lijst leegmaken</button>
     </div>
   </div>
 </div>
@@ -902,16 +904,25 @@ function logoutAdmin() {
   showToast("Beheermodus uitgeschakeld");
 }
 
-function saveAdminSettings() {
-  const datum = document.getElementById("adminFriday").value;
-  db.ref(`sessies/${datum}`).once("value").then(snap => {
-    if (!snap.exists()) {
-      initialiseerSessie(datum, datumNaarTitel(datum), "9:00 – 10:30 uur");
-    }
-    db.ref("instellingen/huidigeDatum").set(datum);
-  });
+function beheerHuidigeLijst() {
   closeModal("adminPanel");
-  showToast("✓ Datum opgeslagen");
+}
+
+function nieuweLijstAanmaken() {
+  const datum = document.getElementById("adminFriday").value;
+  const title = datumNaarTitel(datum);
+  document.getElementById("confirmTitle").textContent = "Nieuwe lijst aanmaken?";
+  document.getElementById("confirmMsg").textContent = `Er wordt een lege lijst aangemaakt voor ${title}.`;
+  document.getElementById("confirmModal").classList.add("open");
+  document.getElementById("confirmOkBtn").textContent = "Aanmaken ✓";
+  document.getElementById("confirmOkBtn").onclick = () => {
+    closeModal("confirmModal");
+    initialiseerSessie(datum, title, "9:00 – 10:30 uur").then(() => {
+      db.ref("instellingen/huidigeDatum").set(datum);
+    });
+    closeModal("adminPanel");
+    showToast(`✓ Nieuwe lijst aangemaakt voor ${title}`);
+  };
 }
 
 // ═══ LEDENLIJST ═════════════════════════════════════════
