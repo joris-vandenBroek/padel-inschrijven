@@ -580,8 +580,17 @@ let ledenTimestamp = null;
 firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
 
-db.ref("instellingen/admins").once("value", snap => {
-  if (snap.val()) ADMINS = snap.val();
+db.ref("instellingen").once("value", snap => {
+  const data = snap.val() || {};
+  if (data.admins) {
+    ADMINS = data.admins;
+  } else {
+    // Migreer oud enkelvoudig wachtwoord of gebruik standaard
+    const oudWw = data.adminWachtwoord || "padel";
+    ADMINS = { "Beheerder": oudWw };
+    db.ref("instellingen/admins").set(ADMINS);
+    db.ref("instellingen/adminWachtwoord").remove();
+  }
 });
 
 db.ref("instellingen/huidigeDatum").on("value", snap => {
