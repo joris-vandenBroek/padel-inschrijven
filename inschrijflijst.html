@@ -522,7 +522,7 @@
         style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
       <button class="btn-confirm" onclick="wijzigWachtwoord()">Wachtwoord opslaan ✓</button>
       <label style="font-size:12px;color:var(--ink-light);margin-top:4px;">Nieuwe beheerder toevoegen</label>
-      <input type="text" id="nieuwBeheerderNaam" placeholder="Naam…" maxlength="40"
+      <input type="text" id="nieuwBeheerderNaam" placeholder="Naam…" maxlength="40" list="ledenList"
         style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
       <input type="password" id="nieuwBeheerderWw" placeholder="Wachtwoord…" maxlength="40"
         style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
@@ -1060,7 +1060,7 @@ function voegBeheerderToe() {
   const ww   = document.getElementById("nieuwBeheerderWw").value;
   if (!naam) { showToast("Voer een naam in"); return; }
   if (!ww || ww.length < 4) { showToast("⚠️ Wachtwoord minimaal 4 tekens"); return; }
-  if (ADMINS[naam]) { showToast(`⚠️ '${naam}' bestaat al`); return; }
+  if (Object.keys(ADMINS).some(n => n.toLowerCase() === naam.toLowerCase())) { showToast(`⚠️ '${naam}' is al beheerder`); return; }
   ADMINS[naam] = ww;
   db.ref("instellingen/admins").set(ADMINS).then(() => {
     document.getElementById("nieuwBeheerderNaam").value = "";
