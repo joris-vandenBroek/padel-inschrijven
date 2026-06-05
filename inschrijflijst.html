@@ -861,20 +861,17 @@ function confirmClearList() {
 }
 
 function openAdminModal() {
+  if (isAdmin) {
+    openAdminPanel();
+    return;
+  }
   document.getElementById("adminPwInput").value = "";
   document.getElementById("adminPwError").textContent = "";
   document.getElementById("adminPwModal").classList.add("open");
   setTimeout(() => document.getElementById("adminPwInput").focus(), 100);
 }
 
-function checkAdminPw() {
-  if (document.getElementById("adminPwInput").value !== ADMIN_PW) {
-    document.getElementById("adminPwError").textContent = "Onjuist wachtwoord.";
-    return;
-  }
-  isAdmin = true;
-  document.getElementById("adminBanner").style.display = "flex";
-  closeModal("adminPwModal");
+function openAdminPanel() {
   const sel = document.getElementById("adminFriday");
   sel.innerHTML = "";
   getUpcomingFridays(8).forEach(f => {
@@ -885,6 +882,16 @@ function checkAdminPw() {
     sel.appendChild(opt);
   });
   document.getElementById("adminPanel").classList.add("open");
+}
+
+function checkAdminPw() {
+  if (document.getElementById("adminPwInput").value !== ADMIN_PW) {
+    document.getElementById("adminPwError").textContent = "Onjuist wachtwoord.";
+    return;
+  }
+  isAdmin = true;
+  document.getElementById("adminBanner").style.display = "flex";
+  closeModal("adminPwModal");
   render();
 }
 
