@@ -385,6 +385,12 @@
   <span>⚙️ Beheermodus actief</span>
   <button class="btn-switch" style="border-color:var(--gold);color:var(--gold);" onclick="logoutAdmin()">Uitloggen</button>
 </div>
+<div id="viewBanner" style="display:none;margin:8px 16px 0;background:#e8f0ff;border:1.5px solid var(--mine);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--mine);font-weight:600;align-items:center;justify-content:space-between;gap:10px;">
+  <span id="viewBannerText">👁 Je bekijkt een andere lijst</span>
+  <div style="display:flex;gap:8px;">
+    <button class="btn-switch" style="border-color:var(--mine);color:var(--mine);white-space:nowrap;" onclick="terugNaarActief()">← Terug</button>
+  </div>
+</div>
 
 <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px;">
   <span style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--ink-light);">Deelnemers</span>
@@ -528,9 +534,10 @@ const MAANDEN      = ["januari","februari","maart","april","mei","juni","juli","
 // ═══ STATE ══════════════════════════════════════════════
 let identity       = localStorage.getItem(IDENTITY_KEY) || "";
 let isAdmin        = false;
-let currentDate    = null;   // "YYYY-MM-DD"
+let activeDatum    = null;   // actieve datum in Firebase (voor alle gebruikers)
+let currentDate    = null;   // datum die de beheerder lokaal bekijkt
 let currentSession = null;   // { title, time, main:{0..19:name}, reserve:{0..3:name} }
-let pendingJoin    = false;  // true = wacht op identiteit, dan inschrijven
+let pendingJoin    = false;
 let pendingAdminSlot = null;
 let sessieListenerRef = null;
 let leden          = [];
@@ -543,7 +550,12 @@ const db = firebase.database();
 db.ref("instellingen/huidigeDatum").on("value", snap => {
   const datum = snap.val() || volgendeVrijdag();
   if (!snap.val()) db.ref("instellingen/huidigeDatum").set(datum);
-  if (datum !== currentDate) switchToDatum(datum);
+  activeDatum = datum;
+  // Niet overschrijven als beheerder bewust een andere lijst bekijkt
+  if (!isAdmin || currentDate === null || currentDate === activeDatum) {
+    if (datum !== currentDate) switchToDatum(datum);
+  }
+  updateViewBanner();
 });
 
 function switchToDatum(datum) {
@@ -931,6 +943,9 @@ function checkAdminPw() {
 function logoutAdmin() {
   isAdmin = false;
   document.getElementById("adminBanner").style.display = "none";
+  document.getElementById("viewBanner").style.display = "none";
+  // Terugkeren naar actieve lijst bij uitloggen
+  if (currentDate !== activeDatum) switchToDatum(activeDatum);
   render();
   showToast("Beheermodus uitgeschakeld");
 }
@@ -981,10 +996,27 @@ async function laadBestaandeLijsten() {
 
 function andereLijstOpenen() {
   const datum = document.getElementById("andereListSelect").value;
-  if (!datum || datum === currentDate) { closeModal("adminPanel"); return; }
-  db.ref("instellingen/huidigeDatum").set(datum);
+  if (!datum) return;
   closeModal("adminPanel");
-  showToast("✓ Lijst gewisseld");
+  if (datum === currentDate) return;
+  switchToDatum(datum);
+  updateViewBanner();
+}
+
+function terugNaarActief() {
+  if (currentDate !== activeDatum) switchToDatum(activeDatum);
+  updateViewBanner();
+}
+
+function updateViewBanner() {
+  const banner = document.getElementById("viewBanner");
+  if (!isAdmin || !activeDatum || currentDate === activeDatum) {
+    banner.style.display = "none";
+    return;
+  }
+  document.getElementById("viewBannerText").textContent =
+    `👁 Je bekijkt ${currentSession?.title || currentDate} (niet de actieve lijst)`;
+  banner.style.display = "flex";
 }
 
 function nieuweLijstAanmaken() {
