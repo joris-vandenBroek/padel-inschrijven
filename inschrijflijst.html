@@ -838,7 +838,19 @@ function renderList(containerId, arr, listType) {
 
     const nm = document.createElement("span");
     nm.className = "slot-name";
-    nm.textContent = filled ? name : "Vrij";
+    if (filled) {
+      nm.textContent = name;
+      const lid = leden.find(l => l.naam === name);
+      if (lid && lid.rating_padel) {
+        const rating = lid.rating_padel.replace(",", ".").replace(/\.0+$/, "");
+        const rt = document.createElement("span");
+        rt.textContent = ` (${rating})`;
+        rt.style.cssText = "font-size:11px;color:var(--ink-light);font-weight:400;";
+        nm.appendChild(rt);
+      }
+    } else {
+      nm.textContent = "Vrij";
+    }
 
     const action = document.createElement("div");
     action.className = "slot-action";
@@ -1437,8 +1449,6 @@ function vulDatalist() {
   leden.forEach(lid => {
     const opt = document.createElement("option");
     opt.value = lid.naam;
-    const rating = lid.rating_padel ? lid.rating_padel.replace(",", ".").replace(/\.0+$/, "") : null;
-    opt.label = rating ? `${lid.naam} (${rating})` : lid.naam;
     dl.appendChild(opt);
   });
 }
