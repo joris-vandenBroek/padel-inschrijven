@@ -9,7 +9,7 @@ Realtime inschrijfformulier voor wekelijkse padelsessies. Deelnemers openen de l
 - 20 plekken hoofdlijst + 4 reserveplekken
 - Automatisch doorschuiven van reserve naar hoofdlijst bij uitschrijving
 - Naam kiezen uit de ledenlijst — vrije invoer is niet toegestaan
-- Iemand anders inschrijven via "+ Iemand anders" knop (ook alleen uit ledenlijst)
+- Iemand anders inschrijven via "Iemand anders inschrijven" knop (ook alleen uit ledenlijst)
 - Naam wordt onthouden op het apparaat (localStorage) — eenmalig invoeren
 - Ledenlijst wordt wekelijks automatisch opgehaald uit de KNLTB-ledenregistratie
 - Realtime sync via Firebase — alle gebruikers zien wijzigingen direct
