@@ -831,6 +831,13 @@ function openIdentityModal() {
 function confirmIdentity() {
   const name = document.getElementById("identityInput").value.trim();
   if (!name) { document.getElementById("identityInput").focus(); return; }
+  if (!leden.includes(name)) {
+    const inp = document.getElementById("identityInput");
+    inp.style.borderColor = "var(--accent)";
+    showToast("⚠️ Kies een naam uit de ledenlijst");
+    setTimeout(() => { inp.style.borderColor = ""; }, 2000);
+    return;
+  }
   identity = name;
   localStorage.setItem(IDENTITY_KEY, name);
   closeModal("identityModal");
@@ -1083,6 +1090,13 @@ function openAndereInschrijvenModal() {
 function confirmAndereInschrijven() {
   const naam = document.getElementById("andereInput").value.trim();
   if (!naam) { document.getElementById("andereInput").focus(); return; }
+  if (!isAdmin && !leden.includes(naam)) {
+    const inp = document.getElementById("andereInput");
+    inp.style.borderColor = "var(--accent)";
+    showToast("⚠️ Kies een naam uit de ledenlijst");
+    setTimeout(() => { inp.style.borderColor = ""; }, 2000);
+    return;
+  }
 
   const alles = [
     ...Object.values(currentSession?.main    || {}),
