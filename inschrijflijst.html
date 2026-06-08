@@ -706,12 +706,19 @@ function initials(name) {
   return name.trim().split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 2);
 }
 
+function toLocalDateString(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dd}`;
+}
+
 function volgendeVrijdag() {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
   const daysUntilFriday = (5 - d.getDay() + 7) % 7 || 7;
   d.setDate(d.getDate() + daysUntilFriday);
-  return d.toISOString().split("T")[0];
+  return toLocalDateString(d);
 }
 
 function datumNaarTitel(datum) {
@@ -726,7 +733,7 @@ function getUpcomingFridays(count) {
   const daysUntilFriday = (5 - d.getDay() + 7) % 7 || 7;
   d.setDate(d.getDate() + daysUntilFriday);
   for (let i = 0; i < count; i++) {
-    const datum = d.toISOString().split("T")[0];
+    const datum = toLocalDateString(d);
     fridays.push({ datum, label: datumNaarTitel(datum) });
     d.setDate(d.getDate() + 7);
   }
