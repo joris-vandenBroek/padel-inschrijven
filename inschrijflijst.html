@@ -503,7 +503,7 @@
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
-        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📅 Nieuwe lege lijst aanmaken</summary>
+        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📅 Nieuwe lijst aanmaken</summary>
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
           <select id="adminFriday"
             style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
@@ -602,7 +602,7 @@
         Sluit dit paneel en ga naar de actieve lijst. Je kunt dan deelnemers verwijderen (✕) of toevoegen via "+ Doe mee". Als beheerder mag je ook namen invullen die niet in de ledenlijst staan.
       </div>
       <div>
-        <strong>📅 Nieuwe lege lijst aanmaken</strong><br>
+        <strong>📅 Nieuwe lijst aanmaken</strong><br>
         Maak een lege inschrijflijst aan voor de gekozen vrijdag. Als er al een lijst bestaat voor die datum krijg je een waarschuwing. Na aanmaken wordt die lijst direct de actieve lijst voor iedereen.<br><br>
         <em>Tip – zo deel je de lijst in WhatsApp:</em><br>
         1. Maak de lijst aan via "Aanmaken ✓"<br>
@@ -1338,7 +1338,7 @@ function nieuweLijstAanmaken() {
       document.getElementById("confirmMsg").textContent =
         `${title} heeft al ${aantalMain} deelnemer${aantalMain !== 1 ? "s" : ""}${reserveTekst}. Wil je de bestaande lijst overschrijven met een lege lijst?`;
     } else {
-      document.getElementById("confirmTitle").textContent = "Nieuwe lege lijst aanmaken?";
+      document.getElementById("confirmTitle").textContent = "Nieuwe lijst aanmaken?";
       document.getElementById("confirmMsg").textContent = `Er wordt een lege lijst aangemaakt voor ${title}.`;
     }
     document.getElementById("confirmModal").classList.add("open");
