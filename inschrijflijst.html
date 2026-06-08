@@ -689,7 +689,8 @@ let currentSession = null;   // { title, time, main:{0..19:name}, reserve:{0..3:
 let pendingJoin    = false;
 let pendingAdminSlot = null;
 let sessieListenerRef = null;
-let leden           = [];
+let leden           = [];       // array van objecten { naam, rating_padel, ... }
+let ledenNamen      = [];       // array van namen (strings) voor validatie
 let ledenTimestamp  = null;
 let vasteDeelnemers = [];   // opgeslagen in Firebase /instellingen/vasteDeelnemers
 
@@ -887,7 +888,7 @@ function openIdentityModal() {
 function confirmIdentity() {
   const name = document.getElementById("identityInput").value.trim();
   if (!name) { document.getElementById("identityInput").focus(); return; }
-  if (!leden.includes(name)) {
+  if (!ledenNamen.includes(name)) {
     const inp = document.getElementById("identityInput");
     inp.style.borderColor = "var(--accent)";
     showToast("⚠️ Kies een naam uit de ledenlijst");
@@ -1147,7 +1148,7 @@ function openAndereInschrijvenModal() {
 function confirmAndereInschrijven() {
   const naam = document.getElementById("andereInput").value.trim();
   if (!naam) { document.getElementById("andereInput").focus(); return; }
-  if (!isAdmin && !leden.includes(naam)) {
+  if (!isAdmin && !ledenNamen.includes(naam)) {
     const inp = document.getElementById("andereInput");
     inp.style.borderColor = "var(--accent)";
     showToast("⚠️ Kies een naam uit de ledenlijst");
@@ -1298,7 +1299,7 @@ function voegVasteDeelnemerToe() {
   const inp = document.getElementById("vasteDeelnemerInput");
   const naam = inp.value.trim();
   if (!naam) { inp.focus(); return; }
-  if (!leden.includes(naam)) {
+  if (!ledenNamen.includes(naam)) {
     inp.style.borderColor = "var(--accent)";
     showToast("⚠️ Kies een naam uit de ledenlijst");
     setTimeout(() => { inp.style.borderColor = ""; }, 2000);
@@ -1433,9 +1434,11 @@ function nieuweLijstAanmaken() {
 function vulDatalist() {
   const dl = document.getElementById("ledenList");
   dl.innerHTML = "";
-  leden.forEach(naam => {
+  leden.forEach(lid => {
     const opt = document.createElement("option");
-    opt.value = naam;
+    opt.value = lid.naam;
+    const rating = lid.rating_padel ? lid.rating_padel.replace(",", ".").replace(/\.0+$/, "") : null;
+    opt.label = rating ? `${lid.naam} (${rating})` : lid.naam;
     dl.appendChild(opt);
   });
 }
@@ -1455,9 +1458,14 @@ async function laadLeden(forceFetch = false) {
     try {
       const cached = localStorage.getItem(LEDEN_CACHE);
       if (cached) {
-        const { namen, timestamp } = JSON.parse(cached);
-        leden = namen; ledenTimestamp = timestamp;
-        vulDatalist(); updateLedenInfo(); return;
+        const parsed = JSON.parse(cached);
+        // Migreer oude cache (namen = string array) naar nieuwe structuur (data = object array)
+        if (parsed.namen && !parsed.data) { localStorage.removeItem(LEDEN_CACHE); }
+        else {
+          leden = parsed.data; ledenNamen = leden.map(l => l.naam);
+          ledenTimestamp = parsed.timestamp;
+          vulDatalist(); updateLedenInfo(); return;
+        }
       }
     } catch(e) {}
   }
@@ -1465,8 +1473,9 @@ async function laadLeden(forceFetch = false) {
     const resp = await fetch(LEDEN_URL);
     if (!resp.ok) throw new Error();
     leden = await resp.json();
+    ledenNamen = leden.map(l => l.naam);
     ledenTimestamp = Date.now();
-    localStorage.setItem(LEDEN_CACHE, JSON.stringify({ namen: leden, timestamp: ledenTimestamp }));
+    localStorage.setItem(LEDEN_CACHE, JSON.stringify({ data: leden, timestamp: ledenTimestamp }));
     vulDatalist(); updateLedenInfo();
   } catch(e) { updateLedenInfo(); }
 }
