@@ -510,6 +510,19 @@
           </select>
           <button class="btn-confirm" style="width:100%;" onclick="nieuweLijstAanmaken()">Aanmaken ✓</button>
           <button class="btn-share" style="width:100%;border-radius:10px;padding:11px;" onclick="closeModal('adminPanel');shareLink()">🔗 De link voor WhatsApp</button>
+
+          <details style="margin-top:4px;">
+            <summary style="font-size:12px;color:var(--ink-light);cursor:pointer;user-select:none;">👥 Vaste deelnemers beheren</summary>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+              <div style="font-size:12px;color:var(--ink-light);">Deze deelnemers worden automatisch toegevoegd bij het aanmaken van een nieuwe lijst.</div>
+              <div id="vasteDeelnemerLijst" style="display:flex;flex-direction:column;gap:6px;"></div>
+              <div style="display:flex;gap:8px;margin-top:4px;">
+                <input type="text" id="vasteDeelnemerInput" placeholder="Naam toevoegen…" maxlength="40" autocomplete="off" list="ledenList"
+                  style="flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+                <button class="btn-confirm" style="flex:0 0 auto;padding:9px 14px;font-size:14px;" onclick="voegVasteDeelnemerToe()">+</button>
+              </div>
+            </div>
+          </details>
         </div>
       </details>
     </div>
@@ -670,8 +683,9 @@ let currentSession = null;   // { title, time, main:{0..19:name}, reserve:{0..3:
 let pendingJoin    = false;
 let pendingAdminSlot = null;
 let sessieListenerRef = null;
-let leden          = [];
-let ledenTimestamp = null;
+let leden           = [];
+let ledenTimestamp  = null;
+let vasteDeelnemers = [];   // opgeslagen in Firebase /instellingen/vasteDeelnemers
 
 // ═══ FIREBASE ═══════════════════════════════════════════
 firebase.initializeApp(FIREBASE_CONFIG);
@@ -688,6 +702,7 @@ db.ref("instellingen").once("value", snap => {
     db.ref("instellingen/admins").set(ADMINS);
     db.ref("instellingen/adminWachtwoord").remove();
   }
+  vasteDeelnemers = Array.isArray(data.vasteDeelnemers) ? data.vasteDeelnemers : [];
   updateBeheerderFooter();
 });
 
@@ -724,6 +739,8 @@ async function initialiseerSessie(datum, title, time) {
   const main = {}, reserve = {};
   for (let i = 0; i < MAIN_SIZE; i++)    main[i]    = "";
   for (let i = 0; i < RESERVE_SIZE; i++) reserve[i] = "";
+  // Vul vaste deelnemers in op de eerste slots
+  vasteDeelnemers.slice(0, MAIN_SIZE).forEach((naam, i) => { main[i] = naam; });
   await db.ref(`sessies/${datum}`).set({
     title, time, main, reserve,
     aangemaaktOp: firebase.database.ServerValue.TIMESTAMP
@@ -1085,6 +1102,7 @@ function openAdminPanel() {
   document.getElementById("adminPanel").classList.add("open");
   laadBestaandeLijsten();
   renderBeheerderLijst();
+  renderVasteDeelnemers();
 }
 
 function checkAdminPw() {
@@ -1254,6 +1272,57 @@ function updateBeheerderFooter() {
   el.textContent = `Beheerders: ${namen}`;
 }
 
+function renderVasteDeelnemers() {
+  const el = document.getElementById("vasteDeelnemerLijst");
+  if (!el) return;
+  el.innerHTML = "";
+  if (!vasteDeelnemers.length) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--ink-light);font-style:italic;">Nog geen vaste deelnemers</div>`;
+    return;
+  }
+  vasteDeelnemers.forEach((naam, i) => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;";
+    row.innerHTML = `<span style="flex:1;">${naam}</span><button onclick="verwijderVasteDeelnemer(${i})" style="background:transparent;border:none;color:var(--ink-light);cursor:pointer;font-size:16px;padding:0 4px;">✕</button>`;
+    el.appendChild(row);
+  });
+}
+
+function voegVasteDeelnemerToe() {
+  const inp = document.getElementById("vasteDeelnemerInput");
+  const naam = inp.value.trim();
+  if (!naam) { inp.focus(); return; }
+  if (!leden.includes(naam)) {
+    inp.style.borderColor = "var(--accent)";
+    showToast("⚠️ Kies een naam uit de ledenlijst");
+    setTimeout(() => { inp.style.borderColor = ""; }, 2000);
+    return;
+  }
+  if (vasteDeelnemers.includes(naam)) {
+    showToast(`⚠️ ${naam} staat al in de lijst`);
+    return;
+  }
+  if (vasteDeelnemers.length >= MAIN_SIZE) {
+    showToast(`⚠️ Maximum van ${MAIN_SIZE} vaste deelnemers bereikt`);
+    return;
+  }
+  vasteDeelnemers.push(naam);
+  db.ref("instellingen/vasteDeelnemers").set(vasteDeelnemers).then(() => {
+    inp.value = "";
+    renderVasteDeelnemers();
+    showToast(`✓ ${naam} toegevoegd als vaste deelnemer`);
+  });
+}
+
+function verwijderVasteDeelnemer(index) {
+  const naam = vasteDeelnemers[index];
+  vasteDeelnemers.splice(index, 1);
+  db.ref("instellingen/vasteDeelnemers").set(vasteDeelnemers).then(() => {
+    renderVasteDeelnemers();
+    showToast(`✓ ${naam} verwijderd uit vaste deelnemers`);
+  });
+}
+
 function beheerHuidigeLijst() {
   closeModal("adminPanel");
 }
@@ -1348,7 +1417,8 @@ function nieuweLijstAanmaken() {
       initialiseerSessie(datum, title, "9:00 – 10:30 uur").then(() => {
         db.ref("instellingen/huidigeDatum").set(datum);
       });
-      showToast(`✓ Lege lijst aangemaakt voor ${title}`);
+      const n = vasteDeelnemers.length;
+      showToast(`✓ Lijst aangemaakt voor ${title}${n ? ` met ${n} vaste deelnemer${n !== 1 ? "s" : ""}` : ""}`);
     };
   });
 }
