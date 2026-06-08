@@ -8,7 +8,8 @@ Realtime inschrijfformulier voor wekelijkse padelsessies. Deelnemers openen de l
 
 - 20 plekken hoofdlijst + 4 reserveplekken
 - Automatisch doorschuiven van reserve naar hoofdlijst bij uitschrijving
-- Iemand anders inschrijven via "+ Iemand anders" knop
+- Naam kiezen uit de ledenlijst — vrije invoer is niet toegestaan
+- Iemand anders inschrijven via "+ Iemand anders" knop (ook alleen uit ledenlijst)
 - Naam wordt onthouden op het apparaat (localStorage) — eenmalig invoeren
 - Ledenlijst wordt wekelijks automatisch opgehaald uit de KNLTB-ledenregistratie
 - Realtime sync via Firebase — alle gebruikers zien wijzigingen direct
@@ -17,9 +18,9 @@ Realtime inschrijfformulier voor wekelijkse padelsessies. Deelnemers openen de l
 
 Klik op **⚙️ Beheer** en voer het wachtwoord in. Meerdere beheerders kunnen elk hun eigen wachtwoord hebben. Als beheerder kun je:
 
-- Deelnemers toevoegen of verwijderen
+- Deelnemers toevoegen of verwijderen (beheerder mag ook namen invullen die niet in de ledenlijst staan)
 - Een eerdere lijst bekijken zonder dat dit de actieve lijst wijzigt
-- Een nieuwe lege lijst aanmaken voor de volgende vrijdag
+- Een nieuwe lege lijst aanmaken voor de volgende vrijdag en de link direct delen in WhatsApp
 - Beheerders toevoegen en wachtwoorden wijzigen
 - De ledenlijst verversen
 
