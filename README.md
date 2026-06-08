@@ -20,7 +20,8 @@ Klik op **⚙️ Beheer** en voer het wachtwoord in. Meerdere beheerders kunnen 
 
 - Deelnemers toevoegen of verwijderen (beheerder mag ook namen invullen die niet in de ledenlijst staan)
 - Een eerdere lijst bekijken zonder dat dit de actieve lijst wijzigt
-- Een nieuwe lege lijst aanmaken voor de volgende vrijdag en de link direct delen in WhatsApp
+- Een nieuwe lijst aanmaken voor de volgende vrijdag en de link direct delen in WhatsApp
+- Vaste deelnemers beheren — worden automatisch toegevoegd bij elke nieuwe lijst
 - Beheerders toevoegen en wachtwoorden wijzigen
 - De ledenlijst verversen
 
@@ -42,6 +43,7 @@ instellingen/
   huidigeDatum: "YYYY-MM-DD"     ← actieve sessie voor alle gebruikers
   admins/
     "Naam": "wachtwoord"         ← één entry per beheerder
+  vasteDeelnemers: ["Naam", …]   ← automatisch toegevoegd bij nieuwe lijst
 
 sessies/
   YYYY-MM-DD/
@@ -64,4 +66,4 @@ sessies/
 
 ## Nieuwe week
 
-Als beheerder: klik **⚙️ Beheer → Nieuwe lege lijst aanmaken**, kies de volgende vrijdag en bevestig. De link blijft hetzelfde voor iedereen.
+Als beheerder: klik **⚙️ Beheer → Nieuwe lijst aanmaken**, kies de volgende vrijdag en bevestig. Vaste deelnemers worden automatisch ingevuld. De link blijft hetzelfde voor iedereen.
