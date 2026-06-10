@@ -515,6 +515,20 @@
     </div>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <details id="screenshotSection">
+        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📸 Screenshot inschrijflijst</summary>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+          <div style="font-size:12px;color:var(--ink-light);">Maak een afbeelding van de huidige lijst om te delen in WhatsApp.</div>
+          <button class="btn-confirm" style="width:100%;background:var(--ink);" onclick="maakScreenshot()">📸 Maak screenshot</button>
+          <div id="screenshotPreview" style="display:none;">
+            <img id="screenshotImg" style="width:100%;border-radius:10px;border:1px solid var(--border);" />
+            <button class="btn-share" style="width:100%;border-radius:10px;padding:11px;margin-top:8px;" onclick="deelScreenshot()">📤 Deel via WhatsApp</button>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
         <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">👥 Vaste deelnemers beheren</summary>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
@@ -655,6 +669,8 @@
 <datalist id="ledenList"></datalist>
 <div class="toast" id="toast"></div>
 
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -1557,6 +1573,99 @@ function shareLink() {
   } else {
     navigator.clipboard.writeText(tekst + '\n' + url)
       .then(() => showToast("🔗 Link gekopieerd!"));
+  }
+}
+
+// ═══ SCREENSHOT ══════════════════════════════════════════
+let screenshotBlob = null;
+
+async function maakScreenshot() {
+  const btn = document.querySelector("#screenshotSection button[onclick='maakScreenshot()']");
+  if (btn) btn.textContent = "⏳ Bezig…";
+
+  // Tijdelijk element bouwen met alleen de lijst
+  const el = document.createElement("div");
+  el.style.cssText = "background:#f5f0e8;padding:20px;font-family:'DM Sans',sans-serif;width:420px;";
+
+  const header = document.createElement("div");
+  header.style.cssText = "background:#1a1810;color:#f5f0e8;padding:20px 24px 16px;border-radius:12px 12px 0 0;text-align:center;margin-bottom:0;";
+  header.innerHTML = `
+    <div style="font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#b8963a;margin-bottom:4px;">Padel</div>
+    <div style="font-family:serif;font-size:22px;">${currentSession?.title || ""}</div>
+    <div style="font-size:13px;color:#b0a890;margin-top:4px;">${currentSession?.time || ""}</div>`;
+  el.appendChild(header);
+
+  const main    = slotArray(currentSession.main,    MAIN_SIZE);
+  const reserve = slotArray(currentSession.reserve, RESERVE_SIZE);
+
+  const listEl = document.createElement("div");
+  listEl.style.cssText = "background:#fffef9;border:1px solid #ddd8cc;border-top:none;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:12px;";
+
+  main.forEach((naam, i) => {
+    const row = document.createElement("div");
+    const filled = naam && naam.trim();
+    row.style.cssText = `display:flex;align-items:center;padding:10px 16px;gap:12px;border-bottom:1px solid #ddd8cc;background:${filled ? "#fffef9" : "#fffef9"};`;
+    row.innerHTML = `
+      <span style="font-size:13px;color:#6b6555;width:20px;text-align:right;">${i + 1}</span>
+      <span style="font-size:14px;font-weight:${filled ? 500 : 300};color:${filled ? "#1a1810" : "#ddd8cc"};font-style:${filled ? "normal" : "italic"};">${filled ? naam : "Vrij"}</span>`;
+    listEl.appendChild(row);
+  });
+
+  const divider = document.createElement("div");
+  divider.style.cssText = "text-align:center;padding:6px;font-size:11px;color:#6b6555;background:#f5f0e8;border-bottom:1px solid #ddd8cc;";
+  divider.textContent = "Reserve (max 4)";
+  listEl.appendChild(divider);
+
+  reserve.forEach((naam, i) => {
+    const row = document.createElement("div");
+    const filled = naam && naam.trim();
+    row.style.cssText = `display:flex;align-items:center;padding:10px 16px;gap:12px;border-bottom:1px solid #ddd8cc;`;
+    row.innerHTML = `
+      <span style="font-size:13px;color:#6b6555;width:20px;text-align:right;">${i + 1}</span>
+      <span style="font-size:14px;font-weight:${filled ? 500 : 300};color:${filled ? "#6b6555" : "#ddd8cc"};font-style:${filled ? "normal" : "italic"};">${filled ? naam : "Vrij"}</span>`;
+    listEl.appendChild(row);
+  });
+
+  el.appendChild(listEl);
+
+  const footer = document.createElement("div");
+  footer.style.cssText = "text-align:center;font-size:11px;color:#6b6555;";
+  footer.textContent = "tinyurl.com/padel-inschrijven";
+  el.appendChild(footer);
+
+  document.body.appendChild(el);
+
+  try {
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#f5f0e8" });
+    document.body.removeChild(el);
+
+    canvas.toBlob(blob => {
+      screenshotBlob = blob;
+      const url = URL.createObjectURL(blob);
+      document.getElementById("screenshotImg").src = url;
+      document.getElementById("screenshotPreview").style.display = "block";
+      if (btn) btn.textContent = "📸 Opnieuw maken";
+      showToast("✓ Screenshot klaar!");
+    }, "image/png");
+  } catch(e) {
+    document.body.removeChild(el);
+    if (btn) btn.textContent = "📸 Maak screenshot";
+    showToast("⚠️ Screenshot mislukt");
+  }
+}
+
+async function deelScreenshot() {
+  if (!screenshotBlob) return;
+  const titel = currentSession?.title || "Padel";
+  const file = new File([screenshotBlob], `padel-${currentDate}.png`, { type: "image/png" });
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    await navigator.share({ files: [file], text: `🎾 ${titel} – inschrijflijst` });
+  } else {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(screenshotBlob);
+    a.download = `padel-${currentDate}.png`;
+    a.click();
+    showToast("📥 Afbeelding gedownload");
   }
 }
 
