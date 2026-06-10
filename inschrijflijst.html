@@ -380,6 +380,7 @@
   <span class="who" id="whoLabel">—</span>
   <button class="btn-switch" onclick="openIdentityModal()">Wijzig</button>
   <button onclick="openDeelnemerHelp()" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:26px;height:26px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink-light);flex-shrink:0;">?</button>
+  <button id="langToggleBtn" onclick="setLang(lang==='nl'?'en':'nl')" style="background:transparent;border:none;padding:0;font-size:18px;cursor:pointer;line-height:1;flex-shrink:0;" title="Switch language">🇬🇧</button>
 </div>
 
 <div id="adminBanner" style="display:none;margin:8px 16px 0;background:#fff8e8;border:1.5px solid var(--gold);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--gold);font-weight:600;align-items:center;justify-content:space-between;">
@@ -394,10 +395,10 @@
 </div>
 
 <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px;">
-  <span style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--ink-light);">Deelnemers</span>
+  <span data-i18n="deelnemers" style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--ink-light);">Deelnemers</span>
   <div style="display:flex;gap:8px;">
-    <button class="btn-join" style="font-size:12px;padding:6px 14px;background:var(--ink-light);" onclick="openAndereInschrijvenModal()">Iemand anders inschrijven</button>
-    <button class="btn-join" style="font-size:12px;padding:6px 14px;" onclick="joinFirstFree()">Doe mee</button>
+    <button data-i18n="iemandAndersBtn" class="btn-join" style="font-size:12px;padding:6px 14px;background:var(--ink-light);" onclick="openAndereInschrijvenModal()">Iemand anders inschrijven</button>
+    <button data-i18n="doeMeeBtn" class="btn-join" style="font-size:12px;padding:6px 14px;" onclick="joinFirstFree()">Doe mee</button>
   </div>
 </div>
 <div class="list" id="mainList"></div>
@@ -408,7 +409,7 @@
 <div class="list" id="reserveList"></div>
 
 <div style="margin:20px 16px 0;text-align:center;">
-  <button class="btn-share copy" onclick="openAdminModal()" style="border-radius:10px;padding:10px 24px;">⚙️ Beheer</button>
+  <button data-i18n="beheerKnop" class="btn-share copy" onclick="openAdminModal()" style="border-radius:10px;padding:10px 24px;">⚙️ Beheer</button>
 </div>
 <div id="beheerderFooter" style="margin:16px 16px 24px;text-align:center;font-size:12px;color:var(--ink-light);line-height:1.7;"></div>
 
@@ -693,7 +694,479 @@ let   ADMINS       = null; // geladen vanuit Firebase — null = nog niet klaar
 const LEDEN_URL    = "https://raw.githubusercontent.com/joris-vandenBroek/knltb-autoboek/main/leden.json";
 const LEDEN_CACHE  = "padel_leden_cache";
 const IDENTITY_KEY = "padel_identity";
-const MAANDEN      = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
+const LANG_KEY     = "padel_lang";
+
+const MONTHS = {
+  nl: ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"],
+  en: ["January","February","March","April","May","June","July","August","September","October","November","December"]
+};
+
+const TRANSLATIONS = {
+  nl: {
+    // Loading
+    verbinden: "Verbinden…",
+    // Header
+    eyebrow: "Inschrijflijst",
+    // Identity bar
+    jijBent: "Jij bent:",
+    nogNietIngesteld: "Nog niet ingesteld",
+    wijzig: "Wijzig",
+    // Admin banner
+    beheerBannerPre: "⚙️ Beheer:",
+    uitloggen: "Uitloggen",
+    // View banner
+    terugBtn: "← Terug",
+    bekijktTitel: "👁 Je bekijkt {title} (niet de actieve lijst)",
+    // Main
+    deelnemers: "Deelnemers",
+    iemandAndersBtn: "Iemand anders inschrijven",
+    doeMeeBtn: "Doe mee",
+    reserveLabel: "Reserve (max 4)",
+    beheerKnop: "⚙️ Beheer",
+    aantalDeelnemers: "{filled} / {max} deelnemers",
+    // Slots
+    vrij: "Vrij",
+    jijTag: "jij",
+    uitschrijvenBtn: "Uitschrijven",
+    uitschrijvenTitle: "{naam} uitschrijven",
+    // Modals - admin add
+    adminAddTitle: "Inschrijven als beheerder",
+    adminAddPlaceholder: "Naam van deelnemer…",
+    annuleer: "Annuleer",
+    inschrijvenBevestig: "Inschrijven ✓",
+    // Modals - andere
+    andereTitle: "Iemand anders inschrijven",
+    andereDesc: "Kies de naam van degene die je wilt inschrijven.",
+    anderePlaceholder: "Naam…",
+    // Modals - identity
+    identityTitle: "Wie ben jij?",
+    identityDesc: "Kies je naam zodat je jouw inschrijving kunt beheren.",
+    identityPlaceholder: "Jouw naam…",
+    bevestigen: "Bevestigen ✓",
+    ok: "OK",
+    // Admin pw modal
+    beheerTitle: "Beheer",
+    voerWwIn: "Voer je wachtwoord in.",
+    wachtwoordPlaceholder: "Wachtwoord…",
+    inloggen: "Inloggen ✓",
+    wachtwoordWijzigen: "🔑 Wachtwoord wijzigen",
+    nieuwWachtwoord: "Nieuw wachtwoord…",
+    bevestigWachtwoord: "Bevestig nieuw wachtwoord…",
+    inloggenEnOpslaan: "Inloggen & wachtwoord opslaan ✓",
+    onjuistWachtwoord: "Onjuist wachtwoord.",
+    // Admin panel
+    adminPanelTitle: "⚙️ Beheer",
+    beheerHuidigeBtn: "📋 Beheer huidige lijst",
+    nieuweLijstSummary: "📅 Nieuwe lijst aanmaken",
+    aanmaken: "Aanmaken ✓",
+    deLink: "🔗 De link voor WhatsApp",
+    screenshotSummary: "📸 Screenshot inschrijflijst",
+    screenshotDesc: "Maak een afbeelding van de huidige lijst om te delen in WhatsApp.",
+    maakScreenshotBtn: "📸 Maak screenshot",
+    deelScreenshotBtn: "📤 Deel via WhatsApp",
+    vasteDeelnemersSummary: "👥 Vaste deelnemers beheren",
+    vasteDeelnemersDesc: "Deze deelnemers worden automatisch toegevoegd bij het aanmaken van een nieuwe lijst.",
+    naamToevoegen: "Naam toevoegen…",
+    andereLijstSummary: "📂 Andere lijst openen",
+    laden: "Laden…",
+    openen: "Openen →",
+    ledenlijstSummary: "👥 Ledenlijst verversen",
+    ledenInfoLaden: "Leden: laden…",
+    verversenBtn: "↻ Verversen",
+    beheerdersSummary: "🔑 Beheerders",
+    nieuweBeheerderLabel: "Nieuwe beheerder toevoegen",
+    beheerderNaamPlaceholder: "Naam…",
+    beheerderWwPlaceholder: "Wachtwoord…",
+    beheerderToevoegenBtn: "+ Beheerder toevoegen",
+    testdataSummary: "🧪 Testdata",
+    vulTestdataBtn: "Vul 19 random leden in",
+    sluiten: "Sluiten",
+    deelnemerHelpTitle: "ℹ️ Hoe werkt het?",
+    adminHelpTitle: "⚙️ Beheer – uitleg",
+    vrijdagTitel: "Vrijdag {dag} {maand}",
+    // Toast & dynamic
+    kiesUitLedenlijst: "⚠️ Kies een naam uit de ledenlijst",
+    welkom: "Welkom, {naam}!",
+    alOpLijst: "Je staat al op de lijst",
+    geenPlek: "Geen vrije plekken meer!",
+    inschrijvenVraag: "Inschrijven?",
+    inschrijvenMsg: "{naam} · {title} · {time}",
+    inschrijvenMsgReserve: "{naam} · {title} · {time} · reservelijst",
+    foutInschrijven: "Fout bij inschrijven, probeer opnieuw",
+    geenVrijePlekken: "Geen vrije plekken",
+    opReservelijst: "✓ Op de reservelijst gezet",
+    ingeschreven: "✓ Ingeschreven!",
+    uitschrijvenVraag: "{naam} uitschrijven?",
+    doorschuiven: "'{promotee}' schuift dan door naar de hoofdlijst.",
+    weetJeHetZeker: "Weet je het zeker?",
+    uitschrijvenKnop: "Uitschrijven",
+    uitgeschreven: "{naam} uitgeschreven",
+    uitschrijvenAlsBeheerder: "Je schrijft deze persoon uit als beheerder.",
+    lijstLeegmaken: "Lijst leegmaken?",
+    lijstLeegmakenMsg: "Alle deelnemers en reservelijst van {title} worden gewist.",
+    leegmakenKnop: "Leegmaken",
+    lijstLeeggemaakt: "✓ Lijst leeggemaakt",
+    verbindingNietGereed: "Verbinding nog niet gereed, probeer opnieuw.",
+    voerNieuwWwIn: "Voer een nieuw wachtwoord in",
+    wachtwoordenNietOvereen: "⚠️ Wachtwoorden komen niet overeen",
+    minimaalVierTekens: "⚠️ Minimaal 4 tekens",
+    wwGewijzigd: "✓ Wachtwoord gewijzigd en ingelogd als {naam}",
+    wwOpgeslagen: "✓ Wachtwoord van {naam} opgeslagen",
+    voerNaamIn: "Voer een naam in",
+    wwMinimaal: "⚠️ Wachtwoord minimaal 4 tekens",
+    isAlBeheerder: "⚠️ '{naam}' is al beheerder",
+    beheerderToegevoegd: "✓ {naam} toegevoegd als beheerder",
+    kanJezelfNietVerwijderen: "Je kunt jezelf niet verwijderen",
+    beheerderVerwijderd: "✓ {naam} verwijderd",
+    ledenNietGeladen: "Leden: niet geladen",
+    aantalLeden: "{count} leden · bijgewerkt {tijd}",
+    ledenGeladen: "✓ {count} leden geladen",
+    ledenNogNietGeladen: "Ledenlijst nog niet geladen",
+    lijstAangemaaktToast: "✓ Lijst aangemaakt voor {title}",
+    lijstAangemaaktToastN: "✓ Lijst aangemaakt voor {title} met {n} vaste deelnemer{s}",
+    lijstBestaatAl: "Lijst bestaat al!",
+    lijstBestaatAlMsg: "{title} heeft al {n} deelnemer{s}{reserve}. Wil je de bestaande lijst overschrijven met een lege lijst?",
+    nieuweLijstVraag: "Nieuwe lijst aanmaken?",
+    legalListVoor: "Er wordt een lege lijst aangemaakt voor {title}.",
+    aanmakenKnop: "Aanmaken ✓",
+    gekopieerd: "📋 Gekopieerd voor WhatsApp!",
+    kopieerenMislukt: "Kopiëren mislukt",
+    linkGekopieerd: "🔗 Link gekopieerd!",
+    screenshotBezig: "⏳ Bezig…",
+    screenshotOpnieuw: "📸 Opnieuw maken",
+    screenshotKnop: "📸 Maak screenshot",
+    screenshotKlaar: "✓ Screenshot klaar!",
+    screenshotMislukt: "⚠️ Screenshot mislukt",
+    afbeeldingGedownload: "📥 Afbeelding gedownload",
+    nogGeenVasteDeelnemers: "Nog geen vaste deelnemers",
+    vasteAlInLijst: "⚠️ {naam} staat al in de lijst",
+    maximumBereikt: "⚠️ Maximum van {max} vaste deelnemers bereikt",
+    vasteToegevoegd: "✓ {naam} toegevoegd als vaste deelnemer",
+    vasteVerwijderd: "✓ {naam} verwijderd uit vaste deelnemers",
+    beheerdersBadge: "Beheerders: {namen}",
+    huidig: " ← huidig",
+    reserveCount: " + {n} reserve",
+    verversenBezig: "↻ Verversen…",
+    alOpLijstWaarschuwing: "⚠️ '{naam}' staat al op de lijst",
+    testdataIngevuld: "✓ 19 testleden ingevuld",
+    beheermodeUit: "Beheermodus uitgeschakeld",
+    deelnemerHelpContent: `
+      <div><strong>👤 Jouw naam</strong><br>Je hebt je naam al ingesteld bij het inloggen. Heb je per ongeluk ingeschreven met de verkeerde naam? Kies dan via de <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--ink-light);">Wijzig</span> knop alsnog jouw naam.</div>
+      <div><strong>✅ Inschrijven</strong><br>Tik op <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Doe mee</span> om jezelf in te schrijven. Je krijgt een bevestiging met de datum. Is de hoofdlijst vol (20 plekken)? Dan kom je automatisch op de reservelijst (max 4 plekken). Is ook die vol, dan krijg je een melding dat er geen plek meer is.</div>
+      <div><strong>👥 Iemand anders inschrijven</strong><br>Tik op <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--ink-light);color:white;border-radius:6px;">Iemand anders inschrijven</span> en kies de naam van degene die je wilt inschrijven. Ook hier kun je alleen namen uit de ledenlijst kiezen.<br>Wil je iemand inschrijven die geen lid is, dan moet dat in overleg met (een van) de beheerder(s). Je kunt hiervoor een berichtje achterlaten in deze WhatsApp-groep of direct een berichtje sturen naar (een van) de beheerder(s).</div>
+      <div><strong>❌ Uitschrijven</strong><br>Tik op het kruisje <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span> achter jouw naam. Sta je op de hoofdlijst en er is iemand op de reservelijst? Dan schuift die persoon automatisch door naar de hoofdlijst.</div>`,
+    adminHelpContent: `
+      <div><strong>📋 Beheer huidige lijst</strong><br>Sluit dit paneel en ga naar de actieve lijst. Je kunt dan deelnemers verwijderen <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span> of toevoegen via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Doe mee</span>. Als beheerder mag je ook namen invullen die niet in de ledenlijst staan.</div>
+      <div><strong>📅 Nieuwe lijst aanmaken</strong><br>Maak een inschrijflijst aan voor de gekozen vrijdag. Vaste deelnemers worden automatisch bovenaan de lijst geplaatst. Als er al een lijst bestaat voor die datum krijg je een waarschuwing. Na aanmaken wordt die lijst direct de actieve lijst voor iedereen.<br><br><em>Tip – zo deel je de lijst in WhatsApp:</em><br>1. Maak de lijst aan via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Aanmaken ✓</span><br>2. Tik op <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:#2d7a3a;color:white;border-radius:6px;">🔗 De link voor WhatsApp</span> — de tekst met datum en link wordt gekopieerd of gedeeld<br>3. Plak het bericht in de padelgroep en verstuur het<br>4. Houd het bericht ingedrukt → <strong>Vastzetten</strong> → 30 dagen</div>
+      <div><strong>👥 Vaste deelnemers beheren</strong><br>Stel in welke deelnemers automatisch worden toegevoegd bij het aanmaken van een nieuwe lijst. Voeg namen toe via de ledenlijst of verwijder ze met <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span>. De volgorde bepaalt de positie op de lijst.</div>
+      <div><strong>📂 Andere lijst openen</strong><br>Bekijk een eerdere lijst zonder dat dit de actieve lijst voor andere gebruikers wijzigt. Een blauwe banner verschijnt bovenaan — klik <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">← Terug</span> om terug te gaan naar de actieve lijst.</div>
+      <div><strong>👥 Ledenlijst verversen</strong><br>Haalt de meest recente ledenlijst op uit de KNLTB-registratie. Wordt automatisch gecacht — verversen is alleen nodig als er nieuwe leden zijn bijgekomen.</div>
+      <div><strong>🔑 Beheerders</strong><br>Toont de huidige beheerders. Voeg een nieuwe beheerder toe via naam en een wachtwoord naar keuze. Wachtwoord wijzigen doe je bij het inloggen via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);color:var(--ink-light);border-radius:6px;">🔑 Wachtwoord wijzigen</span>.</div>
+      <div><strong>🧪 Testdata</strong><br>Vult de huidige lijst met 19 willekeurige namen uit de ledenlijst. Alleen bedoeld voor testen.</div>`
+  },
+  en: {
+    verbinden: "Connecting…",
+    eyebrow: "Sign-up list",
+    jijBent: "You are:",
+    nogNietIngesteld: "Not set yet",
+    wijzig: "Change",
+    beheerBannerPre: "⚙️ Admin:",
+    uitloggen: "Log out",
+    terugBtn: "← Back",
+    bekijktTitel: "👁 Viewing {title} (not the active list)",
+    deelnemers: "Participants",
+    iemandAndersBtn: "Sign up someone else",
+    doeMeeBtn: "Join",
+    reserveLabel: "Reserve (max 4)",
+    beheerKnop: "⚙️ Admin",
+    aantalDeelnemers: "{filled} / {max} participants",
+    vrij: "Free",
+    jijTag: "you",
+    uitschrijvenBtn: "Leave",
+    uitschrijvenTitle: "Remove {naam}",
+    adminAddTitle: "Sign up as admin",
+    adminAddPlaceholder: "Name of participant…",
+    annuleer: "Cancel",
+    inschrijvenBevestig: "Sign up ✓",
+    andereTitle: "Sign up someone else",
+    andereDesc: "Choose the name of the person you want to sign up.",
+    anderePlaceholder: "Name…",
+    identityTitle: "Who are you?",
+    identityDesc: "Choose your name to manage your registration.",
+    identityPlaceholder: "Your name…",
+    bevestigen: "Confirm ✓",
+    ok: "OK",
+    beheerTitle: "Admin",
+    voerWwIn: "Enter your password.",
+    wachtwoordPlaceholder: "Password…",
+    inloggen: "Log in ✓",
+    wachtwoordWijzigen: "🔑 Change password",
+    nieuwWachtwoord: "New password…",
+    bevestigWachtwoord: "Confirm new password…",
+    inloggenEnOpslaan: "Log in & save password ✓",
+    onjuistWachtwoord: "Incorrect password.",
+    adminPanelTitle: "⚙️ Admin",
+    beheerHuidigeBtn: "📋 Manage current list",
+    nieuweLijstSummary: "📅 Create new list",
+    aanmaken: "Create ✓",
+    deLink: "🔗 The link for WhatsApp",
+    screenshotSummary: "📸 Screenshot sign-up list",
+    screenshotDesc: "Create an image of the current list to share on WhatsApp.",
+    maakScreenshotBtn: "📸 Take screenshot",
+    deelScreenshotBtn: "📤 Share via WhatsApp",
+    vasteDeelnemersSummary: "👥 Manage regular participants",
+    vasteDeelnemersDesc: "These participants are automatically added when creating a new list.",
+    naamToevoegen: "Add name…",
+    andereLijstSummary: "📂 Open another list",
+    laden: "Loading…",
+    openen: "Open →",
+    ledenlijstSummary: "👥 Refresh member list",
+    ledenInfoLaden: "Members: loading…",
+    verversenBtn: "↻ Refresh",
+    beheerdersSummary: "🔑 Admins",
+    nieuweBeheerderLabel: "Add new admin",
+    beheerderNaamPlaceholder: "Name…",
+    beheerderWwPlaceholder: "Password…",
+    beheerderToevoegenBtn: "+ Add admin",
+    testdataSummary: "🧪 Test data",
+    vulTestdataBtn: "Fill with 19 random members",
+    sluiten: "Close",
+    deelnemerHelpTitle: "ℹ️ How does it work?",
+    adminHelpTitle: "⚙️ Admin – explanation",
+    vrijdagTitel: "Friday {dag} {maand}",
+    kiesUitLedenlijst: "⚠️ Choose a name from the member list",
+    welkom: "Welcome, {naam}!",
+    alOpLijst: "You are already on the list",
+    geenPlek: "No free spots left!",
+    inschrijvenVraag: "Sign up?",
+    inschrijvenMsg: "{naam} · {title} · {time}",
+    inschrijvenMsgReserve: "{naam} · {title} · {time} · reserve list",
+    foutInschrijven: "Error signing up, please try again",
+    geenVrijePlekken: "No free spots",
+    opReservelijst: "✓ Added to the reserve list",
+    ingeschreven: "✓ Signed up!",
+    uitschrijvenVraag: "Remove {naam}?",
+    doorschuiven: "'{promotee}' will move up to the main list.",
+    weetJeHetZeker: "Are you sure?",
+    uitschrijvenKnop: "Remove",
+    uitgeschreven: "{naam} removed",
+    uitschrijvenAlsBeheerder: "You are removing this person as admin.",
+    lijstLeegmaken: "Clear list?",
+    lijstLeegmakenMsg: "All participants and reserve list of {title} will be cleared.",
+    leegmakenKnop: "Clear",
+    lijstLeeggemaakt: "✓ List cleared",
+    verbindingNietGereed: "Connection not ready yet, please try again.",
+    voerNieuwWwIn: "Enter a new password",
+    wachtwoordenNietOvereen: "⚠️ Passwords do not match",
+    minimaalVierTekens: "⚠️ Minimum 4 characters",
+    wwGewijzigd: "✓ Password changed and logged in as {naam}",
+    wwOpgeslagen: "✓ Password of {naam} saved",
+    voerNaamIn: "Enter a name",
+    wwMinimaal: "⚠️ Password minimum 4 characters",
+    isAlBeheerder: "⚠️ '{naam}' is already an admin",
+    beheerderToegevoegd: "✓ {naam} added as admin",
+    kanJezelfNietVerwijderen: "You cannot remove yourself",
+    beheerderVerwijderd: "✓ {naam} removed",
+    ledenNietGeladen: "Members: not loaded",
+    aantalLeden: "{count} members · updated {tijd}",
+    ledenGeladen: "✓ {count} members loaded",
+    ledenNogNietGeladen: "Member list not yet loaded",
+    lijstAangemaaktToast: "✓ List created for {title}",
+    lijstAangemaaktToastN: "✓ List created for {title} with {n} regular participant{s}",
+    lijstBestaatAl: "List already exists!",
+    lijstBestaatAlMsg: "{title} already has {n} participant{s}{reserve}. Do you want to overwrite the existing list?",
+    nieuweLijstVraag: "Create new list?",
+    legalListVoor: "An empty list will be created for {title}.",
+    aanmakenKnop: "Create ✓",
+    gekopieerd: "📋 Copied for WhatsApp!",
+    kopieerenMislukt: "Copy failed",
+    linkGekopieerd: "🔗 Link copied!",
+    screenshotBezig: "⏳ Working…",
+    screenshotOpnieuw: "📸 Take again",
+    screenshotKnop: "📸 Take screenshot",
+    screenshotKlaar: "✓ Screenshot ready!",
+    screenshotMislukt: "⚠️ Screenshot failed",
+    afbeeldingGedownload: "📥 Image downloaded",
+    nogGeenVasteDeelnemers: "No regular participants yet",
+    vasteAlInLijst: "⚠️ {naam} is already in the list",
+    maximumBereikt: "⚠️ Maximum of {max} regular participants reached",
+    vasteToegevoegd: "✓ {naam} added as regular participant",
+    vasteVerwijderd: "✓ {naam} removed from regular participants",
+    beheerdersBadge: "Admins: {namen}",
+    huidig: " ← current",
+    reserveCount: " + {n} reserve",
+    verversenBezig: "↻ Refreshing…",
+    alOpLijstWaarschuwing: "⚠️ '{naam}' is already on the list",
+    testdataIngevuld: "✓ 19 test members filled in",
+    beheermodeUit: "Admin mode disabled",
+    deelnemerHelpContent: `
+      <div><strong>👤 Your name</strong><br>You already set your name when logging in. Did you accidentally sign up with the wrong name? Use the <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--ink-light);">Change</span> button to update your name.</div>
+      <div><strong>✅ Signing up</strong><br>Tap <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Join</span> to sign yourself up. You will receive a confirmation with the date. Is the main list full (20 spots)? Then you are automatically placed on the reserve list (max 4 spots). If that is also full, you will receive a notification that there are no spots left.</div>
+      <div><strong>👥 Signing up someone else</strong><br>Tap <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--ink-light);color:white;border-radius:6px;">Sign up someone else</span> and choose the name of the person you want to sign up. Here too you can only choose names from the member list.<br>If you want to sign up someone who is not a member, this must be arranged with (one of) the admin(s). You can leave a message in this WhatsApp group or send a message directly to (one of) the admin(s).</div>
+      <div><strong>❌ Signing out</strong><br>Tap the cross <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span> next to your name. If you are on the main list and someone is on the reserve list, that person will automatically move up to the main list.</div>`,
+    adminHelpContent: `
+      <div><strong>📋 Manage current list</strong><br>Close this panel and go to the active list. You can then remove participants <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span> or add them via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Join</span>. As admin you may also enter names not in the member list.</div>
+      <div><strong>📅 Create new list</strong><br>Create a sign-up list for the chosen Friday. Regular participants are automatically placed at the top. If a list already exists for that date, you will receive a warning. After creation, that list immediately becomes the active list for everyone.<br><br><em>Tip – how to share the list on WhatsApp:</em><br>1. Create the list via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Create ✓</span><br>2. Tap <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:#2d7a3a;color:white;border-radius:6px;">🔗 The link for WhatsApp</span> — the text with date and link is copied or shared<br>3. Paste the message in the padel group and send it<br>4. Hold the message → <strong>Pin</strong> → 30 days</div>
+      <div><strong>👥 Manage regular participants</strong><br>Configure which participants are automatically added when creating a new list. Add names from the member list or remove them with <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span>. The order determines the position on the list.</div>
+      <div><strong>📂 Open another list</strong><br>View an earlier list without changing the active list for other users. A blue banner appears at the top — click <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">← Back</span> to return to the active list.</div>
+      <div><strong>👥 Refresh member list</strong><br>Fetches the most recent member list from the KNLTB registration. Automatically cached — refresh is only needed when new members have been added.</div>
+      <div><strong>🔑 Admins</strong><br>Shows the current admins. Add a new admin via name and a password of your choice. Change password at login via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);color:var(--ink-light);border-radius:6px;">🔑 Change password</span>.</div>
+      <div><strong>🧪 Test data</strong><br>Fills the current list with 19 random names from the member list. For testing purposes only.</div>`
+  }
+};
+
+// ═══ TAAL ═══════════════════════════════════════════════
+let lang = localStorage.getItem(LANG_KEY) || "nl";
+
+function t(key, vars = {}) {
+  let str = (TRANSLATIONS[lang] && TRANSLATIONS[lang][key] !== undefined)
+    ? TRANSLATIONS[lang][key]
+    : (TRANSLATIONS.nl[key] !== undefined ? TRANSLATIONS.nl[key] : key);
+  if (typeof str === "string") {
+    Object.entries(vars).forEach(([k, v]) => { str = str.split(`{${k}}`).join(v); });
+  }
+  return str;
+}
+
+function setLang(newLang) {
+  lang = newLang;
+  localStorage.setItem(LANG_KEY, lang);
+  document.documentElement.lang = lang;
+  applyLang();
+}
+
+function applyLang() {
+  // Loading overlay
+  const loadingSpan = document.querySelector("#loadingOverlay span");
+  if (loadingSpan) loadingSpan.textContent = t("verbinden");
+
+  // Header
+  const eyebrow = document.querySelector("header .eyebrow");
+  if (eyebrow) eyebrow.textContent = t("eyebrow");
+  if (currentDate) document.getElementById("headerTitle").textContent = datumNaarTitel(currentDate);
+
+  // Identity bar
+  document.querySelector(".identity-bar .label").textContent = t("jijBent");
+  const whoLabel = document.getElementById("whoLabel");
+  if (whoLabel && (!identity || whoLabel.textContent === t("nogNietIngesteld") || (lang !== "nl" && whoLabel.textContent === TRANSLATIONS.nl.nogNietIngesteld) || (lang !== "en" && whoLabel.textContent === TRANSLATIONS.en.nogNietIngesteld))) {
+    if (!identity) whoLabel.textContent = t("nogNietIngesteld");
+  }
+  document.querySelector(".btn-switch").textContent = t("wijzig");
+  const langBtn = document.getElementById("langToggleBtn");
+  if (langBtn) langBtn.textContent = lang === "nl" ? "🇬🇧" : "🇳🇱";
+
+  // Admin banner
+  const adminBannerSpan = document.querySelector("#adminBanner > span");
+  if (adminBannerSpan && adminNaam) adminBannerSpan.innerHTML = `${t("beheerBannerPre")} <span id="adminBannerNaam">${adminNaam}</span>`;
+  const logoutBtn = document.querySelector("#adminBanner .btn-switch");
+  if (logoutBtn) logoutBtn.textContent = t("uitloggen");
+
+  // View banner back button
+  const terugBtnEl = document.querySelector("#viewBanner .btn-switch");
+  if (terugBtnEl) terugBtnEl.textContent = t("terugBtn");
+  if (currentDate && activeDatum && currentDate !== activeDatum) updateViewBanner();
+
+  // Deelnemers section
+  const deelLabel = document.querySelector("[data-i18n='deelnemers']");
+  if (deelLabel) deelLabel.textContent = t("deelnemers");
+  const andereBtn = document.querySelector("[data-i18n='iemandAndersBtn']");
+  if (andereBtn) andereBtn.textContent = t("iemandAndersBtn");
+  const doeMeeBtn = document.querySelector("[data-i18n='doeMeeBtn']");
+  if (doeMeeBtn) doeMeeBtn.textContent = t("doeMeeBtn");
+  const reserveDiv = document.querySelector(".divider-reserve span");
+  if (reserveDiv) reserveDiv.textContent = t("reserveLabel");
+  const beheerBtn = document.querySelector("[data-i18n='beheerKnop']");
+  if (beheerBtn) beheerBtn.textContent = t("beheerKnop");
+
+  // Count badge
+  if (currentSession) {
+    const filled = slotArray(currentSession.main, MAIN_SIZE).filter(n => n && n.trim()).length;
+    document.getElementById("countBadge").textContent = t("aantalDeelnemers", { filled, max: MAIN_SIZE });
+  }
+
+  // Modals - admin add
+  document.querySelector("#adminAddModal h2").textContent = t("adminAddTitle");
+  document.getElementById("adminAddInput").placeholder = t("adminAddPlaceholder");
+  document.querySelectorAll("[data-i18n='annuleer']").forEach(el => el.textContent = t("annuleer"));
+  document.querySelector("#adminAddModal .btn-confirm").textContent = t("inschrijvenBevestig");
+
+  // Modals - andere
+  document.querySelector("#andereModal h2").textContent = t("andereTitle");
+  document.querySelector("#andereModal p").textContent = t("andereDesc");
+  document.getElementById("andereInput").placeholder = t("anderePlaceholder");
+  document.querySelector("#andereModal .btn-confirm").textContent = t("inschrijvenBevestig");
+
+  // Modals - identity
+  document.querySelector("#identityModal h2").textContent = t("identityTitle");
+  document.querySelector("#identityModal p").textContent = t("identityDesc");
+  document.getElementById("identityInput").placeholder = t("identityPlaceholder");
+  document.querySelector("#identityModal .btn-confirm").textContent = t("bevestigen");
+
+  // Modals - admin pw
+  document.querySelector("#adminPwModal h2").textContent = t("beheerTitle");
+  document.querySelector("#adminPwModal > .modal > p").textContent = t("voerWwIn");
+  document.getElementById("adminPwInput").placeholder = t("wachtwoordPlaceholder");
+  document.querySelector("#adminPwModal .btn-confirm:not([onclick='checkAdminPwEnWijzig()'])").textContent = t("inloggen");
+  document.querySelector("#adminPwModal details summary").textContent = t("wachtwoordWijzigen");
+  document.getElementById("nieuwWwInput").placeholder = t("nieuwWachtwoord");
+  document.getElementById("nieuwWwBevestig").placeholder = t("bevestigWachtwoord");
+  document.querySelector("[onclick='checkAdminPwEnWijzig()']").textContent = t("inloggenEnOpslaan");
+
+  // Admin panel
+  document.querySelector("#adminPanel h2").textContent = t("adminPanelTitle");
+  document.querySelector("#adminPanel > .modal > .btn-confirm").textContent = t("beheerHuidigeBtn");
+  const panelSummaries = document.querySelectorAll("#adminPanel details summary");
+  if (panelSummaries[0]) panelSummaries[0].textContent = t("nieuweLijstSummary");
+  if (panelSummaries[1]) panelSummaries[1].textContent = t("screenshotSummary");
+  if (panelSummaries[2]) panelSummaries[2].textContent = t("vasteDeelnemersSummary");
+  if (panelSummaries[3]) panelSummaries[3].textContent = t("andereLijstSummary");
+  if (panelSummaries[4]) panelSummaries[4].textContent = t("ledenlijstSummary");
+  if (panelSummaries[5]) panelSummaries[5].textContent = t("beheerdersSummary");
+  if (panelSummaries[6]) panelSummaries[6].textContent = t("testdataSummary");
+  const panelConfirms = document.querySelectorAll("#adminPanel .btn-confirm");
+  // aanmaken button (index 1), screenshot (index 2), vaste+ (index 3), openen (index 4), verversen (index 5), beheerder+ (index 6), testdata (index 7)
+  if (panelConfirms[1]) panelConfirms[1].textContent = t("aanmaken");
+  if (panelConfirms[3]) panelConfirms[3].textContent = "+";
+  if (panelConfirms[6]) panelConfirms[6].textContent = t("beheerderToevoegenBtn");
+  if (panelConfirms[7]) panelConfirms[7].textContent = t("vulTestdataBtn");
+  const shareBtn = document.querySelector("#adminPanel .btn-share:not([onclick='deelScreenshot()'])");
+  if (shareBtn) shareBtn.textContent = t("deLink");
+  const deelBtn = document.querySelector("[onclick='deelScreenshot()']");
+  if (deelBtn) deelBtn.textContent = t("deelScreenshotBtn");
+  const screenshotDescEl = document.querySelector("#screenshotSection > details > div > div");
+  if (screenshotDescEl) screenshotDescEl.textContent = t("screenshotDesc");
+  const vasteDescEl = document.querySelector("#adminPanel details:nth-of-type(3) > div > div:first-child");
+  if (vasteDescEl) vasteDescEl.textContent = t("vasteDeelnemersDesc");
+  document.getElementById("vasteDeelnemerInput").placeholder = t("naamToevoegen");
+  const openenBtn = document.querySelector("[onclick='andereLijstOpenen()']");
+  if (openenBtn) openenBtn.textContent = t("openen");
+  const ledenInfoEl = document.getElementById("ledenInfo");
+  if (ledenInfoEl && (ledenInfoEl.textContent === TRANSLATIONS.nl.ledenInfoLaden || ledenInfoEl.textContent === TRANSLATIONS.en.ledenInfoLaden)) {
+    ledenInfoEl.textContent = t("ledenInfoLaden");
+  }
+  updateLedenInfo();
+  const nieuweBehLabel = document.querySelector("#adminPanel details:nth-of-type(5) label");
+  if (nieuweBehLabel) nieuweBehLabel.textContent = t("nieuweBeheerderLabel");
+  document.getElementById("nieuwBeheerderNaam").placeholder = t("beheerderNaamPlaceholder");
+  document.getElementById("nieuwBeheerderWw").placeholder = t("beheerderWwPlaceholder");
+
+  // Help modal titles & content
+  document.querySelector("#deelnemerHelpModal h2").textContent = t("deelnemerHelpTitle");
+  document.querySelector("#deelnemerHelpModal .btn-confirm").textContent = t("sluiten");
+  document.querySelector("#deelnemerHelpModal .modal > div:not([style*='margin-top'])").innerHTML = t("deelnemerHelpContent");
+  document.querySelector("#adminHelpModal h2").textContent = t("adminHelpTitle");
+  document.querySelector("#adminHelpModal .btn-confirm").textContent = t("sluiten");
+  document.querySelector("#adminHelpModal .modal > div:not([style*='margin-top'])").innerHTML = t("adminHelpContent");
+
+  // Close buttons
+  document.querySelectorAll("[data-i18n='sluiten']").forEach(el => el.textContent = t("sluiten"));
+
+  // Beheerder footer
+  updateBeheerderFooter();
+
+  // Re-render slots (for "Vrij", "jij", "Uitschrijven" labels)
+  render();
+}
 
 // ═══ STATE ══════════════════════════════════════════════
 let identity       = localStorage.getItem(IDENTITY_KEY) || "";
@@ -750,7 +1223,7 @@ function switchToDatum(datum) {
       initialiseerSessie(datum, datumNaarTitel(datum), "9:00 – 10:30 uur");
     } else {
       currentSession = data;
-      document.getElementById("headerTitle").textContent = data.title || datum;
+      document.getElementById("headerTitle").textContent = datumNaarTitel(datum);
       document.getElementById("headerTime").textContent  = data.time  || "";
       document.getElementById("loadingOverlay").style.display = "none";
       render();
@@ -803,7 +1276,8 @@ function volgendeVrijdag() {
 
 function datumNaarTitel(datum) {
   const d = new Date(datum + "T12:00:00");
-  return `Vrijdag ${d.getDate()} ${MAANDEN[d.getMonth()]}`;
+  const maand = MONTHS[lang][d.getMonth()];
+  return t("vrijdagTitel", { dag: d.getDate(), maand });
 }
 
 function getUpcomingFridays(count) {
@@ -828,8 +1302,8 @@ function render() {
   renderList("mainList",    main,    "main");
   renderList("reserveList", reserve, "reserve");
   const filled = main.filter(n => n && n.trim()).length;
-  document.getElementById("countBadge").textContent = `${filled} / ${MAIN_SIZE} deelnemers`;
-  document.getElementById("whoLabel").textContent   = identity || "Nog niet ingesteld";
+  document.getElementById("countBadge").textContent = t("aantalDeelnemers", { filled, max: MAIN_SIZE });
+  document.getElementById("whoLabel").textContent   = identity || t("nogNietIngesteld");
 }
 
 function renderList(containerId, arr, listType) {
@@ -865,7 +1339,7 @@ function renderList(containerId, arr, listType) {
         nm.appendChild(rt);
       }
     } else {
-      nm.textContent = "Vrij";
+      nm.textContent = t("vrij");
     }
 
     const action = document.createElement("div");
@@ -876,23 +1350,23 @@ function renderList(containerId, arr, listType) {
       if (mine) {
         const tag = document.createElement("span");
         tag.className = "mine-tag";
-        tag.textContent = "jij";
+        tag.textContent = t("jijTag");
         action.appendChild(tag);
       }
       const btn = document.createElement("button");
       btn.className = "btn-leave";
       btn.style.cssText = "border-color:var(--gold);color:var(--gold);";
       btn.textContent = "✕";
-      btn.title = `${name} uitschrijven`;
+      btn.title = t("uitschrijvenTitle", { naam: name });
       btn.onclick = () => adminRemove(listType, i, name);
       action.appendChild(btn);
     } else if (mine) {
       const tag = document.createElement("span");
       tag.className = "mine-tag";
-      tag.textContent = "jij";
+      tag.textContent = t("jijTag");
       const btn = document.createElement("button");
       btn.className = "btn-leave";
-      btn.textContent = "Uitschrijven";
+      btn.textContent = t("uitschrijvenBtn");
       btn.onclick = () => confirmRemove(name, listType, i);
       action.appendChild(tag);
       action.appendChild(btn);
@@ -919,7 +1393,7 @@ function confirmIdentity() {
   if (!ledenNamen.includes(name)) {
     const inp = document.getElementById("identityInput");
     inp.style.borderColor = "var(--accent)";
-    showToast("⚠️ Kies een naam uit de ledenlijst");
+    showToast(t("kiesUitLedenlijst"));
     setTimeout(() => { inp.style.borderColor = ""; }, 2000);
     return;
   }
@@ -927,7 +1401,7 @@ function confirmIdentity() {
   localStorage.setItem(IDENTITY_KEY, name);
   closeModal("identityModal");
   render();
-  showToast(`Welkom, ${name}!`);
+  showToast(t("welkom", { naam: name }));
   if (pendingJoin) { pendingJoin = false; joinFirstFree(); }
 }
 
@@ -938,7 +1412,7 @@ function joinFirstFree() {
 
   if (isAdmin) {
     pendingAdminSlot = { listType: "auto" };
-    document.getElementById("adminAddDesc").textContent = "Schrijf iemand in op de lijst";
+    document.getElementById("adminAddDesc").textContent = t("adminAddTitle");
     document.getElementById("adminAddInput").value = "";
     document.getElementById("adminAddModal").classList.add("open");
     setTimeout(() => document.getElementById("adminAddInput").focus(), 100);
@@ -951,22 +1425,22 @@ function joinFirstFree() {
     ...Object.values(currentSession.reserve || {})
   ];
   if (alles.some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase())) {
-    showToast("Je staat al op de lijst");
+    showToast(t("alOpLijst"));
     return;
   }
 
   const mainVrij    = slotArray(currentSession.main,    MAIN_SIZE).some(n    => !n || !n.trim());
   const reserveVrij = slotArray(currentSession.reserve, RESERVE_SIZE).some(n => !n || !n.trim());
 
-  if (!mainVrij && !reserveVrij) { showToast("Geen vrije plekken meer!"); return; }
+  if (!mainVrij && !reserveVrij) { showToast(t("geenPlek")); return; }
 
   const isReserve = !mainVrij;
-  document.getElementById("confirmTitle").textContent = "Inschrijven?";
-  document.getElementById("confirmMsg").textContent =
-    `${identity} · ${currentSession.title} · ${currentSession.time}` +
-    (isReserve ? " · reservelijst" : "");
+  document.getElementById("confirmTitle").textContent = t("inschrijvenVraag");
+  document.getElementById("confirmMsg").textContent = isReserve
+    ? t("inschrijvenMsgReserve", { naam: identity, title: currentSession.title, time: currentSession.time })
+    : t("inschrijvenMsg", { naam: identity, title: currentSession.title, time: currentSession.time });
   document.getElementById("confirmModal").classList.add("open");
-  document.getElementById("confirmOkBtn").textContent = "Inschrijven ✓";
+  document.getElementById("confirmOkBtn").textContent = t("inschrijvenBevestig");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
     doJoinTransaction();
@@ -988,12 +1462,12 @@ function doJoinTransaction() {
     }
     // Geen plek — aborteer transactie
   }, (error, committed, snapshot) => {
-    if (error)     { showToast("Fout bij inschrijven, probeer opnieuw"); return; }
-    if (!committed) { showToast("Geen vrije plekken meer!"); return; }
+    if (error)     { showToast(t("foutInschrijven")); return; }
+    if (!committed) { showToast(t("geenPlek")); return; }
     const data = snapshot.val();
     const inReserve = Object.values(data.reserve || {})
       .some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase());
-    showToast(inReserve ? `✓ Op de reservelijst gezet` : `✓ Ingeschreven!`);
+    showToast(inReserve ? t("opReservelijst") : t("ingeschreven"));
   });
 }
 
@@ -1005,12 +1479,12 @@ function confirmRemove(naam, listType, idx) {
   const promotee = (listType === "main" && eersteRKey !== undefined)
     ? currentSession.reserve[eersteRKey] : null;
 
-  document.getElementById("confirmTitle").textContent = `${naam} uitschrijven?`;
+  document.getElementById("confirmTitle").textContent = t("uitschrijvenVraag", { naam });
   document.getElementById("confirmMsg").textContent = promotee
-    ? `'${promotee}' schuift dan door naar de hoofdlijst.`
-    : "Weet je het zeker?";
+    ? t("doorschuiven", { promotee })
+    : t("weetJeHetZeker");
   document.getElementById("confirmModal").classList.add("open");
-  document.getElementById("confirmOkBtn").textContent = "Uitschrijven";
+  document.getElementById("confirmOkBtn").textContent = t("uitschrijvenKnop");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
     doRemoveTransaction(naam, listType, idx);
@@ -1040,7 +1514,7 @@ function doRemoveTransaction(naam, listType, fromIdx) {
     }
     return session;
   }, (error, committed) => {
-    if (committed) showToast(`${naam} uitgeschreven`);
+    if (committed) showToast(t("uitgeschreven", { naam }));
   });
 }
 
@@ -1055,10 +1529,10 @@ function shiftUp(obj, fromIdx, size) {
 
 // ═══ ADMIN ══════════════════════════════════════════════
 function adminRemove(listType, idx, naam) {
-  document.getElementById("confirmTitle").textContent = `${naam} uitschrijven?`;
-  document.getElementById("confirmMsg").textContent = "Je schrijft deze persoon uit als beheerder.";
+  document.getElementById("confirmTitle").textContent = t("uitschrijvenVraag", { naam });
+  document.getElementById("confirmMsg").textContent = t("uitschrijvenAlsBeheerder");
   document.getElementById("confirmModal").classList.add("open");
-  document.getElementById("confirmOkBtn").textContent = "Uitschrijven";
+  document.getElementById("confirmOkBtn").textContent = t("uitschrijvenKnop");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
     doRemoveTransaction(naam, listType, idx);
@@ -1076,7 +1550,7 @@ function confirmAdminAdd() {
   if (alles.some(n => (n || "").trim().toLowerCase() === naam.toLowerCase())) {
     const inp = document.getElementById("adminAddInput");
     inp.style.borderColor = "var(--accent)";
-    showToast(`⚠️ '${naam}' staat al op de lijst`);
+    showToast(t("alOpLijstWaarschuwing", { naam }));
     setTimeout(() => { inp.style.borderColor = ""; }, 2000);
     inp.focus();
     return;
@@ -1091,7 +1565,7 @@ function confirmAdminAdd() {
       if (!session.reserve[i] || !session.reserve[i].trim()) { session.reserve[i] = naam; return session; }
     }
   }, (error, committed) => {
-    if (!committed) { showToast("Geen vrije plekken"); return; }
+    if (!committed) { showToast(t("geenVrijePlekken")); return; }
     closeModal("adminAddModal");
     showToast(`✓ ${naam} ingeschreven`);
   });
@@ -1099,17 +1573,17 @@ function confirmAdminAdd() {
 
 function confirmClearList() {
   closeModal("adminPanel");
-  document.getElementById("confirmTitle").textContent = "Lijst leegmaken?";
-  document.getElementById("confirmMsg").textContent = `Alle deelnemers en reservelijst van ${currentSession?.title || currentDate} worden gewist.`;
+  document.getElementById("confirmTitle").textContent = t("lijstLeegmaken");
+  document.getElementById("confirmMsg").textContent = t("lijstLeegmakenMsg", { title: currentSession?.title || currentDate });
   document.getElementById("confirmModal").classList.add("open");
-  document.getElementById("confirmOkBtn").textContent = "Leegmaken";
+  document.getElementById("confirmOkBtn").textContent = t("leegmakenKnop");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
     const main = {}, reserve = {};
     for (let i = 0; i < MAIN_SIZE; i++)    main[i]    = "";
     for (let i = 0; i < RESERVE_SIZE; i++) reserve[i] = "";
     db.ref(`sessies/${currentDate}`).update({ main, reserve });
-    showToast("✓ Lijst leeggemaakt");
+    showToast(t("lijstLeeggemaakt"));
   };
 }
 
@@ -1141,11 +1615,11 @@ function openAdminPanel() {
 }
 
 function checkAdminPw() {
-  if (!ADMINS) { document.getElementById("adminPwError").textContent = "Verbinding nog niet gereed, probeer opnieuw."; return; }
+  if (!ADMINS) { document.getElementById("adminPwError").textContent = t("verbindingNietGereed"); return; }
   const pw = document.getElementById("adminPwInput").value;
   const gevonden = Object.entries(ADMINS).find(([, ww]) => ww === pw);
   if (!gevonden) {
-    document.getElementById("adminPwError").textContent = "Onjuist wachtwoord.";
+    document.getElementById("adminPwError").textContent = t("onjuistWachtwoord");
     return;
   }
   adminNaam = gevonden[0];
@@ -1164,7 +1638,7 @@ function logoutAdmin() {
   // Terugkeren naar actieve lijst bij uitloggen
   if (currentDate !== activeDatum) switchToDatum(activeDatum);
   render();
-  showToast("Beheermodus uitgeschakeld");
+  showToast(t("beheermodeUit"));
 }
 
 function openAndereInschrijvenModal() {
@@ -1179,7 +1653,7 @@ function confirmAndereInschrijven() {
   if (!isAdmin && !ledenNamen.includes(naam)) {
     const inp = document.getElementById("andereInput");
     inp.style.borderColor = "var(--accent)";
-    showToast("⚠️ Kies een naam uit de ledenlijst");
+    showToast(t("kiesUitLedenlijst"));
     setTimeout(() => { inp.style.borderColor = ""; }, 2000);
     return;
   }
@@ -1191,7 +1665,7 @@ function confirmAndereInschrijven() {
   if (alles.some(n => (n || "").trim().toLowerCase() === naam.toLowerCase())) {
     const inp = document.getElementById("andereInput");
     inp.style.borderColor = "var(--accent)";
-    showToast(`⚠️ '${naam}' staat al op de lijst`);
+    showToast(t("alOpLijstWaarschuwing", { naam }));
     setTimeout(() => { inp.style.borderColor = ""; }, 2000);
     inp.focus();
     return;
@@ -1206,24 +1680,24 @@ function confirmAndereInschrijven() {
       if (!session.reserve[i] || !session.reserve[i].trim()) { session.reserve[i] = naam; return session; }
     }
   }, (error, committed, snapshot) => {
-    if (!committed) { showToast("Geen vrije plekken meer!"); return; }
+    if (!committed) { showToast(t("geenPlek")); return; }
     const data = snapshot.val();
     const inReserve = Object.values(data.reserve || {}).some(n => (n || "").trim().toLowerCase() === naam.toLowerCase());
     closeModal("andereModal");
-    showToast(inReserve ? `✓ ${naam} op de reservelijst gezet` : `✓ ${naam} ingeschreven!`);
+    showToast(inReserve ? t("opReservelijst") : t("ingeschreven", { naam }));
   });
 }
 
 function checkAdminPwEnWijzig() {
-  if (!ADMINS) { showToast("Verbinding nog niet gereed, probeer opnieuw."); return; }
+  if (!ADMINS) { showToast(t("verbindingNietGereed")); return; }
   const pw     = document.getElementById("adminPwInput").value;
   const nieuw  = document.getElementById("nieuwWwInput").value;
   const bevestig = document.getElementById("nieuwWwBevestig").value;
   const gevonden = Object.entries(ADMINS).find(([, ww]) => ww === pw);
-  if (!gevonden) { document.getElementById("adminPwError").textContent = "Onjuist wachtwoord."; return; }
-  if (!nieuw)             { showToast("Voer een nieuw wachtwoord in"); return; }
-  if (nieuw !== bevestig) { showToast("⚠️ Wachtwoorden komen niet overeen"); return; }
-  if (nieuw.length < 4)   { showToast("⚠️ Minimaal 4 tekens"); return; }
+  if (!gevonden) { document.getElementById("adminPwError").textContent = t("onjuistWachtwoord"); return; }
+  if (!nieuw)             { showToast(t("voerNieuwWwIn")); return; }
+  if (nieuw !== bevestig) { showToast(t("wachtwoordenNietOvereen")); return; }
+  if (nieuw.length < 4)   { showToast(t("minimaalVierTekens")); return; }
   adminNaam = gevonden[0];
   ADMINS[adminNaam] = nieuw;
   db.ref("instellingen/admins").set(ADMINS).then(() => {
@@ -1234,7 +1708,7 @@ function checkAdminPwEnWijzig() {
     document.getElementById("nieuwWwBevestig").value = "";
     closeModal("adminPwModal");
     render();
-    showToast(`✓ Wachtwoord gewijzigd en ingelogd als ${adminNaam}`);
+    showToast(t("wwGewijzigd", { naam: adminNaam }));
     setTimeout(() => openAdminPanel(), 50);
   });
 }
@@ -1242,38 +1716,38 @@ function checkAdminPwEnWijzig() {
 function wijzigWachtwoord() {
   const nieuw    = document.getElementById("nieuwWwInput").value;
   const bevestig = document.getElementById("nieuwWwBevestig").value;
-  if (!nieuw)              { showToast("Voer een nieuw wachtwoord in"); return; }
-  if (nieuw !== bevestig)  { showToast("⚠️ Wachtwoorden komen niet overeen"); return; }
-  if (nieuw.length < 4)   { showToast("⚠️ Minimaal 4 tekens"); return; }
+  if (!nieuw)              { showToast(t("voerNieuwWwIn")); return; }
+  if (nieuw !== bevestig)  { showToast(t("wachtwoordenNietOvereen")); return; }
+  if (nieuw.length < 4)   { showToast(t("minimaalVierTekens")); return; }
   ADMINS[adminNaam] = nieuw;
   db.ref("instellingen/admins").set(ADMINS).then(() => {
     document.getElementById("nieuwWwInput").value = "";
     document.getElementById("nieuwWwBevestig").value = "";
-    showToast(`✓ Wachtwoord van ${adminNaam} opgeslagen`);
+    showToast(t("wwOpgeslagen", { naam: adminNaam }));
   });
 }
 
 function voegBeheerderToe() {
   const naam = document.getElementById("nieuwBeheerderNaam").value.trim();
   const ww   = document.getElementById("nieuwBeheerderWw").value;
-  if (!naam) { showToast("Voer een naam in"); return; }
-  if (!ww || ww.length < 4) { showToast("⚠️ Wachtwoord minimaal 4 tekens"); return; }
-  if (Object.keys(ADMINS).some(n => n.toLowerCase() === naam.toLowerCase())) { showToast(`⚠️ '${naam}' is al beheerder`); return; }
+  if (!naam) { showToast(t("voerNaamIn")); return; }
+  if (!ww || ww.length < 4) { showToast(t("wwMinimaal")); return; }
+  if (Object.keys(ADMINS).some(n => n.toLowerCase() === naam.toLowerCase())) { showToast(t("isAlBeheerder", { naam })); return; }
   ADMINS[naam] = ww;
   db.ref("instellingen/admins").set(ADMINS).then(() => {
     document.getElementById("nieuwBeheerderNaam").value = "";
     document.getElementById("nieuwBeheerderWw").value = "";
-    showToast(`✓ ${naam} toegevoegd als beheerder`);
+    showToast(t("beheerderToegevoegd", { naam }));
     renderBeheerderLijst();
     updateBeheerderFooter();
   });
 }
 
 function verwijderBeheerder(naam) {
-  if (naam === adminNaam) { showToast("Je kunt jezelf niet verwijderen"); return; }
+  if (naam === adminNaam) { showToast(t("kanJezelfNietVerwijderen")); return; }
   delete ADMINS[naam];
   db.ref("instellingen/admins").set(ADMINS).then(() => {
-    showToast(`✓ ${naam} verwijderd`);
+    showToast(t("beheerderVerwijderd", { naam }));
     renderBeheerderLijst();
     updateBeheerderFooter();
   });
@@ -1304,7 +1778,7 @@ function updateBeheerderFooter() {
   const el = document.getElementById("beheerderFooter");
   if (!el || !ADMINS) return;
   const namen = Object.keys(ADMINS).join(" · ");
-  el.textContent = `Beheerders: ${namen}`;
+  el.textContent = t("beheerdersBadge", { namen });
 }
 
 function renderVasteDeelnemers() {
@@ -1312,7 +1786,7 @@ function renderVasteDeelnemers() {
   if (!el) return;
   el.innerHTML = "";
   if (!vasteDeelnemers.length) {
-    el.innerHTML = `<div style="font-size:12px;color:var(--ink-light);font-style:italic;">Nog geen vaste deelnemers</div>`;
+    el.innerHTML = `<div style="font-size:12px;color:var(--ink-light);font-style:italic;">${t("nogGeenVasteDeelnemers")}</div>`;
     return;
   }
   vasteDeelnemers.forEach((naam, i) => {
@@ -1329,23 +1803,23 @@ function voegVasteDeelnemerToe() {
   if (!naam) { inp.focus(); return; }
   if (!ledenNamen.includes(naam)) {
     inp.style.borderColor = "var(--accent)";
-    showToast("⚠️ Kies een naam uit de ledenlijst");
+    showToast(t("kiesUitLedenlijst"));
     setTimeout(() => { inp.style.borderColor = ""; }, 2000);
     return;
   }
   if (vasteDeelnemers.includes(naam)) {
-    showToast(`⚠️ ${naam} staat al in de lijst`);
+    showToast(t("vasteAlInLijst", { naam }));
     return;
   }
   if (vasteDeelnemers.length >= MAIN_SIZE) {
-    showToast(`⚠️ Maximum van ${MAIN_SIZE} vaste deelnemers bereikt`);
+    showToast(t("maximumBereikt", { max: MAIN_SIZE }));
     return;
   }
   vasteDeelnemers.push(naam);
   db.ref("instellingen/vasteDeelnemers").set(vasteDeelnemers).then(() => {
     inp.value = "";
     renderVasteDeelnemers();
-    showToast(`✓ ${naam} toegevoegd als vaste deelnemer`);
+    showToast(t("vasteToegevoegd", { naam }));
   });
 }
 
@@ -1354,7 +1828,7 @@ function verwijderVasteDeelnemer(index) {
   vasteDeelnemers.splice(index, 1);
   db.ref("instellingen/vasteDeelnemers").set(vasteDeelnemers).then(() => {
     renderVasteDeelnemers();
-    showToast(`✓ ${naam} verwijderd uit vaste deelnemers`);
+    showToast(t("vasteVerwijderd", { naam }));
   });
 }
 
@@ -1365,21 +1839,21 @@ function beheerHuidigeLijst() {
 async function vulTestdata() {
   closeModal("adminPanel");
   await laadLeden();
-  if (!leden.length) { showToast("Ledenlijst nog niet geladen"); return; }
+  if (!leden.length) { showToast(t("ledenNogNietGeladen")); return; }
   const shuffled = [...leden].sort(() => Math.random() - 0.5).slice(0, 19);
   db.ref(`sessies/${currentDate}`).transaction(session => {
     if (!session) return;
-    for (let i = 0; i < MAIN_SIZE; i++) session.main[i] = shuffled[i] || "";
+    for (let i = 0; i < MAIN_SIZE; i++) session.main[i] = (shuffled[i] && shuffled[i].naam) ? shuffled[i].naam : (shuffled[i] || "");
     for (let i = 0; i < RESERVE_SIZE; i++) session.reserve[i] = "";
     return session;
   }, (error, committed) => {
-    if (committed) showToast("✓ 19 testleden ingevuld");
+    if (committed) showToast(t("testdataIngevuld"));
   });
 }
 
 async function laadBestaandeLijsten() {
   const sel = document.getElementById("andereListSelect");
-  sel.innerHTML = "<option value=''>Laden…</option>";
+  sel.innerHTML = `<option value=''>${t("laden")}</option>`;
   const snap = await db.ref("sessies").once("value");
   const data = snap.val() || {};
   const sessies = Object.entries(data)
@@ -1394,9 +1868,12 @@ async function laadBestaandeLijsten() {
   sessies.forEach(s => {
     const opt = document.createElement("option");
     opt.value = s.datum;
-    const huidig = s.datum === currentDate ? " ← huidig" : "";
-    const reserve = s.aantalReserve > 0 ? ` + ${s.aantalReserve} reserve` : "";
-    opt.textContent = `${s.title} · ${s.aantalMain} deelnemers${reserve}${huidig}`;
+    const huidigSuf = s.datum === currentDate ? t("huidig") : "";
+    const reserveSuf = s.aantalReserve > 0 ? t("reserveCount", { n: s.aantalReserve }) : "";
+    const deelTxt = s.aantalMain === 1
+      ? t("deelnemersCount", { n: s.aantalMain }) || `${s.aantalMain} deelnemer`
+      : t("aantalDeelnemers", { filled: s.aantalMain, max: MAIN_SIZE }).split(" / ")[0] + (lang === "en" ? " participants" : " deelnemers");
+    opt.textContent = `${datumNaarTitel(s.datum)} · ${s.aantalMain} ${lang === "en" ? "participants" : "deelnemers"}${reserveSuf}${huidigSuf}`;
     if (s.datum === currentDate) opt.selected = true;
     sel.appendChild(opt);
   });
@@ -1423,7 +1900,7 @@ function updateViewBanner() {
     return;
   }
   document.getElementById("viewBannerText").textContent =
-    `👁 Je bekijkt ${currentSession?.title || currentDate} (niet de actieve lijst)`;
+    t("bekijktTitel", { title: currentSession?.title || datumNaarTitel(currentDate) || currentDate });
   banner.style.display = "flex";
 }
 
@@ -1437,23 +1914,25 @@ function nieuweLijstAanmaken() {
       const s = snap.val();
       const aantalMain    = Object.values(s.main    || {}).filter(n => n && n.trim()).length;
       const aantalReserve = Object.values(s.reserve || {}).filter(n => n && n.trim()).length;
-      const reserveTekst  = aantalReserve > 0 ? ` + ${aantalReserve} reserve` : "";
-      document.getElementById("confirmTitle").textContent = "Lijst bestaat al!";
-      document.getElementById("confirmMsg").textContent =
-        `${title} heeft al ${aantalMain} deelnemer${aantalMain !== 1 ? "s" : ""}${reserveTekst}. Wil je de bestaande lijst overschrijven met een lege lijst?`;
+      const reserveTekst  = aantalReserve > 0 ? t("reserveCount", { n: aantalReserve }) : "";
+      const suf = aantalMain !== 1 ? "s" : "";
+      document.getElementById("confirmTitle").textContent = t("lijstBestaatAl");
+      document.getElementById("confirmMsg").textContent = t("lijstBestaatAlMsg", { title, n: aantalMain, s: suf, reserve: reserveTekst });
     } else {
-      document.getElementById("confirmTitle").textContent = "Nieuwe lijst aanmaken?";
-      document.getElementById("confirmMsg").textContent = `Er wordt een lege lijst aangemaakt voor ${title}.`;
+      document.getElementById("confirmTitle").textContent = t("nieuweLijstVraag");
+      document.getElementById("confirmMsg").textContent = t("legalListVoor", { title });
     }
     document.getElementById("confirmModal").classList.add("open");
-    document.getElementById("confirmOkBtn").textContent = "Aanmaken ✓";
+    document.getElementById("confirmOkBtn").textContent = t("aanmakenKnop");
     document.getElementById("confirmOkBtn").onclick = () => {
       closeModal("confirmModal");
       initialiseerSessie(datum, title, "9:00 – 10:30 uur").then(() => {
         db.ref("instellingen/huidigeDatum").set(datum);
       });
       const n = vasteDeelnemers.length;
-      showToast(`✓ Lijst aangemaakt voor ${title}${n ? ` met ${n} vaste deelnemer${n !== 1 ? "s" : ""}` : ""}`);
+      const toast = n === 0 ? t("lijstAangemaaktToast", { title })
+        : t("lijstAangemaaktToastN", { title, n, s: n !== 1 ? "s" : "" });
+      showToast(toast);
     };
   });
 }
@@ -1472,11 +1951,12 @@ function vulDatalist() {
 function updateLedenInfo() {
   const el = document.getElementById("ledenInfo");
   if (!el) return;
-  if (!leden.length) { el.textContent = "Leden: niet geladen"; return; }
+  if (!leden.length) { el.textContent = t("ledenNietGeladen"); return; }
+  const locale = lang === "en" ? "en-GB" : "nl-NL";
   const tijdStr = ledenTimestamp
-    ? new Date(ledenTimestamp).toLocaleString("nl-NL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
-    : "onbekend";
-  el.textContent = `${leden.length} leden · bijgewerkt ${tijdStr}`;
+    ? new Date(ledenTimestamp).toLocaleString(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+    : "?";
+  el.textContent = t("aantalLeden", { count: leden.length, tijd: tijdStr });
 }
 
 async function laadLeden(forceFetch = false) {
@@ -1508,10 +1988,10 @@ async function laadLeden(forceFetch = false) {
 
 async function verversLeden() {
   const btn = document.querySelector("#adminPanel button[onclick='verversLeden()']");
-  if (btn) btn.textContent = "↻ Verversen…";
+  if (btn) btn.textContent = t("verversenBezig");
   await laadLeden(true);
-  if (btn) btn.textContent = "↻ Ledenlijst verversen";
-  showToast(`✓ ${leden.length} leden geladen`);
+  if (btn) btn.textContent = t("verversenBtn");
+  showToast(t("ledenGeladen", { count: leden.length }));
 }
 
 // ═══ MODALS & TOAST ═════════════════════════════════════
@@ -1558,8 +2038,8 @@ function copyWhatsApp() {
   lines.push("— reserve —");
   reserve.forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
   navigator.clipboard.writeText(lines.join("\n"))
-    .then(() => showToast("📋 Gekopieerd voor WhatsApp!"))
-    .catch(() => showToast("Kopiëren mislukt"));
+    .then(() => showToast(t("gekopieerd")))
+    .catch(() => showToast(t("kopieerenMislukt")));
 }
 
 function shareLink() {
@@ -1572,7 +2052,7 @@ function shareLink() {
     navigator.share({ text: tekst, url });
   } else {
     navigator.clipboard.writeText(tekst + '\n' + url)
-      .then(() => showToast("🔗 Link gekopieerd!"));
+      .then(() => showToast(t("linkGekopieerd")));
   }
 }
 
@@ -1581,7 +2061,7 @@ let screenshotBlob = null;
 
 async function maakScreenshot() {
   const btn = document.querySelector("#screenshotSection button[onclick='maakScreenshot()']");
-  if (btn) btn.textContent = "⏳ Bezig…";
+  if (btn) btn.textContent = t("screenshotBezig");
 
   // Tijdelijk element bouwen met alleen de lijst
   const el = document.createElement("div");
@@ -1644,13 +2124,13 @@ async function maakScreenshot() {
       const url = URL.createObjectURL(blob);
       document.getElementById("screenshotImg").src = url;
       document.getElementById("screenshotPreview").style.display = "block";
-      if (btn) btn.textContent = "📸 Opnieuw maken";
-      showToast("✓ Screenshot klaar!");
+      if (btn) btn.textContent = t("screenshotOpnieuw");
+      showToast(t("screenshotKlaar"));
     }, "image/png");
   } catch(e) {
     document.body.removeChild(el);
-    if (btn) btn.textContent = "📸 Maak screenshot";
-    showToast("⚠️ Screenshot mislukt");
+    if (btn) btn.textContent = t("screenshotKnop");
+    showToast(t("screenshotMislukt"));
   }
 }
 
@@ -1665,12 +2145,16 @@ async function deelScreenshot() {
     a.href = URL.createObjectURL(screenshotBlob);
     a.download = `padel-${currentDate}.png`;
     a.click();
-    showToast("📥 Afbeelding gedownload");
+    showToast(t("afbeeldingGedownload"));
   }
 }
 
 // ═══ INIT ═══════════════════════════════════════════════
 window.addEventListener("load", () => {
+  document.documentElement.lang = lang;
+  const langBtn = document.getElementById("langToggleBtn");
+  if (langBtn) langBtn.textContent = lang === "nl" ? "🇬🇧" : "🇳🇱";
+  if (lang !== "nl") applyLang();
   laadLeden();
   if (!identity) openIdentityModal();
   else document.getElementById("whoLabel").textContent = identity;
