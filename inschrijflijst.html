@@ -801,6 +801,7 @@ const TRANSLATIONS = {
     gekopieerd: "📋 Gekopieerd voor WhatsApp!",
     kopieerenMislukt: "Kopiëren mislukt",
     linkGekopieerd: "🔗 Link gekopieerd!",
+    shareTekst: "De inschrijving is geopend – schrijf je snel in, vol = vol!",
     screenshotBezig: "⏳ Bezig…",
     screenshotOpnieuw: "📸 Opnieuw maken",
     screenshotKnop: "📸 Maak screenshot",
@@ -950,6 +951,7 @@ const TRANSLATIONS = {
     gekopieerd: "📋 Copied for WhatsApp!",
     kopieerenMislukt: "Copy failed",
     linkGekopieerd: "🔗 Link copied!",
+    shareTekst: "Sign-up is open – register quickly, spots fill up fast!",
     screenshotBezig: "⏳ Working…",
     screenshotOpnieuw: "📸 Take again",
     screenshotKnop: "📸 Take screenshot",
@@ -1932,7 +1934,7 @@ function copyWhatsApp() {
 function shareLink() {
   const titel  = currentSession?.title || "Padel";
   const tijd   = currentSession?.time  || "";
-  const tekst  = `🎾 ${titel} · ${tijd}\nDe inschrijving is geopend – schrijf je snel in, vol = vol!`;
+  const tekst  = `🎾 ${titel} · ${tijd}\n${t("shareTekst")}`;
   const url    = "https://tinyurl.com/padel-inschrijven";
 
   if (navigator.share) {
