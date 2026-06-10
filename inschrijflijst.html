@@ -753,6 +753,7 @@ const TRANSLATIONS = {
     deelnemerHelpTitle: "ℹ️ Hoe werkt het?",
     adminHelpTitle: "⚙️ Beheer – uitleg",
     vrijdagTitel: "Vrijdag {dag} {maand}",
+    uurSuffix: " uur",
     // Toast & dynamic
     kiesUitLedenlijst: "⚠️ Kies een naam uit de ledenlijst",
     welkom: "Welkom, {naam}!",
@@ -904,6 +905,7 @@ const TRANSLATIONS = {
     deelnemerHelpTitle: "ℹ️ How does it work?",
     adminHelpTitle: "⚙️ Admin – explanation",
     vrijdagTitel: "Friday {dag} {maand}",
+    uurSuffix: "",
     kiesUitLedenlijst: "⚠️ Choose a name from the member list",
     welkom: "Welcome, {naam}!",
     alOpLijst: "You are already on the list",
@@ -1041,6 +1043,9 @@ function applyLang() {
   // Dynamische elementen
   if (currentDate) document.getElementById("headerTitle").textContent = datumNaarTitel(currentDate);
   if (currentSession) {
+    document.getElementById("headerTime").textContent = (currentSession.time || "").replace(/ uur$/, "") + t("uurSuffix");
+  }
+  if (currentSession) {
     const filled = slotArray(currentSession.main, MAIN_SIZE).filter(n => n && n.trim()).length;
     document.getElementById("countBadge").textContent = t("aantalDeelnemers", { filled, max: MAIN_SIZE });
   }
@@ -1114,7 +1119,7 @@ function switchToDatum(datum) {
     } else {
       currentSession = data;
       document.getElementById("headerTitle").textContent = datumNaarTitel(datum);
-      document.getElementById("headerTime").textContent  = data.time  || "";
+      document.getElementById("headerTime").textContent  = (data.time || "").replace(/ uur$/, "") + t("uurSuffix");
       document.getElementById("loadingOverlay").style.display = "none";
       render();
     }
