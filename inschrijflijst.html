@@ -380,10 +380,15 @@
   <span class="who" id="whoLabel">—</span>
   <button data-i18n="wijzig" class="btn-switch" onclick="openIdentityModal()">Wijzig</button>
   <button onclick="openDeelnemerHelp()" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:26px;height:26px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink-light);flex-shrink:0;">?</button>
-  <select id="langSelect" onchange="setLang(this.value)" title="Switch language" style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:3px 6px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;color:var(--ink-light);flex-shrink:0;letter-spacing:0.5px;outline:none;">
-    <option value="nl">🇳🇱 NL</option>
-    <option value="en">🇬🇧 EN</option>
-  </select>
+  <div id="langDropdown" style="position:relative;flex-shrink:0;">
+    <button id="langDropdownBtn" onclick="toggleLangDropdown()" style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:3px 8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink-light);display:flex;align-items:center;gap:4px;letter-spacing:0.3px;">
+      <span id="langFlag">🇳🇱</span><span id="langCode">NL</span><span style="font-size:9px;opacity:0.6;">▾</span>
+    </button>
+    <div id="langMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:var(--card);border:1.5px solid var(--border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);z-index:999;overflow:hidden;min-width:80px;">
+      <div onclick="setLang('nl');closeLangDropdown()" style="padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">🇳🇱 NL</div>
+      <div onclick="setLang('en');closeLangDropdown()" style="padding:7px 12px;cursor:pointer;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;border-top:1px solid var(--border)" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">🇬🇧 EN</div>
+    </div>
+  </div>
 </div>
 
 <div id="adminBanner" style="display:none;margin:8px 16px 0;background:#fff8e8;border:1.5px solid var(--gold);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--gold);font-weight:600;align-items:center;justify-content:space-between;">
@@ -998,11 +1003,23 @@ function setLang(newLang) {
   applyLang();
 }
 
+function toggleLangDropdown() {
+  const menu = document.getElementById("langMenu");
+  if (menu) menu.style.display = menu.style.display === "none" ? "block" : "none";
+}
+
+function closeLangDropdown() {
+  const menu = document.getElementById("langMenu");
+  if (menu) menu.style.display = "none";
+}
+
 function applyLang() {
   document.documentElement.lang = lang;
 
-  const langSel = document.getElementById("langSelect");
-  if (langSel) langSel.value = lang;
+  const langFlag = document.getElementById("langFlag");
+  const langCode = document.getElementById("langCode");
+  if (langFlag) langFlag.textContent = lang === "nl" ? "🇳🇱" : "🇬🇧";
+  if (langCode) langCode.textContent = lang === "nl" ? "NL" : "EN";
 
   // Alle statische tekst via data-i18n
   document.querySelectorAll("[data-i18n]").forEach(el => {
@@ -2020,10 +2037,16 @@ async function deelScreenshot() {
 }
 
 // ═══ INIT ═══════════════════════════════════════════════
+document.addEventListener("click", (e) => {
+  if (!document.getElementById("langDropdown")?.contains(e.target)) closeLangDropdown();
+});
+
 window.addEventListener("load", () => {
   document.documentElement.lang = lang;
-  const langSel = document.getElementById("langSelect");
-  if (langSel) langSel.value = lang;
+  const langFlag = document.getElementById("langFlag");
+  const langCode = document.getElementById("langCode");
+  if (langFlag) langFlag.textContent = lang === "nl" ? "🇳🇱" : "🇬🇧";
+  if (langCode) langCode.textContent = lang === "nl" ? "NL" : "EN";
   if (lang !== "nl") applyLang();
   laadLeden();
   if (!identity) openIdentityModal();
