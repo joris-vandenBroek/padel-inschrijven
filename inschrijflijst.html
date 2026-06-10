@@ -369,7 +369,7 @@
 </div>
 
 <header>
-  <div class="eyebrow">Inschrijflijst</div>
+  <div class="eyebrow" data-i18n="eyebrow">Inschrijflijst</div>
   <h1 id="headerTitle">Padel</h1>
   <div class="meta" id="headerTime"></div>
   <div class="count-badge" id="countBadge">— / — deelnemers</div>
@@ -1017,6 +1017,7 @@ function closeLangDropdown() {
 
 function applyLang() {
   document.documentElement.lang = lang;
+  document.title = lang === "nl" ? "Inschrijflijst – Padel" : "Sign-up list – Padel";
 
   const langFlag = document.getElementById("langFlag");
   const langCode = document.getElementById("langCode");
@@ -2028,7 +2029,7 @@ async function deelScreenshot() {
   const titel = currentSession?.title || "Padel";
   const file = new File([screenshotBlob], `padel-${currentDate}.png`, { type: "image/png" });
   if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-    await navigator.share({ files: [file], text: `🎾 ${titel} – inschrijflijst` });
+    await navigator.share({ files: [file], text: `🎾 ${titel} – ${t("eyebrow").toLowerCase()}` });
   } else {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(screenshotBlob);
