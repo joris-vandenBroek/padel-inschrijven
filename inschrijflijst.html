@@ -376,21 +376,21 @@
 </header>
 
 <div class="identity-bar" id="identityBar">
-  <span class="label">Jij bent:</span>
+  <span data-i18n="jijBent" class="label">Jij bent:</span>
   <span class="who" id="whoLabel">—</span>
-  <button class="btn-switch" onclick="openIdentityModal()">Wijzig</button>
+  <button data-i18n="wijzig" class="btn-switch" onclick="openIdentityModal()">Wijzig</button>
   <button onclick="openDeelnemerHelp()" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:26px;height:26px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink-light);flex-shrink:0;">?</button>
   <button id="langToggleBtn" onclick="setLang(lang==='nl'?'en':'nl')" style="background:transparent;border:1.5px solid var(--border);border-radius:7px;padding:4px 8px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;color:var(--ink-light);flex-shrink:0;letter-spacing:0.5px;" title="Switch language">EN</button>
 </div>
 
 <div id="adminBanner" style="display:none;margin:8px 16px 0;background:#fff8e8;border:1.5px solid var(--gold);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--gold);font-weight:600;align-items:center;justify-content:space-between;">
-  <span>⚙️ Beheer: <span id="adminBannerNaam"></span></span>
-  <button class="btn-switch" style="border-color:var(--gold);color:var(--gold);" onclick="logoutAdmin()">Uitloggen</button>
+  <span><span id="adminBannerPre">⚙️ Beheer: </span><span id="adminBannerNaam"></span></span>
+  <button data-i18n="uitloggen" class="btn-switch" style="border-color:var(--gold);color:var(--gold);" onclick="logoutAdmin()">Uitloggen</button>
 </div>
 <div id="viewBanner" style="display:none;margin:8px 16px 0;background:#e8f0ff;border:1.5px solid var(--mine);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--mine);font-weight:600;align-items:center;justify-content:space-between;gap:10px;">
   <span id="viewBannerText">👁 Je bekijkt een andere lijst</span>
   <div style="display:flex;gap:8px;">
-    <button class="btn-switch" style="border-color:var(--mine);color:var(--mine);white-space:nowrap;" onclick="terugNaarActief()">← Terug</button>
+    <button data-i18n="terugBtn" class="btn-switch" style="border-color:var(--mine);color:var(--mine);white-space:nowrap;" onclick="terugNaarActief()">← Terug</button>
   </div>
 </div>
 
@@ -416,12 +416,12 @@
 <!-- Admin toevoeg modal -->
 <div class="modal-overlay" id="adminAddModal">
   <div class="modal">
-    <h2>Inschrijven als beheerder</h2>
+    <h2 data-i18n="adminAddTitle">Inschrijven als beheerder</h2>
     <p id="adminAddDesc"></p>
-    <input type="text" id="adminAddInput" placeholder="Naam van deelnemer…" maxlength="40" autocomplete="off" list="ledenList" />
+    <input type="text" id="adminAddInput" data-i18n-ph="adminAddPlaceholder" placeholder="Naam van deelnemer…" maxlength="40" autocomplete="off" list="ledenList" />
     <div class="modal-buttons">
-      <button class="btn-cancel" onclick="closeModal('adminAddModal')">Annuleer</button>
-      <button class="btn-confirm" onclick="confirmAdminAdd()">Inschrijven ✓</button>
+      <button data-i18n="annuleer" class="btn-cancel" onclick="closeModal('adminAddModal')">Annuleer</button>
+      <button data-i18n="inschrijvenBevestig" class="btn-confirm" onclick="confirmAdminAdd()">Inschrijven ✓</button>
     </div>
   </div>
 </div>
@@ -429,12 +429,12 @@
 <!-- Iemand anders inschrijven modal -->
 <div class="modal-overlay" id="andereModal">
   <div class="modal">
-    <h2>Iemand anders inschrijven</h2>
-    <p>Kies de naam van degene die je wilt inschrijven.</p>
-    <input type="text" id="andereInput" placeholder="Naam…" maxlength="40" autocomplete="off" list="ledenList" />
+    <h2 data-i18n="andereTitle">Iemand anders inschrijven</h2>
+    <p data-i18n="andereDesc">Kies de naam van degene die je wilt inschrijven.</p>
+    <input type="text" id="andereInput" data-i18n-ph="anderePlaceholder" placeholder="Naam…" maxlength="40" autocomplete="off" list="ledenList" />
     <div class="modal-buttons">
-      <button class="btn-cancel" onclick="closeModal('andereModal')">Annuleer</button>
-      <button class="btn-confirm" onclick="confirmAndereInschrijven()">Inschrijven ✓</button>
+      <button data-i18n="annuleer" class="btn-cancel" onclick="closeModal('andereModal')">Annuleer</button>
+      <button data-i18n="inschrijvenBevestig" class="btn-confirm" onclick="confirmAndereInschrijven()">Inschrijven ✓</button>
     </div>
   </div>
 </div>
@@ -442,12 +442,12 @@
 <!-- Identiteit modal -->
 <div class="modal-overlay" id="identityModal">
   <div class="modal">
-    <h2>Wie ben jij?</h2>
-    <p>Kies je naam zodat je jouw inschrijving kunt beheren.</p>
-    <input type="text" id="identityInput" placeholder="Jouw naam…" maxlength="40" autocomplete="off" list="ledenList" />
+    <h2 data-i18n="identityTitle">Wie ben jij?</h2>
+    <p data-i18n="identityDesc">Kies je naam zodat je jouw inschrijving kunt beheren.</p>
+    <input type="text" id="identityInput" data-i18n-ph="identityPlaceholder" placeholder="Jouw naam…" maxlength="40" autocomplete="off" list="ledenList" />
     <div class="modal-buttons">
-      <button class="btn-cancel" onclick="closeModal('identityModal')">Annuleer</button>
-      <button class="btn-confirm" onclick="confirmIdentity()">Bevestigen ✓</button>
+      <button data-i18n="annuleer" class="btn-cancel" onclick="closeModal('identityModal')">Annuleer</button>
+      <button data-i18n="bevestigen" class="btn-confirm" onclick="confirmIdentity()">Bevestigen ✓</button>
     </div>
   </div>
 </div>
@@ -458,7 +458,7 @@
     <h2 id="confirmTitle"></h2>
     <p class="sub" id="confirmMsg"></p>
     <div class="modal-buttons">
-      <button class="btn-cancel" onclick="closeModal('confirmModal')">Annuleer</button>
+      <button data-i18n="annuleer" class="btn-cancel" onclick="closeModal('confirmModal')">Annuleer</button>
       <button class="btn-danger" id="confirmOkBtn">OK</button>
     </div>
   </div>
@@ -467,23 +467,23 @@
 <!-- Admin wachtwoord modal -->
 <div class="modal-overlay" id="adminPwModal">
   <div class="modal">
-    <h2>Beheer</h2>
-    <p>Voer je wachtwoord in.</p>
-    <input type="password" id="adminPwInput" placeholder="Wachtwoord…" maxlength="40" autocomplete="off" />
+    <h2 data-i18n="beheerTitle">Beheer</h2>
+    <p data-i18n="voerWwIn">Voer je wachtwoord in.</p>
+    <input type="password" id="adminPwInput" data-i18n-ph="wachtwoordPlaceholder" placeholder="Wachtwoord…" maxlength="40" autocomplete="off" />
     <div id="adminPwError" style="color:var(--accent);font-size:13px;margin-top:8px;min-height:18px;"></div>
     <div class="modal-buttons">
-      <button class="btn-cancel" onclick="closeModal('adminPwModal')">Annuleer</button>
-      <button class="btn-confirm" onclick="checkAdminPw()">Inloggen ✓</button>
+      <button data-i18n="annuleer" class="btn-cancel" onclick="closeModal('adminPwModal')">Annuleer</button>
+      <button data-i18n="inloggen" class="btn-confirm" onclick="checkAdminPw()">Inloggen ✓</button>
     </div>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
-        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🔑 Wachtwoord wijzigen</summary>
+        <summary data-i18n="wachtwoordWijzigen" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🔑 Wachtwoord wijzigen</summary>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
-          <input type="password" id="nieuwWwInput" placeholder="Nieuw wachtwoord…" maxlength="40"
+          <input type="password" id="nieuwWwInput" data-i18n-ph="nieuwWachtwoord" placeholder="Nieuw wachtwoord…" maxlength="40"
             style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
-          <input type="password" id="nieuwWwBevestig" placeholder="Bevestig nieuw wachtwoord…" maxlength="40"
+          <input type="password" id="nieuwWwBevestig" data-i18n-ph="bevestigWachtwoord" placeholder="Bevestig nieuw wachtwoord…" maxlength="40"
             style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
-          <button class="btn-confirm" onclick="checkAdminPwEnWijzig()">Inloggen & wachtwoord opslaan ✓</button>
+          <button data-i18n="inloggenEnOpslaan" class="btn-confirm" onclick="checkAdminPwEnWijzig()">Inloggen & wachtwoord opslaan ✓</button>
         </div>
       </details>
     </div>
@@ -494,36 +494,36 @@
 <div class="modal-overlay" id="adminPanel">
   <div class="modal">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <h2 style="margin-bottom:0;">⚙️ Beheer</h2>
+      <h2 data-i18n="adminPanelTitle" style="margin-bottom:0;">⚙️ Beheer</h2>
       <button onclick="openAdminHelp()" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:28px;height:28px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink-light);">?</button>
     </div>
 
-    <button class="btn-confirm" style="width:100%;margin-bottom:16px;" onclick="beheerHuidigeLijst()">
+    <button data-i18n="beheerHuidigeBtn" class="btn-confirm" style="width:100%;margin-bottom:16px;" onclick="beheerHuidigeLijst()">
       📋 Beheer huidige lijst
     </button>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
-        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📅 Nieuwe lijst aanmaken</summary>
+        <summary data-i18n="nieuweLijstSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📅 Nieuwe lijst aanmaken</summary>
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
           <select id="adminFriday"
             style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
           </select>
-          <button class="btn-confirm" style="width:100%;" onclick="nieuweLijstAanmaken()">Aanmaken ✓</button>
-          <button class="btn-share" style="width:100%;border-radius:10px;padding:11px;" onclick="closeModal('adminPanel');shareLink()">🔗 De link voor WhatsApp</button>
+          <button data-i18n="aanmaken" class="btn-confirm" style="width:100%;" onclick="nieuweLijstAanmaken()">Aanmaken ✓</button>
+          <button data-i18n="deLink" class="btn-share" style="width:100%;border-radius:10px;padding:11px;" onclick="closeModal('adminPanel');shareLink()">🔗 De link voor WhatsApp</button>
         </div>
       </details>
     </div>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details id="screenshotSection">
-        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📸 Screenshot inschrijflijst</summary>
+        <summary data-i18n="screenshotSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📸 Screenshot inschrijflijst</summary>
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
-          <div style="font-size:12px;color:var(--ink-light);">Maak een afbeelding van de huidige lijst om te delen in WhatsApp.</div>
-          <button class="btn-confirm" style="width:100%;background:var(--ink);" onclick="maakScreenshot()">📸 Maak screenshot</button>
+          <div data-i18n="screenshotDesc" style="font-size:12px;color:var(--ink-light);">Maak een afbeelding van de huidige lijst om te delen in WhatsApp.</div>
+          <button data-i18n="maakScreenshotBtn" class="btn-confirm" style="width:100%;background:var(--ink);" onclick="maakScreenshot()">📸 Maak screenshot</button>
           <div id="screenshotPreview" style="display:none;">
             <img id="screenshotImg" style="width:100%;border-radius:10px;border:1px solid var(--border);" />
-            <button class="btn-share" style="width:100%;border-radius:10px;padding:11px;margin-top:8px;" onclick="deelScreenshot()">📤 Deel via WhatsApp</button>
+            <button data-i18n="deelScreenshotBtn" class="btn-share" style="width:100%;border-radius:10px;padding:11px;margin-top:8px;" onclick="deelScreenshot()">📤 Deel via WhatsApp</button>
           </div>
         </div>
       </details>
@@ -531,12 +531,12 @@
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
-        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">👥 Vaste deelnemers beheren</summary>
+        <summary data-i18n="vasteDeelnemersSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">👥 Vaste deelnemers beheren</summary>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
-          <div style="font-size:12px;color:var(--ink-light);">Deze deelnemers worden automatisch toegevoegd bij het aanmaken van een nieuwe lijst.</div>
+          <div data-i18n="vasteDeelnemersDesc" style="font-size:12px;color:var(--ink-light);">Deze deelnemers worden automatisch toegevoegd bij het aanmaken van een nieuwe lijst.</div>
           <div id="vasteDeelnemerLijst" style="display:flex;flex-direction:column;gap:6px;"></div>
           <div style="display:flex;gap:8px;margin-top:4px;">
-            <input type="text" id="vasteDeelnemerInput" placeholder="Naam toevoegen…" maxlength="40" autocomplete="off" list="ledenList"
+            <input type="text" id="vasteDeelnemerInput" data-i18n-ph="naamToevoegen" placeholder="Naam toevoegen…" maxlength="40" autocomplete="off" list="ledenList"
               style="flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
             <button class="btn-confirm" style="flex:0 0 auto;padding:9px 14px;font-size:14px;" onclick="voegVasteDeelnemerToe()">+</button>
           </div>
@@ -546,47 +546,47 @@
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
-        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📂 Andere lijst openen</summary>
+        <summary data-i18n="andereLijstSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📂 Andere lijst openen</summary>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
           <select id="andereListSelect"
             style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;">
             <option value="">Laden…</option>
           </select>
-          <button class="btn-confirm" style="background:var(--ink);" onclick="andereLijstOpenen()">Openen →</button>
+          <button data-i18n="openen" class="btn-confirm" style="background:var(--ink);" onclick="andereLijstOpenen()">Openen →</button>
         </div>
       </details>
     </div>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
-        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">👥 Ledenlijst verversen</summary>
+        <summary data-i18n="ledenlijstSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">👥 Ledenlijst verversen</summary>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
           <div style="font-size:12px;color:var(--ink-light);" id="ledenInfo">Leden: laden…</div>
-          <button class="btn-confirm" style="background:var(--green);" onclick="verversLeden()">↻ Verversen</button>
+          <button data-i18n="verversenBtn" class="btn-confirm" style="background:var(--green);" onclick="verversLeden()">↻ Verversen</button>
         </div>
       </details>
     </div>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
-        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🔑 Beheerders</summary>
+        <summary data-i18n="beheerdersSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🔑 Beheerders</summary>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
           <div id="beheerderLijst"></div>
-          <label style="font-size:12px;color:var(--ink-light);margin-top:4px;">Nieuwe beheerder toevoegen</label>
-          <input type="text" id="nieuwBeheerderNaam" placeholder="Naam…" maxlength="40" list="ledenList"
+          <label data-i18n="nieuweBeheerderLabel" style="font-size:12px;color:var(--ink-light);margin-top:4px;">Nieuwe beheerder toevoegen</label>
+          <input type="text" id="nieuwBeheerderNaam" data-i18n-ph="beheerderNaamPlaceholder" placeholder="Naam…" maxlength="40" list="ledenList"
             style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
-          <input type="password" id="nieuwBeheerderWw" placeholder="Wachtwoord…" maxlength="40"
+          <input type="password" id="nieuwBeheerderWw" data-i18n-ph="beheerderWwPlaceholder" placeholder="Wachtwoord…" maxlength="40"
             style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
-          <button class="btn-confirm" style="background:var(--green);" onclick="voegBeheerderToe()">+ Beheerder toevoegen</button>
+          <button data-i18n="beheerderToevoegenBtn" class="btn-confirm" style="background:var(--green);" onclick="voegBeheerderToe()">+ Beheerder toevoegen</button>
         </div>
       </details>
     </div>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
-        <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🧪 Testdata</summary>
+        <summary data-i18n="testdataSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🧪 Testdata</summary>
         <div style="margin-top:12px;">
-          <button class="btn-confirm" style="background:var(--ink-light);width:100%;" onclick="vulTestdata()">Vul 19 random leden in</button>
+          <button data-i18n="vulTestdataBtn" class="btn-confirm" style="background:var(--ink-light);width:100%;" onclick="vulTestdata()">Vul 19 random leden in</button>
         </div>
       </details>
     </div>
@@ -596,28 +596,15 @@
 <!-- Deelnemer help modal -->
 <div class="modal-overlay" id="deelnemerHelpModal">
   <div class="modal">
-    <h2>ℹ️ Hoe werkt het?</h2>
-    <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px;font-size:13px;line-height:1.6;color:var(--ink);">
-      <div>
-        <strong>👤 Jouw naam</strong><br>
-        Je hebt je naam al ingesteld bij het inloggen. Heb je per ongeluk ingeschreven met de verkeerde naam? Kies dan via de <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--ink-light);">Wijzig</span> knop alsnog jouw naam.
-      </div>
-      <div>
-        <strong>✅ Inschrijven</strong><br>
-        Tik op <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Doe mee</span> om jezelf in te schrijven. Je krijgt een bevestiging met de datum. Is de hoofdlijst vol (20 plekken)? Dan kom je automatisch op de reservelijst (max 4 plekken). Is ook die vol, dan krijg je een melding dat er geen plek meer is.
-      </div>
-      <div>
-        <strong>👥 Iemand anders inschrijven</strong><br>
-        Tik op <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--ink-light);color:white;border-radius:6px;">Iemand anders inschrijven</span> en kies de naam van degene die je wilt inschrijven. Ook hier kun je alleen namen uit de ledenlijst kiezen.<br>
-        Wil je iemand inschrijven die geen lid is, dan moet dat in overleg met (een van) de beheerder(s). Je kunt hiervoor een berichtje achterlaten in deze WhatsApp-groep of direct een berichtje sturen naar (een van) de beheerder(s).
-      </div>
-      <div>
-        <strong>❌ Uitschrijven</strong><br>
-        Tik op het kruisje <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span> achter jouw naam. Sta je op de hoofdlijst en er is iemand op de reservelijst? Dan schuift die persoon automatisch door naar de hoofdlijst.
-      </div>
+    <h2 data-i18n="deelnemerHelpTitle">ℹ️ Hoe werkt het?</h2>
+    <div id="deelnemerHelpContent" style="display:flex;flex-direction:column;gap:14px;margin-top:8px;font-size:13px;line-height:1.6;color:var(--ink);">
+      <div><strong>👤 Jouw naam</strong><br>Je hebt je naam al ingesteld bij het inloggen. Heb je per ongeluk ingeschreven met de verkeerde naam? Kies dan via de <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--ink-light);">Wijzig</span> knop alsnog jouw naam.</div>
+      <div><strong>✅ Inschrijven</strong><br>Tik op <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Doe mee</span> om jezelf in te schrijven. Je krijgt een bevestiging met de datum. Is de hoofdlijst vol (20 plekken)? Dan kom je automatisch op de reservelijst (max 4 plekken). Is ook die vol, dan krijg je een melding dat er geen plek meer is.</div>
+      <div><strong>👥 Iemand anders inschrijven</strong><br>Tik op <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--ink-light);color:white;border-radius:6px;">Iemand anders inschrijven</span> en kies de naam van degene die je wilt inschrijven. Ook hier kun je alleen namen uit de ledenlijst kiezen.<br>Wil je iemand inschrijven die geen lid is, dan moet dat in overleg met (een van) de beheerder(s). Je kunt hiervoor een berichtje achterlaten in deze WhatsApp-groep of direct een berichtje sturen naar (een van) de beheerder(s).</div>
+      <div><strong>❌ Uitschrijven</strong><br>Tik op het kruisje <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span> achter jouw naam. Sta je op de hoofdlijst en er is iemand op de reservelijst? Dan schuift die persoon automatisch door naar de hoofdlijst.</div>
     </div>
     <div style="margin-top:20px;">
-      <button class="btn-confirm" style="width:100%;" onclick="closeModal('deelnemerHelpModal')">Sluiten</button>
+      <button data-i18n="sluiten" class="btn-confirm" style="width:100%;" onclick="closeModal('deelnemerHelpModal')">Sluiten</button>
     </div>
   </div>
 </div>
@@ -625,44 +612,18 @@
 <!-- Admin help modal -->
 <div class="modal-overlay" id="adminHelpModal">
   <div class="modal">
-    <h2>⚙️ Beheer – uitleg</h2>
-    <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px;font-size:13px;line-height:1.5;color:var(--ink);">
-      <div>
-        <strong>📋 Beheer huidige lijst</strong><br>
-        Sluit dit paneel en ga naar de actieve lijst. Je kunt dan deelnemers verwijderen <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span> of toevoegen via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Doe mee</span>. Als beheerder mag je ook namen invullen die niet in de ledenlijst staan.
-      </div>
-      <div>
-        <strong>📅 Nieuwe lijst aanmaken</strong><br>
-        Maak een inschrijflijst aan voor de gekozen vrijdag. Vaste deelnemers worden automatisch bovenaan de lijst geplaatst. Als er al een lijst bestaat voor die datum krijg je een waarschuwing. Na aanmaken wordt die lijst direct de actieve lijst voor iedereen.<br><br>
-        <em>Tip – zo deel je de lijst in WhatsApp:</em><br>
-        1. Maak de lijst aan via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Aanmaken ✓</span><br>
-        2. Tik op <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:#2d7a3a;color:white;border-radius:6px;">🔗 De link voor WhatsApp</span> — de tekst met datum en link wordt gekopieerd of gedeeld<br>
-        3. Plak het bericht in de padelgroep en verstuur het<br>
-        4. Houd het bericht ingedrukt → <strong>Vastzetten</strong> → 30 dagen
-      </div>
-      <div>
-        <strong>👥 Vaste deelnemers beheren</strong><br>
-        Stel in welke deelnemers automatisch worden toegevoegd bij het aanmaken van een nieuwe lijst. Voeg namen toe via de ledenlijst of verwijder ze met <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span>. De volgorde bepaalt de positie op de lijst.
-      </div>
-      <div>
-        <strong>📂 Andere lijst openen</strong><br>
-        Bekijk een eerdere lijst zonder dat dit de actieve lijst voor andere gebruikers wijzigt. Een blauwe banner verschijnt bovenaan — klik <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">← Terug</span> om terug te gaan naar de actieve lijst.
-      </div>
-      <div>
-        <strong>👥 Ledenlijst verversen</strong><br>
-        Haalt de meest recente ledenlijst op uit de KNLTB-registratie. De lijst wordt gebruikt als keuzelijst bij inschrijven — gewone gebruikers kunnen alleen namen uit deze lijst kiezen. Wordt automatisch gecacht — verversen is alleen nodig als er nieuwe leden zijn bijgekomen.
-      </div>
-      <div>
-        <strong>🔑 Beheerders</strong><br>
-        Toont de huidige beheerders. Voeg een nieuwe beheerder toe via naam (uit de ledenlijst) en een wachtwoord naar keuze. Wachtwoord wijzigen doe je bij het inloggen via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);color:var(--ink-light);border-radius:6px;">🔑 Wachtwoord wijzigen</span>.
-      </div>
-      <div>
-        <strong>🧪 Testdata</strong><br>
-        Vult de huidige lijst met 19 willekeurige namen uit de ledenlijst. Alleen bedoeld voor testen.
-      </div>
+    <h2 data-i18n="adminHelpTitle">⚙️ Beheer – uitleg</h2>
+    <div id="adminHelpContent" style="display:flex;flex-direction:column;gap:14px;margin-top:8px;font-size:13px;line-height:1.5;color:var(--ink);">
+      <div><strong>📋 Beheer huidige lijst</strong><br>Sluit dit paneel en ga naar de actieve lijst. Je kunt dan deelnemers verwijderen <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span> of toevoegen via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Doe mee</span>. Als beheerder mag je ook namen invullen die niet in de ledenlijst staan.</div>
+      <div><strong>📅 Nieuwe lijst aanmaken</strong><br>Maak een inschrijflijst aan voor de gekozen vrijdag. Vaste deelnemers worden automatisch bovenaan de lijst geplaatst. Als er al een lijst bestaat voor die datum krijg je een waarschuwing. Na aanmaken wordt die lijst direct de actieve lijst voor iedereen.<br><br><em>Tip – zo deel je de lijst in WhatsApp:</em><br>1. Maak de lijst aan via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Aanmaken ✓</span><br>2. Tik op <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:#2d7a3a;color:white;border-radius:6px;">🔗 De link voor WhatsApp</span> — de tekst met datum en link wordt gekopieerd of gedeeld<br>3. Plak het bericht in de padelgroep en verstuur het<br>4. Houd het bericht ingedrukt → <strong>Vastzetten</strong> → 30 dagen</div>
+      <div><strong>👥 Vaste deelnemers beheren</strong><br>Stel in welke deelnemers automatisch worden toegevoegd bij het aanmaken van een nieuwe lijst. Voeg namen toe via de ledenlijst of verwijder ze met <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span>. De volgorde bepaalt de positie op de lijst.</div>
+      <div><strong>📂 Andere lijst openen</strong><br>Bekijk een eerdere lijst zonder dat dit de actieve lijst voor andere gebruikers wijzigt. Een blauwe banner verschijnt bovenaan — klik <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">← Terug</span> om terug te gaan naar de actieve lijst.</div>
+      <div><strong>👥 Ledenlijst verversen</strong><br>Haalt de meest recente ledenlijst op uit de KNLTB-registratie. Wordt automatisch gecacht — verversen is alleen nodig als er nieuwe leden zijn bijgekomen.</div>
+      <div><strong>🔑 Beheerders</strong><br>Toont de huidige beheerders. Voeg een nieuwe beheerder toe via naam en een wachtwoord naar keuze. Wachtwoord wijzigen doe je bij het inloggen via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);color:var(--ink-light);border-radius:6px;">🔑 Wachtwoord wijzigen</span>.</div>
+      <div><strong>🧪 Testdata</strong><br>Vult de huidige lijst met 19 willekeurige namen uit de ledenlijst. Alleen bedoeld voor testen.</div>
     </div>
     <div style="margin-top:20px;">
-      <button class="btn-confirm" style="width:100%;" onclick="closeModal('adminHelpModal')">Sluiten</button>
+      <button data-i18n="sluiten" class="btn-confirm" style="width:100%;" onclick="closeModal('adminHelpModal')">Sluiten</button>
     </div>
   </div>
 </div>
@@ -1031,140 +992,47 @@ function t(key, vars = {}) {
 function setLang(newLang) {
   lang = newLang;
   localStorage.setItem(LANG_KEY, lang);
-  document.documentElement.lang = lang;
   applyLang();
 }
 
 function applyLang() {
-  // Loading overlay
-  const loadingSpan = document.querySelector("#loadingOverlay span");
-  if (loadingSpan) loadingSpan.textContent = t("verbinden");
+  document.documentElement.lang = lang;
 
-  // Header
-  const eyebrow = document.querySelector("header .eyebrow");
-  if (eyebrow) eyebrow.textContent = t("eyebrow");
-  if (currentDate) document.getElementById("headerTitle").textContent = datumNaarTitel(currentDate);
-
-  // Identity bar
-  document.querySelector(".identity-bar .label").textContent = t("jijBent");
-  const whoLabel = document.getElementById("whoLabel");
-  if (whoLabel && (!identity || whoLabel.textContent === t("nogNietIngesteld") || (lang !== "nl" && whoLabel.textContent === TRANSLATIONS.nl.nogNietIngesteld) || (lang !== "en" && whoLabel.textContent === TRANSLATIONS.en.nogNietIngesteld))) {
-    if (!identity) whoLabel.textContent = t("nogNietIngesteld");
-  }
-  document.querySelector(".btn-switch").textContent = t("wijzig");
+  // Lang toggle knop
   const langBtn = document.getElementById("langToggleBtn");
   if (langBtn) langBtn.textContent = lang === "nl" ? "EN" : "NL";
 
-  // Admin banner
-  const adminBannerSpan = document.querySelector("#adminBanner > span");
-  if (adminBannerSpan && adminNaam) adminBannerSpan.innerHTML = `${t("beheerBannerPre")} <span id="adminBannerNaam">${adminNaam}</span>`;
-  const logoutBtn = document.querySelector("#adminBanner .btn-switch");
-  if (logoutBtn) logoutBtn.textContent = t("uitloggen");
+  // Alle statische tekst via data-i18n
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
 
-  // View banner back button
-  const terugBtnEl = document.querySelector("#viewBanner .btn-switch");
-  if (terugBtnEl) terugBtnEl.textContent = t("terugBtn");
-  if (currentDate && activeDatum && currentDate !== activeDatum) updateViewBanner();
+  // Help modal content (bevat HTML)
+  const helpEl = document.getElementById("deelnemerHelpContent");
+  if (helpEl) helpEl.innerHTML = t("deelnemerHelpContent");
+  const adminHelpEl = document.getElementById("adminHelpContent");
+  if (adminHelpEl) adminHelpEl.innerHTML = t("adminHelpContent");
 
-  // Deelnemers section
-  const deelLabel = document.querySelector("[data-i18n='deelnemers']");
-  if (deelLabel) deelLabel.textContent = t("deelnemers");
-  const andereBtn = document.querySelector("[data-i18n='iemandAndersBtn']");
-  if (andereBtn) andereBtn.textContent = t("iemandAndersBtn");
-  const doeMeeBtn = document.querySelector("[data-i18n='doeMeeBtn']");
-  if (doeMeeBtn) doeMeeBtn.textContent = t("doeMeeBtn");
-  const reserveDiv = document.querySelector(".divider-reserve span");
-  if (reserveDiv) reserveDiv.textContent = t("reserveLabel");
-  const beheerBtn = document.querySelector("[data-i18n='beheerKnop']");
-  if (beheerBtn) beheerBtn.textContent = t("beheerKnop");
-
-  // Count badge
+  // Dynamische elementen
+  if (currentDate) document.getElementById("headerTitle").textContent = datumNaarTitel(currentDate);
   if (currentSession) {
     const filled = slotArray(currentSession.main, MAIN_SIZE).filter(n => n && n.trim()).length;
     document.getElementById("countBadge").textContent = t("aantalDeelnemers", { filled, max: MAIN_SIZE });
   }
+  if (!identity) document.getElementById("whoLabel").textContent = t("nogNietIngesteld");
 
-  // Modals - admin add
-  document.querySelector("#adminAddModal h2").textContent = t("adminAddTitle");
-  document.getElementById("adminAddInput").placeholder = t("adminAddPlaceholder");
-  document.querySelectorAll("[data-i18n='annuleer']").forEach(el => el.textContent = t("annuleer"));
-  document.querySelector("#adminAddModal .btn-confirm").textContent = t("inschrijvenBevestig");
-
-  // Modals - andere
-  document.querySelector("#andereModal h2").textContent = t("andereTitle");
-  document.querySelector("#andereModal p").textContent = t("andereDesc");
-  document.getElementById("andereInput").placeholder = t("anderePlaceholder");
-  document.querySelector("#andereModal .btn-confirm").textContent = t("inschrijvenBevestig");
-
-  // Modals - identity
-  document.querySelector("#identityModal h2").textContent = t("identityTitle");
-  document.querySelector("#identityModal p").textContent = t("identityDesc");
-  document.getElementById("identityInput").placeholder = t("identityPlaceholder");
-  document.querySelector("#identityModal .btn-confirm").textContent = t("bevestigen");
-
-  // Modals - admin pw
-  document.querySelector("#adminPwModal h2").textContent = t("beheerTitle");
-  document.querySelector("#adminPwModal > .modal > p").textContent = t("voerWwIn");
-  document.getElementById("adminPwInput").placeholder = t("wachtwoordPlaceholder");
-  document.querySelector("#adminPwModal .btn-confirm:not([onclick='checkAdminPwEnWijzig()'])").textContent = t("inloggen");
-  document.querySelector("#adminPwModal details summary").textContent = t("wachtwoordWijzigen");
-  document.getElementById("nieuwWwInput").placeholder = t("nieuwWachtwoord");
-  document.getElementById("nieuwWwBevestig").placeholder = t("bevestigWachtwoord");
-  document.querySelector("[onclick='checkAdminPwEnWijzig()']").textContent = t("inloggenEnOpslaan");
-
-  // Admin panel
-  document.querySelector("#adminPanel h2").textContent = t("adminPanelTitle");
-  document.querySelector("#adminPanel > .modal > .btn-confirm").textContent = t("beheerHuidigeBtn");
-  const panelSummaries = document.querySelectorAll("#adminPanel details summary");
-  if (panelSummaries[0]) panelSummaries[0].textContent = t("nieuweLijstSummary");
-  if (panelSummaries[1]) panelSummaries[1].textContent = t("screenshotSummary");
-  if (panelSummaries[2]) panelSummaries[2].textContent = t("vasteDeelnemersSummary");
-  if (panelSummaries[3]) panelSummaries[3].textContent = t("andereLijstSummary");
-  if (panelSummaries[4]) panelSummaries[4].textContent = t("ledenlijstSummary");
-  if (panelSummaries[5]) panelSummaries[5].textContent = t("beheerdersSummary");
-  if (panelSummaries[6]) panelSummaries[6].textContent = t("testdataSummary");
-  const panelConfirms = document.querySelectorAll("#adminPanel .btn-confirm");
-  // aanmaken button (index 1), screenshot (index 2), vaste+ (index 3), openen (index 4), verversen (index 5), beheerder+ (index 6), testdata (index 7)
-  if (panelConfirms[1]) panelConfirms[1].textContent = t("aanmaken");
-  if (panelConfirms[3]) panelConfirms[3].textContent = "+";
-  if (panelConfirms[6]) panelConfirms[6].textContent = t("beheerderToevoegenBtn");
-  if (panelConfirms[7]) panelConfirms[7].textContent = t("vulTestdataBtn");
-  const shareBtn = document.querySelector("#adminPanel .btn-share:not([onclick='deelScreenshot()'])");
-  if (shareBtn) shareBtn.textContent = t("deLink");
-  const deelBtn = document.querySelector("[onclick='deelScreenshot()']");
-  if (deelBtn) deelBtn.textContent = t("deelScreenshotBtn");
-  const screenshotDescEl = document.querySelector("#screenshotSection > details > div > div");
-  if (screenshotDescEl) screenshotDescEl.textContent = t("screenshotDesc");
-  const vasteDescEl = document.querySelector("#adminPanel details:nth-of-type(3) > div > div:first-child");
-  if (vasteDescEl) vasteDescEl.textContent = t("vasteDeelnemersDesc");
-  document.getElementById("vasteDeelnemerInput").placeholder = t("naamToevoegen");
-  const openenBtn = document.querySelector("[onclick='andereLijstOpenen()']");
-  if (openenBtn) openenBtn.textContent = t("openen");
-  const ledenInfoEl = document.getElementById("ledenInfo");
-  if (ledenInfoEl && (ledenInfoEl.textContent === TRANSLATIONS.nl.ledenInfoLaden || ledenInfoEl.textContent === TRANSLATIONS.en.ledenInfoLaden)) {
-    ledenInfoEl.textContent = t("ledenInfoLaden");
+  // Admin banner naam
+  if (adminNaam) {
+    const bannerPre = document.getElementById("adminBannerPre");
+    if (bannerPre) bannerPre.textContent = t("beheerBannerPre") + " ";
   }
-  updateLedenInfo();
-  const nieuweBehLabel = document.querySelector("#adminPanel details:nth-of-type(5) label");
-  if (nieuweBehLabel) nieuweBehLabel.textContent = t("nieuweBeheerderLabel");
-  document.getElementById("nieuwBeheerderNaam").placeholder = t("beheerderNaamPlaceholder");
-  document.getElementById("nieuwBeheerderWw").placeholder = t("beheerderWwPlaceholder");
 
-  // Help modal titles & content
-  document.querySelector("#deelnemerHelpModal h2").textContent = t("deelnemerHelpTitle");
-  document.querySelector("#deelnemerHelpModal .btn-confirm").textContent = t("sluiten");
-  document.querySelector("#deelnemerHelpModal .modal > div:not([style*='margin-top'])").innerHTML = t("deelnemerHelpContent");
-  document.querySelector("#adminHelpModal h2").textContent = t("adminHelpTitle");
-  document.querySelector("#adminHelpModal .btn-confirm").textContent = t("sluiten");
-  document.querySelector("#adminHelpModal .modal > div:not([style*='margin-top'])").innerHTML = t("adminHelpContent");
-
-  // Close buttons
-  document.querySelectorAll("[data-i18n='sluiten']").forEach(el => el.textContent = t("sluiten"));
-
-  // Beheerder footer
   updateBeheerderFooter();
-
-  // Re-render slots (for "Vrij", "jij", "Uitschrijven" labels)
+  updateLedenInfo();
+  updateViewBanner();
   render();
 }
 
