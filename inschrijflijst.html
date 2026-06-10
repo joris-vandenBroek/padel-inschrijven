@@ -977,7 +977,7 @@ const TRANSLATIONS = {
 };
 
 // ═══ TAAL ═══════════════════════════════════════════════
-let lang = localStorage.getItem(LANG_KEY) || "nl";
+var lang = localStorage.getItem(LANG_KEY) || "nl";
 
 function t(key, vars = {}) {
   let str = (TRANSLATIONS[lang] && TRANSLATIONS[lang][key] !== undefined)
