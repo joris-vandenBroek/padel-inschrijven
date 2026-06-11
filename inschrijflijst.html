@@ -619,14 +619,6 @@
       </details>
     </div>
 
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
-      <details>
-        <summary data-i18n="testdataSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🧪 Testdata</summary>
-        <div style="margin-top:12px;">
-          <button data-i18n="vulTestdataBtn" class="btn-confirm" style="background:var(--ink-light);width:100%;" onclick="vulTestdata()">Vul 19 random leden in</button>
-        </div>
-      </details>
-    </div>
   </div>
 </div>
 
@@ -776,8 +768,6 @@ const TRANSLATIONS = {
     beheerderNaamPlaceholder: "Naam…",
     beheerderWwPlaceholder: "Wachtwoord…",
     beheerderToevoegenBtn: "+ Beheerder toevoegen",
-    testdataSummary: "🧪 Testdata",
-    vulTestdataBtn: "Vul 19 random leden in",
     sluiten: "Sluiten",
     deelnemerHelpTitle: "ℹ️ Hoe werkt het?",
     adminHelpTitle: "⚙️ Beheer – uitleg",
@@ -848,7 +838,6 @@ const TRANSLATIONS = {
     reserveCount: " + {n} reserve",
     verversenBezig: "↻ Verversen…",
     alOpLijstWaarschuwing: "⚠️ '{naam}' staat al op de lijst",
-    testdataIngevuld: "✓ 19 testleden ingevuld",
     beheermodeUit: "Beheermodus uitgeschakeld",
     deelnemerHelpContent: `
       <div><strong>👤 Jouw naam</strong><br>Je hebt je naam al ingesteld bij het inloggen. Heb je per ongeluk ingeschreven met de verkeerde naam? Kies dan via de <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--ink-light);">Wijzig</span> knop alsnog jouw naam.</div>
@@ -862,7 +851,7 @@ const TRANSLATIONS = {
       <div><strong>📂 Andere lijst openen</strong><br>Bekijk een eerdere lijst zonder dat dit de actieve lijst voor andere gebruikers wijzigt. Een blauwe banner verschijnt bovenaan — klik <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">← Terug</span> om terug te gaan naar de actieve lijst.</div>
       <div><strong>👥 Ledenlijst verversen</strong><br>Haalt de meest recente ledenlijst op uit de KNLTB-registratie. Wordt automatisch gecacht — verversen is alleen nodig als er nieuwe leden zijn bijgekomen.</div>
       <div><strong>🔑 Beheerders</strong><br>Toont de huidige beheerders. Voeg een nieuwe beheerder toe via naam en een wachtwoord naar keuze. Wachtwoord wijzigen doe je bij het inloggen via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);color:var(--ink-light);border-radius:6px;">🔑 Wachtwoord wijzigen</span>.</div>
-      <div><strong>🧪 Testdata</strong><br>Vult de huidige lijst met 19 willekeurige namen uit de ledenlijst. Alleen bedoeld voor testen.</div>`
+`
   },
   en: {
     verbinden: "Connecting…",
@@ -928,8 +917,6 @@ const TRANSLATIONS = {
     beheerderNaamPlaceholder: "Name…",
     beheerderWwPlaceholder: "Password…",
     beheerderToevoegenBtn: "+ Add admin",
-    testdataSummary: "🧪 Test data",
-    vulTestdataBtn: "Fill with 19 random members",
     sluiten: "Close",
     deelnemerHelpTitle: "ℹ️ How does it work?",
     adminHelpTitle: "⚙️ Admin – explanation",
@@ -999,7 +986,6 @@ const TRANSLATIONS = {
     reserveCount: " + {n} reserve",
     verversenBezig: "↻ Refreshing…",
     alOpLijstWaarschuwing: "⚠️ '{naam}' is already on the list",
-    testdataIngevuld: "✓ 19 test members filled in",
     beheermodeUit: "Admin mode disabled",
     deelnemerHelpContent: `
       <div><strong>👤 Your name</strong><br>You already set your name when logging in. Did you accidentally sign up with the wrong name? Use the <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--ink-light);">Change</span> button to update your name.</div>
@@ -1013,7 +999,7 @@ const TRANSLATIONS = {
       <div><strong>📂 Open another list</strong><br>View an earlier list without changing the active list for other users. A blue banner appears at the top — click <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">← Back</span> to return to the active list.</div>
       <div><strong>👥 Refresh member list</strong><br>Fetches the most recent member list from the KNLTB registration. Automatically cached — refresh is only needed when new members have been added.</div>
       <div><strong>🔑 Admins</strong><br>Shows the current admins. Add a new admin via name and a password of your choice. Change password at login via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);color:var(--ink-light);border-radius:6px;">🔑 Change password</span>.</div>
-      <div><strong>🧪 Test data</strong><br>Fills the current list with 19 random names from the member list. For testing purposes only.</div>`
+`
   }
 };
 
@@ -1760,20 +1746,6 @@ function beheerHuidigeLijst() {
   closeModal("adminPanel");
 }
 
-async function vulTestdata() {
-  closeModal("adminPanel");
-  await laadLeden();
-  if (!leden.length) { showToast(t("ledenNogNietGeladen")); return; }
-  const shuffled = [...leden].sort(() => Math.random() - 0.5).slice(0, 19);
-  db.ref(`sessies/${currentDate}`).transaction(session => {
-    if (!session) return;
-    for (let i = 0; i < MAIN_SIZE; i++) session.main[i] = (shuffled[i] && shuffled[i].naam) ? shuffled[i].naam : (shuffled[i] || "");
-    for (let i = 0; i < RESERVE_SIZE; i++) session.reserve[i] = "";
-    return session;
-  }, (error, committed) => {
-    if (committed) showToast(t("testdataIngevuld"));
-  });
-}
 
 async function laadBestaandeLijsten() {
   const sel = document.getElementById("andereListSelect");
