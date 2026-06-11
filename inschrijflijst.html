@@ -20,6 +20,7 @@
     --ink: #1a1810;
     --ink-light: #6b6555;
     --accent: #c8410a;
+    --danger: #b82a0a;
     --green: #2d7a3a;
     --green-light: #e4f2e6;
     --mine: #1a4f8a;
@@ -115,7 +116,7 @@
   .slot {
     display: flex;
     align-items: center;
-    padding: 13px 20px;
+    padding: 13px 16px;
     border-bottom: 1px solid var(--border);
     gap: 14px;
     position: relative;
@@ -173,7 +174,7 @@
     color: var(--mine);
     border: 1.5px solid var(--mine);
     border-radius: 8px;
-    padding: 6px 12px;
+    padding: 10px 14px;
     font-family: 'DM Sans', sans-serif;
     font-size: 12px;
     font-weight: 600;
@@ -313,7 +314,7 @@
 
   .divider-reserve {
     background: #ede8dc;
-    padding: 8px 20px;
+    padding: 8px 16px;
     font-size: 11px;
     letter-spacing: 2px;
     text-transform: uppercase;
@@ -328,7 +329,7 @@
   .confirm-modal .modal .sub { font-size: 13px; color: var(--ink-light); margin-bottom: 20px; line-height: 1.5; }
   .btn-danger {
     flex: 1;
-    background: var(--accent);
+    background: var(--danger);
     color: white;
     border: none;
     border-radius: 10px;
@@ -339,7 +340,7 @@
     cursor: pointer;
     transition: background 0.15s;
   }
-  .btn-danger:hover { background: #a83508; }
+  .btn-danger:hover { background: #8e1d06; }
 
   #loadingOverlay {
     position: fixed; inset: 0;
@@ -359,6 +360,34 @@
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .btn-join:focus-visible,
+  .btn-confirm:focus-visible,
+  .btn-danger:focus-visible,
+  .btn-leave:focus-visible,
+  .btn-share:focus-visible,
+  .btn-switch:focus-visible,
+  .btn-cancel:focus-visible {
+    outline: 2.5px solid var(--mine);
+    outline-offset: 2px;
+  }
+
+  .btn-help {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--ink-light);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-help:hover { border-color: var(--mine); color: var(--mine); }
+  .btn-help:focus-visible { outline: 2.5px solid var(--mine); outline-offset: 2px; }
+
+  .toast { white-space: normal; max-width: calc(100vw - 48px); text-align: center; }
 </style>
 </head>
 <body>
@@ -379,7 +408,7 @@
   <span data-i18n="jijBent" class="label">Jij bent:</span>
   <span class="who" id="whoLabel">—</span>
   <button data-i18n="wijzig" class="btn-switch" onclick="openIdentityModal()">Wijzig</button>
-  <button onclick="openDeelnemerHelp()" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:26px;height:26px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink-light);flex-shrink:0;">?</button>
+  <button onclick="openDeelnemerHelp()" class="btn-help">?</button>
   <div id="langDropdown" style="position:relative;flex-shrink:0;">
     <button id="langDropdownBtn" onclick="toggleLangDropdown()" style="background:var(--card);border:1.5px solid var(--border);border-radius:7px;padding:3px 8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink-light);display:flex;align-items:center;gap:5px;letter-spacing:0.3px;">
       <img id="langFlag" src="https://flagcdn.com/nl.svg" width="18" height="13" style="border-radius:2px;display:block;" alt="NL"><span id="langCode">NL</span><span style="font-size:9px;opacity:0.6;">▾</span>
@@ -402,10 +431,10 @@
   </div>
 </div>
 
-<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px;">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 16px 8px;">
   <span data-i18n="deelnemers" style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--ink-light);">Deelnemers</span>
   <div style="display:flex;gap:8px;">
-    <button data-i18n="iemandAndersBtn" class="btn-join" style="font-size:12px;padding:6px 14px;background:var(--ink-light);" onclick="openAndereInschrijvenModal()">Iemand anders inschrijven</button>
+    <button data-i18n="iemandAndersBtn" class="btn-switch" style="font-size:12px;padding:7px 14px;" onclick="openAndereInschrijvenModal()">Iemand anders inschrijven</button>
     <button data-i18n="doeMeeBtn" class="btn-join" style="font-size:12px;padding:6px 14px;" onclick="joinFirstFree()">Doe mee</button>
   </div>
 </div>
@@ -488,9 +517,9 @@
         <summary data-i18n="wachtwoordWijzigen" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🔑 Wachtwoord wijzigen</summary>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
           <input type="password" id="nieuwWwInput" data-i18n-ph="nieuwWachtwoord" placeholder="Nieuw wachtwoord…" maxlength="40"
-            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);color:var(--ink);outline:none;" />
           <input type="password" id="nieuwWwBevestig" data-i18n-ph="bevestigWachtwoord" placeholder="Bevestig nieuw wachtwoord…" maxlength="40"
-            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);color:var(--ink);outline:none;" />
           <button data-i18n="inloggenEnOpslaan" class="btn-confirm" onclick="checkAdminPwEnWijzig()">Inloggen & wachtwoord opslaan ✓</button>
         </div>
       </details>
@@ -503,7 +532,7 @@
   <div class="modal">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <h2 data-i18n="adminPanelTitle" style="margin-bottom:0;">⚙️ Beheer</h2>
-      <button onclick="openAdminHelp()" style="background:transparent;border:1.5px solid var(--border);border-radius:50%;width:28px;height:28px;font-size:14px;font-weight:700;cursor:pointer;color:var(--ink-light);">?</button>
+      <button onclick="openAdminHelp()" class="btn-help">?</button>
     </div>
 
     <button data-i18n="beheerHuidigeBtn" class="btn-confirm" style="width:100%;margin-bottom:16px;" onclick="beheerHuidigeLijst()">
@@ -545,7 +574,7 @@
           <div id="vasteDeelnemerLijst" style="display:flex;flex-direction:column;gap:6px;"></div>
           <div style="display:flex;gap:8px;margin-top:4px;">
             <input type="text" id="vasteDeelnemerInput" data-i18n-ph="naamToevoegen" placeholder="Naam toevoegen…" maxlength="40" autocomplete="off" list="ledenList"
-              style="flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+              style="flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);color:var(--ink);outline:none;" />
             <button class="btn-confirm" style="flex:0 0 auto;padding:9px 14px;font-size:14px;" onclick="voegVasteDeelnemerToe()">+</button>
           </div>
         </div>
@@ -582,9 +611,9 @@
           <div id="beheerderLijst"></div>
           <label data-i18n="nieuweBeheerderLabel" style="font-size:12px;color:var(--ink-light);margin-top:4px;">Nieuwe beheerder toevoegen</label>
           <input type="text" id="nieuwBeheerderNaam" data-i18n-ph="beheerderNaamPlaceholder" placeholder="Naam…" maxlength="40" list="ledenList"
-            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);color:var(--ink);outline:none;" />
           <input type="password" id="nieuwBeheerderWw" data-i18n-ph="beheerderWwPlaceholder" placeholder="Wachtwoord…" maxlength="40"
-            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+            style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);color:var(--ink);outline:none;" />
           <button data-i18n="beheerderToevoegenBtn" class="btn-confirm" style="background:var(--green);" onclick="voegBeheerderToe()">+ Beheerder toevoegen</button>
         </div>
       </details>
@@ -1901,9 +1930,14 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2500);
 }
 
-["identityModal","confirmModal","adminPwModal","adminPanel","adminAddModal","andereModal"].forEach(id => {
+const ALL_MODALS = ["identityModal","confirmModal","adminPwModal","adminPanel","adminAddModal","andereModal","deelnemerHelpModal","adminHelpModal"];
+ALL_MODALS.forEach(id => {
   const m = document.getElementById(id);
   if (m) m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); });
+});
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape") return;
+  ALL_MODALS.forEach(id => document.getElementById(id)?.classList.remove("open"));
 });
 
 document.getElementById("identityInput").addEventListener("keydown", e => {
