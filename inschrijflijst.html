@@ -1395,16 +1395,20 @@ async function initialiseerSessie(datum, title, time, eventType) {
   const leeg = (size) => { const o = {}; for (let i = 0; i < size; i++) o[i] = ""; return o; };
   const beide = eventConfig.sport === "beide";
 
+  // Laad vaste deelnemers voor het juiste event type (niet altijd het huidige URL-type)
+  const vdSnap = await db.ref(`instellingen/vasteDeelnemersPerType/${eventType || DEFAULT_EVENT_TYPE}`).once("value");
+  const vd = Array.isArray(vdSnap.val()) ? vdSnap.val() : [];
+
   let data;
   if (beide) {
     const main_padel = leeg(s), main_tennis = leeg(s);
-    vasteDeelnemers.slice(0, s).forEach((naam, i) => { main_padel[i] = naam; });
+    vd.slice(0, s).forEach((naam, i) => { main_padel[i] = naam; });
     data = { title, time, eventType: eventType || DEFAULT_EVENT_TYPE,
       main_padel, reserve_padel: leeg(r), main_tennis, reserve_tennis: leeg(r),
       aangemaaktOp: firebase.database.ServerValue.TIMESTAMP };
   } else {
     const main = leeg(s), reserve = leeg(r);
-    vasteDeelnemers.slice(0, s).forEach((naam, i) => { main[i] = naam; });
+    vd.slice(0, s).forEach((naam, i) => { main[i] = naam; });
     data = { title, time, eventType: eventType || DEFAULT_EVENT_TYPE, main, reserve,
       aangemaaktOp: firebase.database.ServerValue.TIMESTAMP };
   }
