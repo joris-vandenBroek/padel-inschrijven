@@ -2582,7 +2582,8 @@ function shareLink() {
   const tijd   = currentSession?.time  || "";
   const tekst  = `🎾 ${titel} · ${tijd}\nDe inschrijving is geopend – schrijf je snel in, vol = vol!\nSign-up is open – register quickly, spots fill up fast!`;
   const baseUrl = location.origin + location.pathname;
-  const url = eventConfig.shareUrl || `${baseUrl}?event=${urlEventType}`;
+  const url = eventConfig.shareUrl
+    || (urlEventType === DEFAULT_EVENT_TYPE ? baseUrl : `${baseUrl}?event=${urlEventType}`);
 
   if (navigator.share) {
     navigator.share({ text: tekst, url });
