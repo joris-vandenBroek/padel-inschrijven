@@ -732,6 +732,13 @@
         </div>
       </div>
     </div>
+      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etSport">Sport</label>
+      <select id="etSport"
+        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
+        <option value="padel">🎾 Padel</option>
+        <option value="tennis">🎾 Tennis</option>
+        <option value="beide">🎾 Padel &amp; Tennis</option>
+      </select>
       <label style="font-size:12px;color:var(--ink-light);" data-i18n="etShareUrl">Korte link (optioneel, bijv. tinyurl)</label>
       <input id="etShareUrl" type="url" placeholder="https://tinyurl.com/…" maxlength="200" autocomplete="off"
         style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
@@ -895,6 +902,7 @@ const TRANSLATIONS = {
     etVerloop: "Lijst sluit om (uur)",
     etMainSize: "Max deelnemers",
     etReserveSize: "Max reserve",
+    etSport: "Sport",
     etShareUrl: "Korte link (optioneel, bijv. tinyurl)",
     etOpslaanBtn: "Opslaan ✓",
     beheerdersSummary: "🔑 Beheerders",
@@ -1066,6 +1074,7 @@ const TRANSLATIONS = {
     etVerloop: "List closes at (hour)",
     etMainSize: "Max participants",
     etReserveSize: "Max reserve",
+    etSport: "Sport",
     etShareUrl: "Short link (optional, e.g. tinyurl)",
     etOpslaanBtn: "Save ✓",
     beheerdersSummary: "🔑 Admins",
@@ -1929,6 +1938,7 @@ function openEventTypeForm(id) {
   document.getElementById("etNaamNl").value    = et ? (et.label?.nl || "") : "";
   document.getElementById("etNaamEn").value    = et ? (et.label?.en || "") : "";
   document.getElementById("etShareUrl").value  = et ? (et.shareUrl || "") : "";
+  document.getElementById("etSport").value     = et ? (et.sport || "padel") : "padel";
   document.getElementById("etVerloop").value   = et ? et.verloopUur : 9;
   document.getElementById("etMainSize").value  = et ? et.mainSize : 20;
   document.getElementById("etReserveSize").value = et ? et.reserveSize : 4;
@@ -1968,8 +1978,9 @@ function slaEventTypeOp() {
 
   // ID: nieuw = slug van NL naam, bestaand = zelfde houden
   const shareUrl = document.getElementById("etShareUrl").value.trim();
+  const sport    = document.getElementById("etSport").value;
   const id = _editingEventTypeId || naamNl.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-  const et = { id, label: { nl: naamNl, en: naamEn || naamNl }, dag, startTijd, eindTijd, verloopUur, mainSize, reserveSize, ...(shareUrl && { shareUrl }) };
+  const et = { id, label: { nl: naamNl, en: naamEn || naamNl }, dag, startTijd, eindTijd, verloopUur, mainSize, reserveSize, sport, ...(shareUrl && { shareUrl }) };
 
   EVENT_TYPES[id] = et;
   db.ref(`instellingen/eventTypes/${id}`).set(et).then(() => {
