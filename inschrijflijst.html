@@ -1265,6 +1265,7 @@ function updateVerlopenState() {
 function render() {
   if (!currentSession) return;
   updateVerlopenState();
+  updateViewBanner();
   const main    = slotArray(currentSession.main,    MAIN_SIZE);
   const reserve = slotArray(currentSession.reserve, RESERVE_SIZE);
   renderList("mainList",    main,    "main");
