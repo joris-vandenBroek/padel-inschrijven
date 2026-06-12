@@ -489,6 +489,7 @@
   <span id="viewBannerText">👁 Je bekijkt een andere lijst</span>
   <div style="display:flex;gap:8px;">
     <button data-i18n="maakActiefBtn" class="btn-switch" style="border-color:var(--green);color:var(--green);white-space:nowrap;" onclick="maakLijstActief()">✓ Maak lijst actief</button>
+    <button class="btn-switch" style="border-color:var(--accent);color:var(--accent);white-space:nowrap;" onclick="verwijderHuidigeLijst()">🗑 Verwijder</button>
     <button data-i18n="terugBtn" class="btn-switch" style="border-color:var(--mine);color:var(--mine);white-space:nowrap;" onclick="terugNaarActief()">← Terug</button>
   </div>
 </div>
@@ -2731,6 +2732,22 @@ function andereLijstOpenen() {
 function terugNaarActief() {
   if (currentDate !== activeDatum) switchToDatum(activeDatum);
   updateViewBanner();
+}
+
+function verwijderHuidigeLijst() {
+  if (!currentDate || currentDate === activeDatum) { showToast("Kan de actieve lijst niet verwijderen"); return; }
+  const titel = currentSession?.title || currentDate;
+  document.getElementById("confirmTitle").textContent = "Lijst verwijderen?";
+  document.getElementById("confirmMsg").textContent   = `"${titel}" permanent verwijderen uit Firebase?`;
+  document.getElementById("confirmOkBtn").textContent = "Verwijderen";
+  document.getElementById("confirmModal").classList.add("open");
+  document.getElementById("confirmOkBtn").onclick = () => {
+    closeModal("confirmModal");
+    db.ref(`sessies/${currentDate}`).remove().then(() => {
+      showToast(`✓ ${titel} verwijderd`);
+      terugNaarActief();
+    });
+  };
 }
 
 function maakLijstActief() {
