@@ -622,7 +622,7 @@
       <details>
         <summary data-i18n="vasteDeelnemersSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">👥 Vaste deelnemers beheren</summary>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
-          <div data-i18n="vasteDeelnemersDesc" style="font-size:12px;color:var(--ink-light);">Deze deelnemers worden automatisch toegevoegd bij het aanmaken van een nieuwe lijst.</div>
+          <div id="vasteDeelnemersDesc" style="font-size:12px;color:var(--ink-light);"></div>
           <div id="vasteDeelnemerLijst" style="display:flex;flex-direction:column;gap:6px;"></div>
           <div style="display:flex;gap:8px;margin-top:4px;">
             <input type="text" id="vasteDeelnemerInput" data-i18n-ph="naamToevoegen" placeholder="Naam toevoegen…" maxlength="40" autocomplete="off" list="ledenList"
@@ -2184,6 +2184,12 @@ function updateBeheerderFooter() {
 function renderVasteDeelnemers() {
   const el = document.getElementById("vasteDeelnemerLijst");
   if (!el) return;
+  const label = eventConfig?.label?.[currentLang] || eventConfig?.label?.nl || urlEventType;
+  const desc = document.getElementById("vasteDeelnemersDesc");
+  if (desc) desc.textContent = currentLang === "en"
+    ? `These participants are automatically added when creating a new list for "${label}".`
+    : `Deze deelnemers worden automatisch toegevoegd bij het aanmaken van een nieuwe lijst voor "${label}".`;
+
   el.innerHTML = "";
   if (!vasteDeelnemers.length) {
     el.innerHTML = `<div style="font-size:12px;color:var(--ink-light);font-style:italic;">${t("nogGeenVasteDeelnemers")}</div>`;
