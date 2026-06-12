@@ -432,7 +432,9 @@
   </div>
 </div>
 
-<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 16px 8px;">
+<div id="verlopenBanner" style="display:none;margin:8px 16px 0;background:#fff8e8;border:1.5px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--ink-light);line-height:1.5;"></div>
+
+<div id="actieBar" style="display:flex;align-items:center;justify-content:space-between;padding:18px 16px 8px;">
   <span data-i18n="deelnemers" style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--ink-light);">Deelnemers</span>
   <div style="display:flex;gap:8px;">
     <button data-i18n="iemandAndersBtn" class="btn-switch" style="font-size:12px;padding:7px 14px;" onclick="openAndereInschrijvenModal()">Iemand anders inschrijven</button>
@@ -842,6 +844,7 @@ const TRANSLATIONS = {
     verversenBezig: "↻ Verversen…",
     alOpLijstWaarschuwing: "⚠️ '{naam}' staat al op de lijst",
     beheermodeUit: "Beheermodus uitgeschakeld",
+    lijstVerlopen: "⏸ De inschrijving is gesloten. De beheerder heeft nog geen nieuwe lijst klaargezet.",
     deelnemerHelpContent: `
       <div><strong>👤 Jouw naam</strong><br>Je hebt je naam al ingesteld bij het inloggen. Heb je per ongeluk ingeschreven met de verkeerde naam? Kies dan via de <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--ink-light);">Wijzig</span> knop alsnog jouw naam.</div>
       <div><strong>✅ Inschrijven</strong><br>Tik op <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Doe mee</span> om jezelf in te schrijven. Je krijgt een bevestiging met de datum. Is de hoofdlijst vol (20 plekken)? Dan kom je automatisch op de reservelijst (max 4 plekken). Is ook die vol, dan krijg je een melding dat er geen plek meer is.</div>
@@ -992,6 +995,7 @@ const TRANSLATIONS = {
     verversenBezig: "↻ Refreshing…",
     alOpLijstWaarschuwing: "⚠️ '{naam}' is already on the list",
     beheermodeUit: "Admin mode disabled",
+    lijstVerlopen: "⏸ Sign-up is closed. The admin has not yet set up a new list.",
     deelnemerHelpContent: `
       <div><strong>👤 Your name</strong><br>You already set your name when logging in. Did you accidentally sign up with the wrong name? Use the <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);border-radius:6px;color:var(--ink-light);">Change</span> button to update your name.</div>
       <div><strong>✅ Signing up</strong><br>Tap <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Join</span> to sign yourself up. You will receive a confirmation with the date. Is the main list full (20 spots)? Then you are automatically placed on the reserve list (max 4 spots). If that is also full, you will receive a notification that there are no spots left.</div>
@@ -1211,9 +1215,30 @@ function getUpcomingFridays(count) {
   return fridays;
 }
 
+// ═══ VERLOPEN ═══════════════════════════════════════════
+function isLijstVerlopen() {
+  if (!activeDatum) return true;
+  return new Date() >= new Date(activeDatum + "T09:00:00");
+}
+
+function updateVerlopenState() {
+  const verlopen = isLijstVerlopen();
+  const banner = document.getElementById("verlopenBanner");
+  const actieBar = document.getElementById("actieBar");
+  if (verlopen && !isAdmin) {
+    banner.style.display = "block";
+    banner.textContent = t("lijstVerlopen");
+    actieBar.style.display = "none";
+  } else {
+    banner.style.display = "none";
+    actieBar.style.display = "flex";
+  }
+}
+
 // ═══ RENDER ═════════════════════════════════════════════
 function render() {
   if (!currentSession) return;
+  updateVerlopenState();
   const main    = slotArray(currentSession.main,    MAIN_SIZE);
   const reserve = slotArray(currentSession.reserve, RESERVE_SIZE);
   renderList("mainList",    main,    "main");
@@ -1281,12 +1306,14 @@ function renderList(containerId, arr, listType) {
       const tag = document.createElement("span");
       tag.className = "mine-tag";
       tag.textContent = t("jijTag");
-      const btn = document.createElement("button");
-      btn.className = "btn-leave";
-      btn.textContent = t("uitschrijvenBtn");
-      btn.onclick = () => confirmRemove(name, listType, i);
       action.appendChild(tag);
-      action.appendChild(btn);
+      if (!isLijstVerlopen()) {
+        const btn = document.createElement("button");
+        btn.className = "btn-leave";
+        btn.textContent = t("uitschrijvenBtn");
+        btn.onclick = () => confirmRemove(name, listType, i);
+        action.appendChild(btn);
+      }
     }
 
     div.appendChild(num);
@@ -1324,6 +1351,7 @@ function confirmIdentity() {
 
 // ═══ INSCHRIJVEN ════════════════════════════════════════
 function joinFirstFree() {
+  if (isLijstVerlopen() && !isAdmin) return;
   if (!identity) { pendingJoin = true; openIdentityModal(); return; }
   if (!currentSession) return;
 
@@ -2068,6 +2096,8 @@ async function deelScreenshot() {
 document.addEventListener("click", (e) => {
   if (!document.getElementById("langDropdown")?.contains(e.target)) closeLangDropdown();
 });
+
+setInterval(() => { if (currentSession) updateVerlopenState(); }, 60000);
 
 window.addEventListener("load", () => {
   document.documentElement.lang = lang;
