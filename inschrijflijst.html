@@ -822,18 +822,22 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
         <div>
           <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">Start</div>
-          <input id="etStartTijd" type="text" placeholder="9:00" maxlength="5"
+          <input id="etStartTijd" type="time"
             style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
         </div>
         <div>
           <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">Eind</div>
-          <input id="etEindTijd" type="text" placeholder="10:30" maxlength="5"
+          <input id="etEindTijd" type="time"
             style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
         </div>
         <div>
-          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">Sluit om</div>
-          <input id="etVerloop" type="number" min="0" max="23" step="1"
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px;">
+            <span style="font-size:11px;color:var(--ink-light);">Lijst sluit om</span>
+            <button type="button" onclick="toggleVerloopTip()" style="width:15px;height:15px;border-radius:50%;border:1.5px solid var(--ink-light);background:none;color:var(--ink-light);font-size:9px;font-weight:700;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">?</button>
+          </div>
+          <input id="etVerloop" type="number" min="0" max="23" step="1" placeholder="9"
             style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+          <div id="verloopTip" style="display:none;font-size:11px;color:var(--ink-light);margin-top:5px;line-height:1.4;grid-column:1/-1;">Op de sessiedag sluit de inschrijflijst om dit uur (0–23). Daarna kunnen deelnemers niet meer in- of uitschrijven.</div>
         </div>
       </div>
     </div>
@@ -2297,6 +2301,24 @@ function renderEventTypeLijst() {
   });
 }
 
+function toTimeInput(t) {
+  if (!t) return "";
+  const [h, m] = String(t).split(":");
+  return `${String(h).padStart(2,"0")}:${(m || "00").padStart(2,"0")}`;
+}
+
+function fromTimeInput(val) {
+  // "09:00" → "9:00", "10:30" stays "10:30"
+  if (!val) return "";
+  const [h, m] = val.split(":");
+  return `${parseInt(h)}:${m}`;
+}
+
+function toggleVerloopTip() {
+  const el = document.getElementById("verloopTip");
+  if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+}
+
 function openEventTypeForm(id) {
   _editingEventTypeId = id;
   const et = id ? EVENT_TYPES[id] : null;
@@ -2321,8 +2343,8 @@ function openEventTypeForm(id) {
   });
   dagSel.value = et ? et.dag : 5;
 
-  document.getElementById("etStartTijd").value = et ? et.startTijd : "9:00";
-  document.getElementById("etEindTijd").value  = et ? et.eindTijd  : "10:30";
+  document.getElementById("etStartTijd").value = toTimeInput(et ? et.startTijd : "9:00");
+  document.getElementById("etEindTijd").value  = toTimeInput(et ? et.eindTijd  : "10:30");
 
   document.getElementById("eventTypeModal").classList.add("open");
   setTimeout(() => document.getElementById("etNaamNl").focus(), 100);
@@ -2334,8 +2356,8 @@ function slaEventTypeOp() {
   if (!naamNl) { showToast(lang === "en" ? "⚠️ Enter a name (NL)" : "⚠️ Voer een naam (NL) in"); return; }
 
   const dag         = parseInt(document.getElementById("etDag").value);
-  const startRaw    = document.getElementById("etStartTijd").value.trim();
-  const eindRaw     = document.getElementById("etEindTijd").value.trim();
+  const startRaw    = fromTimeInput(document.getElementById("etStartTijd").value);
+  const eindRaw     = fromTimeInput(document.getElementById("etEindTijd").value);
   const verloopUur  = parseInt(document.getElementById("etVerloop").value);
   const mainSize    = parseInt(document.getElementById("etMainSize").value);
   const reserveSize = parseInt(document.getElementById("etReserveSize").value);
