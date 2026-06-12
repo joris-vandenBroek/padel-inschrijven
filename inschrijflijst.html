@@ -607,8 +607,11 @@
       <button onclick="openAdminHelp()" class="btn-help">?</button>
     </div>
 
-    <button data-i18n="beheerHuidigeBtn" class="btn-confirm" style="width:100%;margin-bottom:16px;" onclick="beheerHuidigeLijst()">
+    <button data-i18n="beheerHuidigeBtn" class="btn-confirm" style="width:100%;margin-bottom:8px;" onclick="beheerHuidigeLijst()">
       📋 Beheer huidige lijst
+    </button>
+    <button class="btn-switch" style="width:100%;margin-bottom:16px;font-size:12px;padding:8px;" onclick="repareerLijst()">
+      🔧 Repareer lege plekken in lijst
     </button>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
@@ -2416,6 +2419,32 @@ function verwijderVasteDeelnemer(index, sport) {
 
 function beheerHuidigeLijst() {
   closeModal("adminPanel");
+}
+
+async function repareerLijst() {
+  if (!currentDate || !currentSession) return;
+  const s = eventConfig.mainSize, r = eventConfig.reserveSize;
+  const compact = (obj, size) => {
+    const gevuld = Object.values(obj || {}).filter(n => n && n.trim());
+    const res = {};
+    for (let i = 0; i < size; i++) res[i] = gevuld[i] || "";
+    return res;
+  };
+
+  let update = {};
+  if (currentSession.main_padel !== undefined) {
+    update[`sessies/${currentDate}/main_padel`]    = compact(currentSession.main_padel,    s);
+    update[`sessies/${currentDate}/reserve_padel`] = compact(currentSession.reserve_padel, r);
+    update[`sessies/${currentDate}/main_tennis`]   = compact(currentSession.main_tennis,   s);
+    update[`sessies/${currentDate}/reserve_tennis`]= compact(currentSession.reserve_tennis,r);
+  } else {
+    update[`sessies/${currentDate}/main`]    = compact(currentSession.main,    s);
+    update[`sessies/${currentDate}/reserve`] = compact(currentSession.reserve, r);
+  }
+
+  await db.ref().update(update);
+  closeModal("adminPanel");
+  showToast("✅ Lijst gerepareerd — lege plekken opgeschoven");
 }
 
 
