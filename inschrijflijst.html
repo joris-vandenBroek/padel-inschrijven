@@ -801,8 +801,16 @@
 
     <div style="margin-top:12px;">
       <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-light);margin-bottom:6px;">Koptekst header <span style="font-weight:400;text-transform:none;letter-spacing:0;">(leeg = "Inschrijflijst")</span></div>
-      <input id="etEyebrow" type="text" maxlength="30" autocomplete="off" placeholder="bijv. Losse Pols"
-        style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+      <div style="position:relative;margin-bottom:8px;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;color:var(--ink-light);pointer-events:none;">NL</span>
+        <input id="etEyebrowNl" type="text" maxlength="30" autocomplete="off" placeholder="bijv. Losse Pols"
+          style="width:100%;box-sizing:border-box;padding:10px 14px 10px 36px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+      </div>
+      <div style="position:relative;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;color:var(--ink-light);pointer-events:none;">EN</span>
+        <input id="etEyebrowEn" type="text" maxlength="30" autocomplete="off" placeholder="e.g. Drop-in"
+          style="width:100%;box-sizing:border-box;padding:10px 14px 10px 36px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+      </div>
     </div>
 
     <div style="margin-top:16px;">
@@ -1334,6 +1342,7 @@ function applyLang() {
 
   // Dynamische elementen
   if (currentDate) document.getElementById("headerTitle").textContent = datumNaarTitel(currentDate);
+  document.getElementById("headerEyebrow").textContent = eventConfig.eyebrow?.[lang] || t("eyebrow");
   if (currentSession) {
     document.getElementById("headerTime").textContent = (currentSession.time || "").replace(/ uur$/, "") + t("uurSuffix");
   }
@@ -1449,7 +1458,7 @@ function switchToDatum(datum) {
       currentSession = data;
       document.getElementById("headerTitle").textContent = datumNaarTitel(datum);
       document.getElementById("headerTime").textContent  = (data.time || "").replace(/ uur$/, "") + t("uurSuffix");
-      document.getElementById("headerEyebrow").textContent = eventConfig.eyebrow || t("eyebrow");
+      document.getElementById("headerEyebrow").textContent = eventConfig.eyebrow?.[lang] || t("eyebrow");
       document.getElementById("loadingOverlay").style.display = "none";
       render();
     }
@@ -2259,7 +2268,8 @@ function openEventTypeForm(id) {
   document.getElementById("eventTypeModalTitle").textContent = id ? (lang === "en" ? "🎯 Edit event type" : "🎯 Evenement type bewerken") : (lang === "en" ? "🎯 Add event type" : "🎯 Nieuw evenement type");
   document.getElementById("etNaamNl").value    = et ? (et.label?.nl || "") : "";
   document.getElementById("etNaamEn").value    = et ? (et.label?.en || "") : "";
-  document.getElementById("etEyebrow").value   = et ? (et.eyebrow || "") : "";
+  document.getElementById("etEyebrowNl").value  = et ? (et.eyebrow?.nl || "") : "";
+  document.getElementById("etEyebrowEn").value  = et ? (et.eyebrow?.en || "") : "";
   document.getElementById("etSport").value     = et ? (et.sport || "padel") : "padel";
   document.getElementById("etVerloop").value   = et ? et.verloopUur : 9;
   document.getElementById("etMainSize").value  = et ? et.mainSize : 20;
@@ -2300,10 +2310,11 @@ function slaEventTypeOp() {
 
   // ID: nieuw = slug van NL naam, bestaand = zelfde houden
   const sport    = document.getElementById("etSport").value;
-  const eyebrow  = document.getElementById("etEyebrow").value.trim();
+  const eyebrowNl = document.getElementById("etEyebrowNl").value.trim();
+  const eyebrowEn = document.getElementById("etEyebrowEn").value.trim();
   const id = _editingEventTypeId || naamNl.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
   const et = { id, label: { nl: naamNl, en: naamEn || naamNl }, dag, startTijd, eindTijd, verloopUur, mainSize, reserveSize, sport };
-  if (eyebrow) et.eyebrow = eyebrow;
+  if (eyebrowNl || eyebrowEn) et.eyebrow = { nl: eyebrowNl, en: eyebrowEn || eyebrowNl };
 
   EVENT_TYPES[id] = et;
   db.ref(`instellingen/eventTypes/${id}`).set(et).then(() => {
