@@ -432,7 +432,10 @@
   </div>
 </div>
 
-<div id="verlopenBanner" style="display:none;margin:8px 16px 0;background:#fff8e8;border:1.5px solid var(--border);border-radius:10px;padding:10px 16px;font-size:13px;color:var(--ink-light);line-height:1.5;"></div>
+<div id="verlopenBanner" style="display:none;margin:16px 16px 0;background:var(--ink);color:var(--bg);border-radius:14px;padding:20px 20px;text-align:center;line-height:1.6;">
+  <div style="font-size:28px;margin-bottom:6px;">⏸</div>
+  <div id="verlopenBannerText" style="font-size:15px;font-weight:600;"></div>
+</div>
 
 <div id="actieBar" style="display:flex;align-items:center;justify-content:space-between;padding:18px 16px 8px;">
   <span data-i18n="deelnemers" style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--ink-light);">Deelnemers</span>
@@ -1227,7 +1230,7 @@ function updateVerlopenState() {
   const actieBar = document.getElementById("actieBar");
   if (verlopen && !isAdmin) {
     banner.style.display = "block";
-    banner.textContent = t("lijstVerlopen");
+    document.getElementById("verlopenBannerText").textContent = t("lijstVerlopen");
     actieBar.style.display = "none";
   } else {
     banner.style.display = "none";
