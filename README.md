@@ -72,3 +72,10 @@ sessies/
 4. Deel daarna de link via **🔗 Deel link** in WhatsApp. De link blijft hetzelfde voor iedereen.
 
 Een lijst vervalt automatisch op de dag van de sessie om 09:00 uur. Daarna kunnen deelnemers zich niet meer in- of uitschrijven, totdat een nieuwe lijst actief is gemaakt.
+
+## Exporteren
+
+Via **⚙️ Beheer → Exporteren & Screenshot** kun je:
+
+- **Screenshot maken** — slaat een afbeelding van de lijst op, geschikt om in WhatsApp te plaatsen.
+- **Download CSV** — downloadt een `.csv`-bestand met alle namen (hoofdlijst + reserve). Open dit bestand in Excel; de kolommen staan klaar om direct te gebruiken.
