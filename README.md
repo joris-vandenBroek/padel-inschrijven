@@ -19,8 +19,8 @@ Realtime inschrijfformulier voor wekelijkse padelsessies. Deelnemers openen de l
 Klik op **⚙️ Beheer** en voer het wachtwoord in. Meerdere beheerders kunnen elk hun eigen wachtwoord hebben. Als beheerder kun je:
 
 - Deelnemers toevoegen of verwijderen (beheerder mag ook namen invullen die niet in de ledenlijst staan)
-- Een eerdere lijst bekijken zonder dat dit de actieve lijst wijzigt
-- Een nieuwe lijst aanmaken voor de volgende vrijdag en de link direct delen in WhatsApp
+- Een eerdere lijst bekijken via "Andere lijst openen" — zonder dat dit de actieve lijst wijzigt
+- Een nieuwe lijst aanmaken voor de volgende vrijdag, en daarna pas activeren wanneer je klaar bent om te delen
 - Vaste deelnemers beheren — worden automatisch toegevoegd bij elke nieuwe lijst
 - Beheerders toevoegen en wachtwoorden wijzigen
 - De ledenlijst verversen
@@ -40,7 +40,7 @@ De app gebruikt Firebase-transacties voor gelijktijdige inschrijvingen, zodat tw
 
 ```
 instellingen/
-  huidigeDatum: "YYYY-MM-DD"     ← actieve sessie voor alle gebruikers
+  datumActieveLijst: "YYYY-MM-DD"  ← actieve sessie voor alle gebruikers
   admins/
     "Naam": "wachtwoord"         ← één entry per beheerder
   vasteDeelnemers: ["Naam", …]   ← automatisch toegevoegd bij nieuwe lijst
@@ -66,4 +66,9 @@ sessies/
 
 ## Nieuwe week
 
-Als beheerder: klik **⚙️ Beheer → Nieuwe lijst aanmaken**, kies de volgende vrijdag en bevestig. Vaste deelnemers worden automatisch ingevuld. De link blijft hetzelfde voor iedereen.
+1. Klik **⚙️ Beheer → Nieuwe lijst aanmaken**, kies de volgende vrijdag en bevestig. Vaste deelnemers worden automatisch ingevuld.
+2. De nieuwe lijst is nog **niet actief** — deelnemers zien de oude lijst totdat jij de nieuwe activeert.
+3. Open de nieuwe lijst via **Andere lijst openen**, controleer hem, en klik **✓ Maak lijst actief**.
+4. Deel daarna de link via **🔗 Deel link** in WhatsApp. De link blijft hetzelfde voor iedereen.
+
+Een lijst vervalt automatisch op de dag van de sessie om 09:00 uur. Daarna kunnen deelnemers zich niet meer in- of uitschrijven, totdat een nieuwe lijst actief is gemaakt.
