@@ -1490,6 +1490,7 @@ async function initialiseerSessie(datum, title, time, eventType) {
       aangemaaktOp: firebase.database.ServerValue.TIMESTAMP };
   }
   await db.ref(`sessies/${datum}`).set(data);
+  return beide ? vdP.length + vdT.length : vd.length;
 }
 
 // ═══ HULPFUNCTIES ═══════════════════════════════════════
@@ -2435,8 +2436,13 @@ async function laadBestaandeLijsten() {
   const data = snap.val() || {};
   const sessies = Object.entries(data)
     .map(([datum, s]) => {
-      const aantalMain    = Object.values(s.main    || {}).filter(n => n && n.trim()).length;
-      const aantalReserve = Object.values(s.reserve || {}).filter(n => n && n.trim()).length;
+      const tel = obj => Object.values(obj || {}).filter(n => n && n.trim()).length;
+      const aantalMain    = s.main_padel !== undefined
+        ? tel(s.main_padel) + tel(s.main_tennis)
+        : tel(s.main);
+      const aantalReserve = s.reserve_padel !== undefined
+        ? tel(s.reserve_padel) + tel(s.reserve_tennis)
+        : tel(s.reserve);
       return { datum, title: s.title || datum, aantalMain, aantalReserve };
     })
     .sort((a, b) => b.datum.localeCompare(a.datum)); // nieuwste eerst
@@ -2522,13 +2528,13 @@ function nieuweLijstAanmaken() {
     document.getElementById("confirmOkBtn").onclick = () => {
       closeModal("confirmModal");
       const time = `${eventConfig.startTijd} – ${eventConfig.eindTijd} uur`;
-      initialiseerSessie(datum, title, time, eventConfig.id).then(() => {
+      initialiseerSessie(datum, title, time, eventConfig.id).then(aantalVd => {
         switchToDatum(datum);
+        const n = aantalVd || 0;
+        const toast = n === 0 ? t("lijstAangemaaktToast", { title })
+          : t("lijstAangemaaktToastN", { title, n, s: n !== 1 ? "s" : "" });
+        showToast(toast);
       });
-      const n = vasteDeelnemers.length;
-      const toast = n === 0 ? t("lijstAangemaaktToast", { title })
-        : t("lijstAangemaaktToastN", { title, n, s: n !== 1 ? "s" : "" });
-      showToast(toast);
     };
   });
 }
