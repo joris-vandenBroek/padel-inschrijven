@@ -312,31 +312,71 @@
   }
   .toast.show { opacity: 1; }
 
-  .beide-kolommen {
+  .beide-count-bar {
     display: flex;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  .beide-count-pill {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .beide-count-pill:first-child { border-right: 1px solid var(--border); }
+  .beide-count-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .beide-count-label { color: var(--ink-light); }
+  .beide-count-val { font-weight: 600; color: var(--ink); margin-left: auto; }
+  .beide-kolommen {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 0;
   }
   .beide-kolom {
-    flex: 1;
     min-width: 0;
   }
   .beide-kolom:first-child { border-right: 1px solid var(--border); }
   .sport-header {
-    padding: 8px 10px 6px;
+    padding: 7px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+  .sport-header.padel  { background: #FFF4EE; border-bottom-color: #F0997B; }
+  .sport-header.tennis { background: #EAF6EE; border-bottom-color: #5DCAA5; }
+  .sport-header-name {
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: var(--ink-light);
-    text-align: center;
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
   }
-  .beide-kolom .slot { padding: 8px 8px; }
-  .beide-kolom .slot-name { font-size: 13px; }
-  .beide-kolom .slot-num { font-size: 11px; min-width: 16px; }
-  .beide-kolom .avatar { width: 26px; height: 26px; font-size: 10px; }
-  .beide-kolom .divider-reserve { padding: 5px 8px; }
+  .sport-header-name.padel  { color: #993C1D; }
+  .sport-header-name.tennis { color: #0F6E56; }
+  .sport-join-btn {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.2px;
+    transition: opacity .15s;
+  }
+  .sport-join-btn:active { opacity: .75; }
+  .sport-join-btn.padel  { background: #D85A30; color: #fff; }
+  .sport-join-btn.tennis { background: #1D9E75; color: #fff; }
+  .sport-join-btn:disabled { opacity: .35; cursor: default; }
+  .beide-kolom .slot { padding: 7px 8px; }
+  .beide-kolom .slot-name { font-size: 12px; }
+  .beide-kolom .slot-num { font-size: 11px; min-width: 14px; }
+  .beide-kolom .avatar { width: 24px; height: 24px; font-size: 9px; }
+  .beide-kolom .divider-reserve { padding: 4px 8px; font-size: 10px; }
 
   .divider-reserve {
     background: #ede8dc;
@@ -1534,10 +1574,10 @@ function render() {
   updateViewBanner();
 
   const beide = isBeideSport();
-  document.getElementById("doeMeeBtn").style.display      = beide ? "none"         : "";
-  document.getElementById("doeMeePadelBtn").style.display = beide ? ""             : "none";
-  document.getElementById("doeMeeTennisBtn").style.display= beide ? ""             : "none";
-  document.getElementById("iemandAndersBtn").style.display= beide ? "none"         : "";
+  document.getElementById("doeMeeBtn").style.display       = beide ? "none" : "";
+  document.getElementById("doeMeePadelBtn").style.display  = "none";
+  document.getElementById("doeMeeTennisBtn").style.display = "none";
+  document.getElementById("iemandAndersBtn").style.display = beide ? "none" : "";
 
   if (beide) {
     renderBeide();
@@ -1564,17 +1604,36 @@ function renderBeide() {
   const mainT    = slotArray(currentSession.main_tennis,   s);
   const resT     = slotArray(currentSession.reserve_tennis,r);
 
+  const verlopen = isLijstVerlopen();
   const container = document.getElementById("listContainer");
   container.innerHTML = `
+    <div class="beide-count-bar">
+      <div class="beide-count-pill">
+        <div class="beide-count-dot" style="background:#D85A30;"></div>
+        <span class="beide-count-label">Padel</span>
+        <span class="beide-count-val" id="countPadel">— / ${s}</span>
+      </div>
+      <div class="beide-count-pill">
+        <div class="beide-count-dot" style="background:#1D9E75;"></div>
+        <span class="beide-count-label">Tennis</span>
+        <span class="beide-count-val" id="countTennis">— / ${s}</span>
+      </div>
+    </div>
     <div class="beide-kolommen">
       <div class="beide-kolom">
-        <div class="sport-header">🎾 Padel</div>
+        <div class="sport-header padel">
+          <span class="sport-header-name padel">Padel</span>
+          ${!verlopen ? `<button class="sport-join-btn padel" id="joinPadelBtn" onclick="joinFirstFree('padel')">${t("doeMeeBtn") || "Doe mee"}</button>` : ""}
+        </div>
         <div class="list" id="mainListPadel"></div>
         <div class="divider-reserve"><span>Reserve (max ${r})</span></div>
         <div class="list" id="reserveListPadel"></div>
       </div>
       <div class="beide-kolom">
-        <div class="sport-header">🎾 Tennis</div>
+        <div class="sport-header tennis">
+          <span class="sport-header-name tennis">Tennis</span>
+          ${!verlopen ? `<button class="sport-join-btn tennis" id="joinTennisBtn" onclick="joinFirstFree('tennis')">${t("doeMeeBtn") || "Doe mee"}</button>` : ""}
+        </div>
         <div class="list" id="mainListTennis"></div>
         <div class="divider-reserve"><span>Reserve (max ${r})</span></div>
         <div class="list" id="reserveListTennis"></div>
@@ -1588,8 +1647,15 @@ function renderBeide() {
 
   const filledP = mainP.filter(n => n && n.trim()).length;
   const filledT = mainT.filter(n => n && n.trim()).length;
-  document.getElementById("countBadge").textContent =
-    `Padel ${filledP}/${s} · Tennis ${filledT}/${s}`;
+  document.getElementById("countBadge").textContent = `${filledP + filledT} / ${s * 2}`;
+  const cp = document.getElementById("countPadel");
+  const ct = document.getElementById("countTennis");
+  if (cp) cp.textContent = `${filledP} / ${s}`;
+  if (ct) ct.textContent = `${filledT} / ${s}`;
+  const jpb = document.getElementById("joinPadelBtn");
+  const jtb = document.getElementById("joinTennisBtn");
+  if (jpb) jpb.disabled = filledP >= s;
+  if (jtb) jtb.disabled = filledT >= s;
 }
 
 function renderList(containerId, arr, listType, sport) {
