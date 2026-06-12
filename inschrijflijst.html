@@ -427,6 +427,7 @@
 <div id="viewBanner" style="display:none;margin:8px 16px 0;background:#e8f0ff;border:1.5px solid var(--mine);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--mine);font-weight:600;align-items:center;justify-content:space-between;gap:10px;">
   <span id="viewBannerText">👁 Je bekijkt een andere lijst</span>
   <div style="display:flex;gap:8px;">
+    <button data-i18n="maakActiefBtn" class="btn-switch" style="border-color:var(--green);color:var(--green);white-space:nowrap;" onclick="maakLijstActief()">✓ Maak lijst actief</button>
     <button data-i18n="terugBtn" class="btn-switch" style="border-color:var(--mine);color:var(--mine);white-space:nowrap;" onclick="terugNaarActief()">← Terug</button>
   </div>
 </div>
@@ -705,6 +706,8 @@ const TRANSLATIONS = {
     beheerBannerPre: "⚙️ Beheer:",
     uitloggen: "Uitloggen",
     // View banner
+    maakActiefBtn: "✓ Maak lijst actief",
+    lijstActiefGemaakt: "✓ {title} is nu de actieve lijst",
     terugBtn: "← Terug",
     bekijktTitel: "👁 Je bekijkt {title} (niet de actieve lijst)",
     // Main
@@ -861,6 +864,8 @@ const TRANSLATIONS = {
     wijzig: "Change",
     beheerBannerPre: "⚙️ Admin:",
     uitloggen: "Log out",
+    maakActiefBtn: "✓ Make list active",
+    lijstActiefGemaakt: "✓ {title} is now the active list",
     terugBtn: "← Back",
     bekijktTitel: "👁 Viewing {title} (not the active list)",
     deelnemers: "Participants",
@@ -1112,9 +1117,9 @@ db.ref("instellingen").once("value", snap => {
   updateBeheerderFooter();
 });
 
-db.ref("instellingen/huidigeDatum").on("value", snap => {
+db.ref("instellingen/datumActieveLijst").on("value", snap => {
   const datum = snap.val() || volgendeVrijdag();
-  if (!snap.val()) db.ref("instellingen/huidigeDatum").set(datum);
+  if (!snap.val()) db.ref("instellingen/datumActieveLijst").set(datum);
   activeDatum = datum;
   // Niet overschrijven als beheerder bewust een andere lijst bekijkt
   if (!isAdmin || currentDate === null || currentDate === activeDatum) {
@@ -1789,6 +1794,13 @@ function terugNaarActief() {
   updateViewBanner();
 }
 
+function maakLijstActief() {
+  if (!currentDate || currentDate === activeDatum) return;
+  db.ref("instellingen/datumActieveLijst").set(currentDate);
+  showToast(t("lijstActiefGemaakt", { title: currentSession?.title || currentDate }));
+  updateViewBanner();
+}
+
 function updateViewBanner() {
   const banner = document.getElementById("viewBanner");
   if (!isAdmin || !activeDatum || currentDate === activeDatum) {
@@ -1823,7 +1835,7 @@ function nieuweLijstAanmaken() {
     document.getElementById("confirmOkBtn").onclick = () => {
       closeModal("confirmModal");
       initialiseerSessie(datum, title, "9:00 – 10:30 uur").then(() => {
-        db.ref("instellingen/huidigeDatum").set(datum);
+        switchToDatum(datum);
       });
       const n = vasteDeelnemers.length;
       const toast = n === 0 ? t("lijstAangemaaktToast", { title })
