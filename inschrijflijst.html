@@ -424,11 +424,20 @@
   <span><span id="adminBannerPre">⚙️ Beheer: </span><span id="adminBannerNaam"></span></span>
   <button data-i18n="uitloggen" class="btn-switch" style="border-color:var(--gold);color:var(--gold);" onclick="logoutAdmin()">Uitloggen</button>
 </div>
+<!-- Viewbanner mode A: lijst nog niet actief -->
 <div id="viewBanner" style="display:none;margin:8px 16px 0;background:#e8f0ff;border:1.5px solid var(--mine);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--mine);font-weight:600;align-items:center;justify-content:space-between;gap:10px;">
   <span id="viewBannerText">👁 Je bekijkt een andere lijst</span>
   <div style="display:flex;gap:8px;">
     <button data-i18n="maakActiefBtn" class="btn-switch" style="border-color:var(--green);color:var(--green);white-space:nowrap;" onclick="maakLijstActief()">✓ Maak lijst actief</button>
     <button data-i18n="terugBtn" class="btn-switch" style="border-color:var(--mine);color:var(--mine);white-space:nowrap;" onclick="terugNaarActief()">← Terug</button>
+  </div>
+</div>
+<!-- Viewbanner mode B: lijst net actief gemaakt → deel de link -->
+<div id="deelBanner" style="display:none;margin:8px 16px 0;background:#e8f5ec;border:1.5px solid var(--green);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--green);font-weight:600;align-items:center;justify-content:space-between;gap:10px;">
+  <span id="deelBannerText"></span>
+  <div style="display:flex;gap:8px;">
+    <button data-i18n="deelLinkBtn" class="btn-switch" style="border-color:var(--green);color:var(--green);white-space:nowrap;" onclick="shareLink()">🔗 Deel link</button>
+    <button data-i18n="sluitenBtn" class="btn-switch" style="border-color:var(--green);color:var(--green);white-space:nowrap;" onclick="sluitDeelBanner()">✕</button>
   </div>
 </div>
 
@@ -553,7 +562,6 @@
             style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
           </select>
           <button data-i18n="aanmaken" class="btn-confirm" style="width:100%;" onclick="nieuweLijstAanmaken()">Aanmaken ✓</button>
-          <button data-i18n="deLink" class="btn-share" style="width:100%;border-radius:10px;padding:11px;" onclick="closeModal('adminPanel');shareLink()">🔗 De link voor WhatsApp</button>
         </div>
       </details>
     </div>
@@ -713,6 +721,8 @@ const TRANSLATIONS = {
     // View banner
     maakActiefBtn: "✓ Maak lijst actief",
     lijstActiefGemaakt: "✓ {title} is nu de actieve lijst",
+    deelLinkBtn: "🔗 Deel link",
+    sluitenBtn: "✕",
     terugBtn: "← Terug",
     bekijktTitel: "👁 Je bekijkt {title} (niet de actieve lijst)",
     // Main
@@ -872,6 +882,8 @@ const TRANSLATIONS = {
     uitloggen: "Log out",
     maakActiefBtn: "✓ Make list active",
     lijstActiefGemaakt: "✓ {title} is now the active list",
+    deelLinkBtn: "🔗 Share link",
+    sluitenBtn: "✕",
     terugBtn: "← Back",
     bekijktTitel: "👁 Viewing {title} (not the active list)",
     deelnemers: "Participants",
@@ -1829,20 +1841,29 @@ function terugNaarActief() {
 
 function maakLijstActief() {
   if (!currentDate || currentDate === activeDatum) return;
+  const title = currentSession?.title || currentDate;
   db.ref("instellingen/datumActieveLijst").set(currentDate);
-  showToast(t("lijstActiefGemaakt", { title: currentSession?.title || currentDate }));
-  updateViewBanner();
+  document.getElementById("viewBanner").style.display = "none";
+  const deelBanner = document.getElementById("deelBanner");
+  document.getElementById("deelBannerText").textContent = t("lijstActiefGemaakt", { title });
+  deelBanner.style.display = "flex";
+}
+
+function sluitDeelBanner() {
+  document.getElementById("deelBanner").style.display = "none";
 }
 
 function updateViewBanner() {
-  const banner = document.getElementById("viewBanner");
+  const viewBanner = document.getElementById("viewBanner");
+  const deelBanner = document.getElementById("deelBanner");
   if (!isAdmin || !activeDatum || currentDate === activeDatum) {
-    banner.style.display = "none";
+    viewBanner.style.display = "none";
     return;
   }
+  deelBanner.style.display = "none";
   document.getElementById("viewBannerText").textContent =
     t("bekijktTitel", { title: currentSession?.title || datumNaarTitel(currentDate) || currentDate });
-  banner.style.display = "flex";
+  viewBanner.style.display = "flex";
 }
 
 function nieuweLijstAanmaken() {
