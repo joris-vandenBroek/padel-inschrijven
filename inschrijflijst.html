@@ -2393,39 +2393,116 @@ function verwijderEventType(id) {
   };
 }
 
+function etPillen(etArr) {
+  if (etArr === "*") return `<span style="font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:#fff;border-radius:20px;">🔑 Alles</span>`;
+  if (!Array.isArray(etArr) || !etArr.length) return `<span style="font-size:11px;color:var(--ink-light);">— geen toegang</span>`;
+  return etArr.map(id => {
+    const lbl = EVENT_TYPES[id]?.label?.[lang] || EVENT_TYPES[id]?.label?.nl || id;
+    return `<span style="font-size:11px;padding:2px 8px;background:var(--surface);border:1px solid var(--border);border-radius:20px;white-space:nowrap;">${lbl}</span>`;
+  }).join(" ");
+}
+
 function renderBeheerderLijst() {
   const el = document.getElementById("beheerderLijst");
   if (!el) return;
   el.innerHTML = "";
+
   Object.entries(ADMINS).forEach(([naam, rec]) => {
     const etArr = (typeof rec === "object" && rec.eventTypes) ? rec.eventTypes : "*";
-    const etLabel = etArr === "*" ? "🔑 Alles" : (Array.isArray(etArr) && etArr.length
-      ? etArr.map(id => EVENT_TYPES[id]?.label?.[lang] || id).join(", ")
-      : "— geen toegang");
-    const jij = naam === adminNaam ? " <span style='font-size:10px;color:var(--mine);font-weight:700;'>(jij)</span>" : "";
-    const verwijderBtn = naam !== adminNaam
-      ? `<button onclick="verwijderBeheerder('${naam}')" style="font-size:11px;padding:2px 8px;border:1px solid var(--accent);color:var(--accent);border-radius:6px;background:none;cursor:pointer;margin-left:6px;">✕</button>`
-      : "";
-    const row = document.createElement("div");
-    row.style.cssText = "padding:5px 0;font-size:14px;";
-    row.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;">
-      <span>${naam}${jij}${verwijderBtn}</span>
-    </div>
-    <div style="font-size:11px;color:var(--ink-light);margin-top:1px;">${etLabel}</div>`;
-    el.appendChild(row);
+    const isJij = naam === adminNaam;
+    const kanVerwijderen = !isJij;
+
+    const card = document.createElement("div");
+    card.style.cssText = "border:1px solid var(--border);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;";
+    card.id = `adminCard_${naam.replace(/\s/g,"_")}`;
+
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;flex:1;min-width:0;">
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${naam}</span>
+          ${isJij ? `<span style="font-size:10px;color:var(--mine);font-weight:700;flex-shrink:0;">(jij)</span>` : ""}
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;">
+          <button onclick="openBeheerderEtEdit('${naam}')" style="font-size:11px;padding:3px 9px;border:1px solid var(--border);color:var(--ink-light);border-radius:8px;background:none;cursor:pointer;">✏️ Types</button>
+          ${kanVerwijderen ? `<button onclick="verwijderBeheerder('${naam}')" style="font-size:11px;padding:3px 9px;border:1px solid var(--accent);color:var(--accent);border-radius:8px;background:none;cursor:pointer;">✕</button>` : ""}
+        </div>
+      </div>
+      <div id="etPillen_${naam.replace(/\s/g,"_")}" style="display:flex;flex-wrap:wrap;gap:4px;">${etPillen(etArr)}</div>
+      <div id="etEdit_${naam.replace(/\s/g,"_")}" style="display:none;flex-direction:column;gap:6px;padding-top:6px;border-top:1px solid var(--border);margin-top:2px;">
+        <div id="etEditChecks_${naam.replace(/\s/g,"_")}" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="slaEtAccessOp('${naam}')" style="flex:1;padding:6px;font-size:12px;font-weight:600;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;">Opslaan ✓</button>
+          <button onclick="sluitBeheerderEtEdit('${naam}')" style="padding:6px 10px;font-size:12px;border:1px solid var(--border);color:var(--ink-light);border-radius:8px;background:none;cursor:pointer;">Annuleer</button>
+        </div>
+      </div>`;
+    el.appendChild(card);
   });
 
-  // Vul event type checkboxes voor nieuwe beheerder
+  // Checkboxes voor nieuwe beheerder — pill-toggle stijl
   const checksEl = document.getElementById("nieuwBeheerderEtChecks");
   if (checksEl) {
-    checksEl.innerHTML = `<div style="font-size:11px;color:var(--ink-light);margin-bottom:2px;">Toegang tot event types:</div>`;
+    const etIds = Object.keys(EVENT_TYPES);
+    if (!etIds.length) { checksEl.innerHTML = ""; return; }
+    checksEl.innerHTML = `<div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">Toegang tot event types:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;" id="nieuwBeheerderPills"></div>`;
+    const pillsEl = document.getElementById("nieuwBeheerderPills");
     Object.values(EVENT_TYPES).forEach(et => {
-      const lbl = document.createElement("label");
-      lbl.style.cssText = "display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;";
-      lbl.innerHTML = `<input type="checkbox" class="nieuwBeheerderEtCheck" value="${et.id}" checked style="accent-color:var(--accent);"> ${et.label[lang] || et.label.nl}`;
-      checksEl.appendChild(lbl);
+      const pill = document.createElement("label");
+      pill.style.cssText = "cursor:pointer;user-select:none;";
+      pill.innerHTML = `<input type="checkbox" class="nieuwBeheerderEtCheck" value="${et.id}" checked style="display:none;">
+        <span class="et-pill-lbl" style="display:inline-block;font-size:12px;font-weight:500;padding:4px 10px;border-radius:20px;border:1.5px solid var(--accent);background:var(--accent);color:#fff;transition:all .15s;">${et.label[lang] || et.label.nl}</span>`;
+      const cb = pill.querySelector("input");
+      const span = pill.querySelector(".et-pill-lbl");
+      cb.addEventListener("change", () => {
+        span.style.background = cb.checked ? "var(--accent)" : "transparent";
+        span.style.color = cb.checked ? "#fff" : "var(--accent)";
+      });
+      pillsEl.appendChild(pill);
     });
   }
+}
+
+function openBeheerderEtEdit(naam) {
+  const key = naam.replace(/\s/g,"_");
+  const editEl = document.getElementById(`etEdit_${key}`);
+  if (!editEl) return;
+  const checksEl = document.getElementById(`etEditChecks_${key}`);
+  const rec = ADMINS[naam];
+  const huidig = (typeof rec === "object" && rec.eventTypes) ? rec.eventTypes : "*";
+  checksEl.innerHTML = "";
+  Object.values(EVENT_TYPES).forEach(et => {
+    const actief = huidig === "*" || (Array.isArray(huidig) && huidig.includes(et.id));
+    const pill = document.createElement("label");
+    pill.style.cssText = "cursor:pointer;user-select:none;";
+    pill.innerHTML = `<input type="checkbox" class="etEditCheck_${key}" value="${et.id}" ${actief ? "checked" : ""} style="display:none;">
+      <span class="et-pill-lbl" style="display:inline-block;font-size:12px;font-weight:500;padding:4px 10px;border-radius:20px;border:1.5px solid var(--accent);background:${actief ? "var(--accent)" : "transparent"};color:${actief ? "#fff" : "var(--accent)"};transition:all .15s;">${et.label[lang] || et.label.nl}</span>`;
+    const cb = pill.querySelector("input");
+    const span = pill.querySelector(".et-pill-lbl");
+    cb.addEventListener("change", () => {
+      span.style.background = cb.checked ? "var(--accent)" : "transparent";
+      span.style.color = cb.checked ? "#fff" : "var(--accent)";
+    });
+    checksEl.appendChild(pill);
+  });
+  editEl.style.display = "flex";
+}
+
+function sluitBeheerderEtEdit(naam) {
+  const key = naam.replace(/\s/g,"_");
+  const editEl = document.getElementById(`etEdit_${key}`);
+  if (editEl) editEl.style.display = "none";
+}
+
+function slaEtAccessOp(naam) {
+  const key = naam.replace(/\s/g,"_");
+  const checks = document.querySelectorAll(`.etEditCheck_${key}:checked`);
+  const etIds = Array.from(checks).map(cb => cb.value);
+  const rec = ADMINS[naam];
+  ADMINS[naam] = typeof rec === "object" ? { ...rec, eventTypes: etIds } : { ww: rec, eventTypes: etIds };
+  db.ref("instellingen/admins").set(ADMINS).then(() => {
+    showToast(`✓ Toegang ${naam} bijgewerkt`);
+    renderBeheerderLijst();
+  });
 }
 
 function openAdminHelp() {
