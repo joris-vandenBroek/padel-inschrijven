@@ -2,7 +2,8 @@
 
 Realtime inschrijfformulier voor wekelijkse padel- en tennissessies. Deelnemers openen de link, kiezen hun naam en schrijven zich in. Alle wijzigingen zijn direct zichtbaar voor iedereen.
 
-**Live (vrijdagochtend):** https://tinyurl.com/padel-inschrijven
+**Live (vrijdagochtend):** https://tinyurl.com/padel-inschrijven  
+**Live (dinsdag Losse Pols):** https://tinyurl.com/LossePols
 
 ## Functionaliteit
 
@@ -24,23 +25,37 @@ Elke sessie is gekoppeld aan een event type. Het type bepaalt:
 - Naam (NL + EN)
 - Koptekst in de header (NL + EN, bijv. "Losse Pols" i.p.v. "Inschrijflijst")
 - Dag van de week, start- en eindtijd
+- Uur waarop de inschrijflijst sluit op de sessiedag
 - Maximaal aantal deelnemers en reservisten
 - Sport: Padel, Tennis of Padel & Tennis (twee kolommen)
-- Optionele korte deellink (bijv. tinyurl)
+- Deel-link (optioneel, bijv. tinyurl) — leeg = automatisch afgeleid
 
 De standaard event type is `vrijdagochtend` — de URL zonder `?event=` parameter verwijst altijd hiernaar. Andere types zijn bereikbaar via `?event=<id>`, bijv. `?event=dinsdag_losse_pols`.
+
+### WhatsApp-preview per event type
+
+Elke event type met een eigen tinyurl heeft een bijbehorend HTML-wrapper bestand (bijv. `dinsdag.html`). Dit bestand bevat de juiste `og:title` meta-tag voor de WhatsApp-preview en verwijst meteen door naar de app. De tinyurl wijst naar dit wrapper-bestand.
 
 ## Beheermodus
 
 Klik op **⚙️ Beheer** en voer het wachtwoord in. Meerdere beheerders kunnen elk hun eigen wachtwoord hebben. Als beheerder kun je:
 
-- Deelnemers toevoegen of verwijderen (beheerder mag ook namen invullen die niet in de ledenlijst staan)
+- Deelnemers toevoegen of verwijderen
 - Een eerdere lijst bekijken via "Andere lijst openen" — zonder dat dit de actieve lijst wijzigt
-- Een nieuwe lijst aanmaken voor de volgende sessiedag, en daarna pas activeren wanneer je klaar bent om te delen
+- Een niet-actieve lijst verwijderen via de 🗑 knop in de blauwe balk
+- Een nieuwe lijst aanmaken voor de volgende sessiedag, en daarna pas activeren
 - **Vaste deelnemers beheren** — worden automatisch toegevoegd bij elke nieuwe lijst, per event type; bij beide-sport apart voor padel en tennis
-- **Evenement types beheren** — naam, koptekst, dag/tijd, capaciteit, sport instellen
-- Beheerders toevoegen en wachtwoorden wijzigen
+- **Evenement types beheren** — naam, koptekst, dag/tijd, capaciteit, sport, deel-link instellen
+- Beheerders toevoegen en hun event type toegang beheren (alleen superadmin)
 - De ledenlijst verversen
+
+### Rol-gebaseerde toegang
+
+Elke beheerder heeft toegang tot een of meerdere event types. De superadmin (Joris van den Broek) heeft toegang tot alles en beheert ook andere beheerders en event type configuratie.
+
+- Dropdowns voor "Nieuwe lijst", "Andere lijst openen" en "Vaste deelnemers" tonen alleen de toegestane event types
+- "Beheerders" en "Evenement types" secties zijn alleen zichtbaar voor de superadmin
+- Een beheerder zonder toegang tot een event type ziet de lijst als normale deelnemer
 
 ### Vaste deelnemers per event type
 
@@ -51,7 +66,7 @@ Vaste deelnemers zijn gekoppeld aan een specifiek event type. In het beheerpanee
 | Onderdeel | Keuze |
 |---|---|
 | Hosting | GitHub Pages |
-| Database | Firebase Realtime Database |
+| Database | Firebase Realtime Database (europe-west1) |
 | Ledenlijst | `leden.json` uit [knltb-autoboek](https://github.com/joris-vandenBroek/knltb-autoboek) |
 | Frontend | Vanilla HTML/CSS/JS, geen framework |
 
@@ -62,7 +77,7 @@ De app gebruikt Firebase-transacties voor gelijktijdige inschrijvingen, zodat tw
 ```
 instellingen/
   admins/
-    "Naam": "wachtwoord"
+    "Naam": { ww: "wachtwoord", eventTypes: "*" | ["id", …] }
   actiefPerType/
     vrijdagochtend: "YYYY-MM-DD"
     dinsdag_losse_pols: "YYYY-MM-DD"
@@ -73,7 +88,7 @@ instellingen/
   eventTypes/
     vrijdagochtend/
       id, label {nl, en}, eyebrow {nl, en}, dag, startTijd, eindTijd,
-      verloopUur, mainSize, reserveSize, sport
+      verloopUur, mainSize, reserveSize, sport, shareUrl?
 
 sessies/
   YYYY-MM-DD/
@@ -117,4 +132,4 @@ Een lijst vervalt automatisch op de dag van de sessie op het ingestelde sluiting
 Via **⚙️ Beheer → Exporteren & Screenshot** kun je:
 
 - **Screenshot maken** — slaat een afbeelding van de lijst op, geschikt om in WhatsApp te plaatsen.
-- **Download CSV** — downloadt een `.csv`-bestand met alle namen (hoofdlijst + reserve). Open dit bestand in Excel; de kolommen staan klaar om direct te gebruiken.
+- **Download CSV** — downloadt een `.csv`-bestand met alle namen (hoofdlijst + reserve).
