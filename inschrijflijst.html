@@ -723,57 +723,68 @@
 <!-- Event type form modal -->
 <div class="modal-overlay" id="eventTypeModal">
   <div class="modal">
-    <h2 id="eventTypeModalTitle" data-i18n="eventTypeFormTitel">🎯 Evenement type</h2>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
-      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etNaamNl">Naam (NL)</label>
-      <input id="etNaamNl" type="text" maxlength="50" autocomplete="off"
-        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
-      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etNaamEn">Naam (EN)</label>
-      <input id="etNaamEn" type="text" maxlength="50" autocomplete="off"
-        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
-      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etDag">Dag van de week</label>
-      <select id="etDag"
-        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
-      </select>
-      <div style="display:flex;gap:10px;">
-        <div style="flex:1;">
-          <label style="font-size:12px;color:var(--ink-light);" data-i18n="etStartTijd">Starttijd</label>
-          <input id="etStartTijd" type="text" placeholder="9:00" maxlength="5"
-            style="width:100%;margin-top:4px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
-        </div>
-        <div style="flex:1;">
-          <label style="font-size:12px;color:var(--ink-light);" data-i18n="etEindTijd">Eindtijd</label>
-          <input id="etEindTijd" type="text" placeholder="10:30" maxlength="5"
-            style="width:100%;margin-top:4px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
-        </div>
+    <h2 id="eventTypeModalTitle">🎯 Evenement type</h2>
+
+    <div style="margin-top:14px;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-light);margin-bottom:8px;">Naam</div>
+      <div style="position:relative;margin-bottom:8px;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;color:var(--ink-light);pointer-events:none;">NL</span>
+        <input id="etNaamNl" type="text" maxlength="50" autocomplete="off" placeholder="Naam in het Nederlands"
+          style="width:100%;padding:10px 14px 10px 36px;box-sizing:border-box;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
       </div>
-      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etVerloop">Lijst sluit om (uur)</label>
-      <input id="etVerloop" type="number" min="0" max="23" step="1"
-        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
-      <div style="display:flex;gap:10px;">
-        <div style="flex:1;">
-          <label style="font-size:12px;color:var(--ink-light);" data-i18n="etMainSize">Max deelnemers</label>
-          <input id="etMainSize" type="number" min="1" max="100" step="1"
-            style="width:100%;margin-top:4px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+      <div style="position:relative;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;color:var(--ink-light);pointer-events:none;">EN</span>
+        <input id="etNaamEn" type="text" maxlength="50" autocomplete="off" placeholder="Name in English"
+          style="width:100%;padding:10px 14px 10px 36px;box-sizing:border-box;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+      </div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-light);margin-bottom:8px;">Planning</div>
+      <select id="etDag"
+        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:8px;">
+      </select>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div>
+          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">Start</div>
+          <input id="etStartTijd" type="text" placeholder="9:00" maxlength="5"
+            style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
         </div>
-        <div style="flex:1;">
-          <label style="font-size:12px;color:var(--ink-light);" data-i18n="etReserveSize">Max reserve</label>
-          <input id="etReserveSize" type="number" min="0" max="20" step="1"
-            style="width:100%;margin-top:4px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+        <div>
+          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">Eind</div>
+          <input id="etEindTijd" type="text" placeholder="10:30" maxlength="5"
+            style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">Sluit om</div>
+          <input id="etVerloop" type="number" min="0" max="23" step="1"
+            style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
         </div>
       </div>
     </div>
-      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etSport">Sport</label>
+
+    <div style="margin-top:16px;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-light);margin-bottom:8px;">Capaciteit &amp; sport</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div>
+          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">Max deelnemers</div>
+          <input id="etMainSize" type="number" min="1" max="100" step="1"
+            style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">Max reserve</div>
+          <input id="etReserveSize" type="number" min="0" max="20" step="1"
+            style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+        </div>
+      </div>
       <select id="etSport"
-        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
+        style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
         <option value="padel">🎾 Padel</option>
         <option value="tennis">🎾 Tennis</option>
         <option value="beide">🎾 Padel &amp; Tennis</option>
       </select>
-      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etShareUrl">Korte link (optioneel, bijv. tinyurl)</label>
-      <input id="etShareUrl" type="url" placeholder="https://tinyurl.com/…" maxlength="200" autocomplete="off"
-        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
     </div>
+
     <div style="display:flex;gap:8px;margin-top:20px;">
       <button data-i18n="sluiten" class="btn-confirm" style="flex:1;background:var(--ink-light);" onclick="closeModal('eventTypeModal')">Sluiten</button>
       <button id="etOpslaanBtn" data-i18n="etOpslaanBtn" class="btn-confirm" style="flex:1;" onclick="slaEventTypeOp()">Opslaan ✓</button>
@@ -2049,7 +2060,6 @@ function openEventTypeForm(id) {
   document.getElementById("eventTypeModalTitle").textContent = id ? (lang === "en" ? "🎯 Edit event type" : "🎯 Evenement type bewerken") : (lang === "en" ? "🎯 Add event type" : "🎯 Nieuw evenement type");
   document.getElementById("etNaamNl").value    = et ? (et.label?.nl || "") : "";
   document.getElementById("etNaamEn").value    = et ? (et.label?.en || "") : "";
-  document.getElementById("etShareUrl").value  = et ? (et.shareUrl || "") : "";
   document.getElementById("etSport").value     = et ? (et.sport || "padel") : "padel";
   document.getElementById("etVerloop").value   = et ? et.verloopUur : 9;
   document.getElementById("etMainSize").value  = et ? et.mainSize : 20;
@@ -2089,10 +2099,9 @@ function slaEventTypeOp() {
   const eindTijd  = eindRaw;
 
   // ID: nieuw = slug van NL naam, bestaand = zelfde houden
-  const shareUrl = document.getElementById("etShareUrl").value.trim();
   const sport    = document.getElementById("etSport").value;
   const id = _editingEventTypeId || naamNl.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-  const et = { id, label: { nl: naamNl, en: naamEn || naamNl }, dag, startTijd, eindTijd, verloopUur, mainSize, reserveSize, sport, ...(shareUrl && { shareUrl }) };
+  const et = { id, label: { nl: naamNl, en: naamEn || naamNl }, dag, startTijd, eindTijd, verloopUur, mainSize, reserveSize, sport };
 
   EVENT_TYPES[id] = et;
   db.ref(`instellingen/eventTypes/${id}`).set(et).then(() => {
