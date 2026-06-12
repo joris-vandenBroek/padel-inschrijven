@@ -1,18 +1,34 @@
 # Padel Inschrijflijst
 
-Realtime inschrijfformulier voor wekelijkse padelsessies. Deelnemers openen de link, kiezen hun naam en schrijven zich in. Alle wijzigingen zijn direct zichtbaar voor iedereen.
+Realtime inschrijfformulier voor wekelijkse padel- en tennissessies. Deelnemers openen de link, kiezen hun naam en schrijven zich in. Alle wijzigingen zijn direct zichtbaar voor iedereen.
 
-**Live:** https://tinyurl.com/padel-inschrijven
+**Live (vrijdagochtend):** https://tinyurl.com/padel-inschrijven
 
 ## Functionaliteit
 
-- 20 plekken hoofdlijst + 4 reserveplekken
+- Configureerbaar aantal plekken (hoofdlijst + reserve) per event type
 - Automatisch doorschuiven van reserve naar hoofdlijst bij uitschrijving
 - Naam kiezen uit de ledenlijst — vrije invoer is niet toegestaan
 - Iemand anders inschrijven via "Iemand anders inschrijven" knop (ook alleen uit ledenlijst)
 - Naam wordt onthouden op het apparaat (localStorage) — eenmalig invoeren
-- Ledenlijst wordt wekelijks automatisch opgehaald uit de KNLTB-ledenregistratie
+- Ledenlijst wordt automatisch opgehaald uit de KNLTB-ledenregistratie
 - Realtime sync via Firebase — alle gebruikers zien wijzigingen direct
+- Meerdere event types (bijv. vrijdagochtend, dinsdagavond) met eigen URL
+- Padel & tennis gecombineerd in één sessie (beide-sport modus)
+- Meertalig: Nederlands en Engels
+
+## Event types
+
+Elke sessie is gekoppeld aan een event type. Het type bepaalt:
+
+- Naam (NL + EN)
+- Koptekst in de header (NL + EN, bijv. "Losse Pols" i.p.v. "Inschrijflijst")
+- Dag van de week, start- en eindtijd
+- Maximaal aantal deelnemers en reservisten
+- Sport: Padel, Tennis of Padel & Tennis (twee kolommen)
+- Optionele korte deellink (bijv. tinyurl)
+
+De standaard event type is `vrijdagochtend` — de URL zonder `?event=` parameter verwijst altijd hiernaar. Andere types zijn bereikbaar via `?event=<id>`, bijv. `?event=dinsdag_losse_pols`.
 
 ## Beheermodus
 
@@ -20,10 +36,15 @@ Klik op **⚙️ Beheer** en voer het wachtwoord in. Meerdere beheerders kunnen 
 
 - Deelnemers toevoegen of verwijderen (beheerder mag ook namen invullen die niet in de ledenlijst staan)
 - Een eerdere lijst bekijken via "Andere lijst openen" — zonder dat dit de actieve lijst wijzigt
-- Een nieuwe lijst aanmaken voor de volgende vrijdag, en daarna pas activeren wanneer je klaar bent om te delen
-- Vaste deelnemers beheren — worden automatisch toegevoegd bij elke nieuwe lijst
+- Een nieuwe lijst aanmaken voor de volgende sessiedag, en daarna pas activeren wanneer je klaar bent om te delen
+- **Vaste deelnemers beheren** — worden automatisch toegevoegd bij elke nieuwe lijst, per event type; bij beide-sport apart voor padel en tennis
+- **Evenement types beheren** — naam, koptekst, dag/tijd, capaciteit, sport instellen
 - Beheerders toevoegen en wachtwoorden wijzigen
 - De ledenlijst verversen
+
+### Vaste deelnemers per event type
+
+Vaste deelnemers zijn gekoppeld aan een specifiek event type. In het beheerpaneel kies je via een dropdown welk type je beheert. Bij een beide-sport type zijn er aparte lijsten voor padel en tennis.
 
 ## Technisch
 
@@ -40,18 +61,36 @@ De app gebruikt Firebase-transacties voor gelijktijdige inschrijvingen, zodat tw
 
 ```
 instellingen/
-  datumActieveLijst: "YYYY-MM-DD"  ← actieve sessie voor alle gebruikers
   admins/
-    "Naam": "wachtwoord"         ← één entry per beheerder
-  vasteDeelnemers: ["Naam", …]   ← automatisch toegevoegd bij nieuwe lijst
+    "Naam": "wachtwoord"
+  actiefPerType/
+    vrijdagochtend: "YYYY-MM-DD"
+    dinsdag_losse_pols: "YYYY-MM-DD"
+  vasteDeelnemersPerType/
+    vrijdagochtend: ["Naam", …]
+    dinsdag_losse_pols_padel: ["Naam", …]   ← beide-sport
+    dinsdag_losse_pols_tennis: ["Naam", …]  ← beide-sport
+  eventTypes/
+    vrijdagochtend/
+      id, label {nl, en}, eyebrow {nl, en}, dag, startTijd, eindTijd,
+      verloopUur, mainSize, reserveSize, sport
 
 sessies/
   YYYY-MM-DD/
     title: "Vrijdag X juni"
     time: "9:00 – 10:30 uur"
+    eventType: "vrijdagochtend"
     aangemaaktOp: timestamp
-    main/   { 0..19: naam }      ← max 20 deelnemers
-    reserve/ { 0..3: naam }      ← max 4 reservisten
+
+    # Enkelvoudig sport:
+    main/    { 0..N: naam }
+    reserve/ { 0..M: naam }
+
+    # Beide-sport:
+    main_padel/    { 0..N: naam }
+    reserve_padel/ { 0..M: naam }
+    main_tennis/   { 0..N: naam }
+    reserve_tennis/{ 0..M: naam }
 ```
 
 ## Firebase instellen
@@ -66,12 +105,12 @@ sessies/
 
 ## Nieuwe week
 
-1. Klik **⚙️ Beheer → Nieuwe lijst aanmaken**, kies de volgende vrijdag en bevestig. Vaste deelnemers worden automatisch ingevuld.
+1. Klik **⚙️ Beheer → Nieuwe lijst aanmaken**, kies het event type en de datum en bevestig. Vaste deelnemers worden automatisch ingevuld.
 2. De nieuwe lijst is nog **niet actief** — deelnemers zien de oude lijst totdat jij de nieuwe activeert.
 3. Open de nieuwe lijst via **Andere lijst openen**, controleer hem, en klik **✓ Maak lijst actief**.
 4. Deel daarna de link via **🔗 Deel link** in WhatsApp. De link blijft hetzelfde voor iedereen.
 
-Een lijst vervalt automatisch op de dag van de sessie om 09:00 uur. Daarna kunnen deelnemers zich niet meer in- of uitschrijven, totdat een nieuwe lijst actief is gemaakt.
+Een lijst vervalt automatisch op de dag van de sessie op het ingestelde sluitingsuur.
 
 ## Exporteren
 
