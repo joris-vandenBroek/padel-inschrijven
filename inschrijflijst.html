@@ -837,7 +837,7 @@ const TRANSLATIONS = {
     vasteToegevoegd: "✓ {naam} toegevoegd als vaste deelnemer",
     vasteVerwijderd: "✓ {naam} verwijderd uit vaste deelnemers",
     beheerdersBadge: "Beheerders: {namen}",
-    huidig: " ← huidig",
+    huidig: " ← actief",
     reserveCount: " + {n} reserve",
     verversenBezig: "↻ Verversen…",
     alOpLijstWaarschuwing: "⚠️ '{naam}' staat al op de lijst",
@@ -987,7 +987,7 @@ const TRANSLATIONS = {
     vasteToegevoegd: "✓ {naam} added as regular participant",
     vasteVerwijderd: "✓ {naam} removed from regular participants",
     beheerdersBadge: "Admins: {namen}",
-    huidig: " ← current",
+    huidig: " ← active",
     reserveCount: " + {n} reserve",
     verversenBezig: "↻ Refreshing…",
     alOpLijstWaarschuwing: "⚠️ '{naam}' is already on the list",
@@ -1771,7 +1771,7 @@ async function laadBestaandeLijsten() {
   sessies.forEach(s => {
     const opt = document.createElement("option");
     opt.value = s.datum;
-    const huidigSuf = s.datum === currentDate ? t("huidig") : "";
+    const huidigSuf = s.datum === activeDatum ? t("huidig") : "";
     const reserveSuf = s.aantalReserve > 0 ? t("reserveCount", { n: s.aantalReserve }) : "";
     const deelTxt = s.aantalMain === 1
       ? t("deelnemersCount", { n: s.aantalMain }) || `${s.aantalMain} deelnemer`
