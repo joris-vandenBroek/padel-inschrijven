@@ -315,12 +315,12 @@
   .beide-kolommen {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto;
     gap: 0;
+    /* Slots worden afwisselend (padel, tennis, padel, tennis…) in het grid geplaatst
+       zodat elke paar automatisch dezelfde rij deelt → altijd gelijke rijhoogte */
   }
-  /* Headers zitten elk in eigen grid-cel op rij 1 → altijd gelijke hoogte */
   .sport-header {
-    background: var(--card);
+    background: var(--surface);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
@@ -328,12 +328,8 @@
   }
   .sport-header.padel-header  { grid-column: 1; grid-row: 1; border-right: 1px solid var(--border); }
   .sport-header.tennis-header { grid-column: 2; grid-row: 1; }
-  .beide-list-padel   { grid-column: 1; grid-row: 2; border-right: 1px solid var(--border); }
-  .beide-list-tennis  { grid-column: 2; grid-row: 2; }
-  .beide-divider-padel  { grid-column: 1; grid-row: 3; border-right: 1px solid var(--border); }
-  .beide-divider-tennis { grid-column: 2; grid-row: 3; }
-  .beide-res-padel    { grid-column: 1; grid-row: 4; border-right: 1px solid var(--border); }
-  .beide-res-tennis   { grid-column: 2; grid-row: 4; }
+  /* Alle padel-kant elementen krijgen rechter rand */
+  .beide-slot-padel, .beide-divider-padel { border-right: 1px solid var(--border); }
   .sport-header-top {
     display: flex;
     align-items: center;
@@ -1598,17 +1594,19 @@ function render() {
 function renderBeide() {
   const s = eventConfig.mainSize;
   const r = eventConfig.reserveSize;
-  const mainP    = slotArray(currentSession.main_padel,    s);
-  const resP     = slotArray(currentSession.reserve_padel, r);
-  const mainT    = slotArray(currentSession.main_tennis,   s);
-  const resT     = slotArray(currentSession.reserve_tennis,r);
+  const mainP = slotArray(currentSession.main_padel,    s);
+  const resP  = slotArray(currentSession.reserve_padel, r);
+  const mainT = slotArray(currentSession.main_tennis,   s);
+  const resT  = slotArray(currentSession.reserve_tennis,r);
 
   const verlopen = isLijstVerlopen();
   const container = document.getElementById("listContainer");
-  const joinBtn = (sport, id, color) => verlopen ? "" :
+  const joinBtnHtml = (sport, id) => verlopen ? "" :
     `<button class="sport-join-btn ${sport}" id="${id}" onclick="joinFirstFree('${sport}')">${t("doeMeeBtn") || "Doe mee"}</button>`;
+
+  // Headers als directe grid-kinderen op rij 1 — auto-plaatsing doet de rest
   container.innerHTML = `
-    <div class="beide-kolommen">
+    <div class="beide-kolommen" id="beideGrid">
       <div class="sport-header padel-header">
         <div class="sport-header-top">
           <div class="sport-header-label">
@@ -1616,7 +1614,7 @@ function renderBeide() {
             <span class="sport-header-name">Padel</span>
             <span class="sport-header-count" id="countPadel">— / ${s}</span>
           </div>
-          ${joinBtn("padel","joinPadelBtn")}
+          ${joinBtnHtml("padel","joinPadelBtn")}
         </div>
         <div class="sport-stripe padel"></div>
       </div>
@@ -1627,34 +1625,108 @@ function renderBeide() {
             <span class="sport-header-name">Tennis</span>
             <span class="sport-header-count" id="countTennis">— / ${s}</span>
           </div>
-          ${joinBtn("tennis","joinTennisBtn")}
+          ${joinBtnHtml("tennis","joinTennisBtn")}
         </div>
         <div class="sport-stripe tennis"></div>
       </div>
-      <div class="beide-list-padel list" id="mainListPadel"></div>
-      <div class="beide-list-tennis list" id="mainListTennis"></div>
-      <div class="beide-divider-padel divider-reserve"><span>Reserve (max ${r})</span></div>
-      <div class="beide-divider-tennis divider-reserve"><span>Reserve (max ${r})</span></div>
-      <div class="beide-res-padel list" id="reserveListPadel"></div>
-      <div class="beide-res-tennis list" id="reserveListTennis"></div>
     </div>`;
 
-  renderList("mainListPadel",    mainP, "main",    "padel");
-  renderList("reserveListPadel", resP,  "reserve", "padel");
-  renderList("mainListTennis",   mainT, "main",    "tennis");
-  renderList("reserveListTennis",resT,  "reserve", "tennis");
+  const grid = document.getElementById("beideGrid");
+
+  // Hoofdlijst: afwisselend padel/tennis zodat elk paar dezelfde grid-rij deelt
+  for (let i = 0; i < s; i++) {
+    grid.appendChild(createBeideSlot(mainP[i], i, "main",    "padel",  verlopen));
+    grid.appendChild(createBeideSlot(mainT[i], i, "main",    "tennis", verlopen));
+  }
+
+  // Reserve-dividers als paar → zelfde rij
+  const dP = document.createElement("div");
+  dP.className = "divider-reserve beide-divider-padel";
+  dP.innerHTML = `<span>Reserve (max ${r})</span>`;
+  grid.appendChild(dP);
+  const dT = document.createElement("div");
+  dT.className = "divider-reserve beide-divider-tennis";
+  dT.innerHTML = `<span>Reserve (max ${r})</span>`;
+  grid.appendChild(dT);
+
+  // Reservelijst: idem afwisselend
+  for (let i = 0; i < r; i++) {
+    grid.appendChild(createBeideSlot(resP[i], i, "reserve", "padel",  verlopen));
+    grid.appendChild(createBeideSlot(resT[i], i, "reserve", "tennis", verlopen));
+  }
 
   const filledP = mainP.filter(n => n && n.trim()).length;
   const filledT = mainT.filter(n => n && n.trim()).length;
   document.getElementById("countBadge").textContent = `${filledP + filledT} / ${s * 2}`;
-  const cp = document.getElementById("countPadel");
-  const ct = document.getElementById("countTennis");
-  if (cp) cp.textContent = `${filledP} / ${s}`;
-  if (ct) ct.textContent = `${filledT} / ${s}`;
+  document.getElementById("countPadel").textContent = `${filledP} / ${s}`;
+  document.getElementById("countTennis").textContent = `${filledT} / ${s}`;
   const jpb = document.getElementById("joinPadelBtn");
   const jtb = document.getElementById("joinTennisBtn");
   if (jpb) jpb.disabled = filledP >= s;
   if (jtb) jtb.disabled = filledT >= s;
+}
+
+function createBeideSlot(name, i, listType, sport, verlopen) {
+  const filled = name && name.trim();
+  const mine   = isMine(name);
+
+  const div = document.createElement("div");
+  div.className = ["slot", "beide-slot-" + sport,
+    filled ? (mine ? "is-mine" : listType === "reserve" ? "reserve" : "filled") : "empty"
+  ].join(" ");
+
+  const num = document.createElement("span");
+  num.className = "slot-num";
+  num.textContent = i + 1;
+
+  const av = document.createElement("div");
+  av.className = `avatar ${mine ? "is-mine" : filled ? (listType === "reserve" ? "reserve" : "filled") : "empty"}`;
+  av.textContent = filled ? initials(name) : "?";
+
+  const nm = document.createElement("span");
+  nm.className = "slot-name";
+  if (filled) {
+    nm.textContent = name;
+    const lid = leden.find(l => l.naam === name);
+    if (lid && lid.rating_padel) {
+      const rating = lid.rating_padel.replace(",", ".").replace(/\.0+$/, "");
+      const rt = document.createElement("span");
+      rt.textContent = ` (${rating})`;
+      rt.style.cssText = "font-size:11px;color:var(--ink-light);font-weight:400;";
+      nm.appendChild(rt);
+    }
+  } else {
+    nm.textContent = t("vrij");
+  }
+
+  const action = document.createElement("div");
+  action.className = "slot-action";
+  action.style.cssText = "display:flex;align-items:center;gap:6px;flex-shrink:0;";
+
+  if (isAdmin && filled) {
+    if (mine) {
+      const tag = document.createElement("span"); tag.className = "mine-tag"; tag.textContent = t("jijTag"); action.appendChild(tag);
+    }
+    const btn = document.createElement("button");
+    btn.className = "btn-leave";
+    btn.style.cssText = "border-color:var(--gold);color:var(--gold);padding:4px 8px;font-size:11px;";
+    btn.textContent = "✕"; btn.title = name;
+    btn.onclick = () => adminRemove(listType, i, name, sport);
+    action.appendChild(btn);
+  } else if (mine) {
+    const tag = document.createElement("span"); tag.className = "mine-tag"; tag.textContent = t("jijTag"); action.appendChild(tag);
+    if (!verlopen) {
+      const btn = document.createElement("button");
+      btn.className = "btn-leave";
+      btn.style.cssText = "padding:4px 8px;font-size:11px;";
+      btn.textContent = "✕";
+      btn.onclick = () => confirmRemove(name, listType, i, sport);
+      action.appendChild(btn);
+    }
+  }
+
+  div.appendChild(num); div.appendChild(av); div.appendChild(nm); div.appendChild(action);
+  return div;
 }
 
 function renderList(containerId, arr, listType, sport) {
