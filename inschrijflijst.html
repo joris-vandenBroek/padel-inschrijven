@@ -456,7 +456,7 @@
 <div class="list" id="mainList"></div>
 
 <div class="divider-reserve">
-  <span>Reserve (max 4)</span>
+  <span id="reserveDividerLabel">Reserve</span>
 </div>
 <div class="list" id="reserveList"></div>
 
@@ -558,6 +558,10 @@
       <details>
         <summary data-i18n="nieuweLijstSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📅 Nieuwe lijst aanmaken</summary>
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+          <select id="adminEventType"
+            style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;"
+            onchange="eventConfig=EVENT_TYPES[this.value]||EVENT_TYPES[DEFAULT_EVENT_TYPE];vulAdminDagenDropdown()">
+          </select>
           <select id="adminFriday"
             style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
           </select>
@@ -694,9 +698,27 @@ const FIREBASE_CONFIG = {
   appId: "1:877480177862:web:aabb72962d83e47081e7c7"
 };
 
+// ═══ EVENT TYPES ════════════════════════════════════════
+const EVENT_TYPES = {
+  vrijdagochtend: {
+    id: "vrijdagochtend",
+    label: { nl: "Vrijdagochtend hussel", en: "Friday morning hussel" },
+    dag: 5,
+    dagNaam: { nl: "Vrijdag", en: "Friday" },
+    startTijd: "9:00",
+    eindTijd: "10:30",
+    verloopUur: 9,
+    mainSize: 20,
+    reserveSize: 4,
+  },
+};
+const DEFAULT_EVENT_TYPE = "vrijdagochtend";
+
+// Actieve config — wordt ingesteld zodra een sessie geladen wordt
+let eventConfig = EVENT_TYPES[DEFAULT_EVENT_TYPE];
+
 // ═══ CONSTANTEN ═════════════════════════════════════════
-const MAIN_SIZE    = 20;
-const RESERVE_SIZE = 4;
+// eventConfig.mainSize en eventConfig.reserveSize worden dynamisch uit eventConfig gelezen
 let   ADMINS       = null; // geladen vanuit Firebase — null = nog niet klaar
 const LEDEN_URL    = "https://raw.githubusercontent.com/joris-vandenBroek/knltb-autoboek/main/leden.json";
 const LEDEN_CACHE  = "padel_leden_cache";
@@ -796,7 +818,6 @@ const TRANSLATIONS = {
     sluiten: "Sluiten",
     deelnemerHelpTitle: "ℹ️ Hoe werkt het?",
     adminHelpTitle: "⚙️ Beheer – uitleg",
-    vrijdagTitel: "Vrijdag {dag} {maand}",
     uurSuffix: " uur",
     // Toast & dynamic
     kiesUitLedenlijst: "⚠️ Kies een naam uit de ledenlijst",
@@ -954,7 +975,6 @@ const TRANSLATIONS = {
     sluiten: "Close",
     deelnemerHelpTitle: "ℹ️ How does it work?",
     adminHelpTitle: "⚙️ Admin – explanation",
-    vrijdagTitel: "Friday {dag} {maand}",
     uurSuffix: "",
     kiesUitLedenlijst: "⚠️ Choose a name from the member list",
     welkom: "Welcome, {naam}!",
@@ -1096,8 +1116,8 @@ function applyLang() {
     document.getElementById("headerTime").textContent = (currentSession.time || "").replace(/ uur$/, "") + t("uurSuffix");
   }
   if (currentSession) {
-    const filled = slotArray(currentSession.main, MAIN_SIZE).filter(n => n && n.trim()).length;
-    document.getElementById("countBadge").textContent = t("aantalDeelnemers", { filled, max: MAIN_SIZE });
+    const filled = slotArray(currentSession.main, eventConfig.mainSize).filter(n => n && n.trim()).length;
+    document.getElementById("countBadge").textContent = t("aantalDeelnemers", { filled, max: eventConfig.mainSize });
   }
   if (!identity) document.getElementById("whoLabel").textContent = t("nogNietIngesteld");
 
@@ -1150,7 +1170,7 @@ db.ref("instellingen").once("value", snap => {
 db.ref("instellingen/huidigeDatum").once("value", s => { if (s.val()) db.ref("instellingen/huidigeDatum").remove(); });
 
 db.ref("instellingen/datumActieveLijst").on("value", snap => {
-  const datum = snap.val() || volgendeVrijdag();
+  const datum = snap.val() || volgendeSessiedag(eventConfig.dag);
   if (!snap.val()) db.ref("instellingen/datumActieveLijst").set(datum);
   activeDatum = datum;
   // Niet overschrijven als beheerder bewust een andere lijst bekijkt
@@ -1167,8 +1187,10 @@ function switchToDatum(datum) {
   sessieListenerRef.on("value", snap => {
     const data = snap.val();
     if (!data) {
-      initialiseerSessie(datum, datumNaarTitel(datum), "9:00 – 10:30 uur");
+      const time = `${eventConfig.startTijd} – ${eventConfig.eindTijd} uur`;
+      initialiseerSessie(datum, datumNaarTitel(datum), time, eventConfig.id);
     } else {
+      eventConfig = EVENT_TYPES[data.eventType] || EVENT_TYPES[DEFAULT_EVENT_TYPE];
       currentSession = data;
       document.getElementById("headerTitle").textContent = datumNaarTitel(datum);
       document.getElementById("headerTime").textContent  = (data.time || "").replace(/ uur$/, "") + t("uurSuffix");
@@ -1178,14 +1200,14 @@ function switchToDatum(datum) {
   });
 }
 
-async function initialiseerSessie(datum, title, time) {
+async function initialiseerSessie(datum, title, time, eventType) {
   const main = {}, reserve = {};
-  for (let i = 0; i < MAIN_SIZE; i++)    main[i]    = "";
-  for (let i = 0; i < RESERVE_SIZE; i++) reserve[i] = "";
+  for (let i = 0; i < eventConfig.mainSize; i++)    main[i]    = "";
+  for (let i = 0; i < eventConfig.reserveSize; i++) reserve[i] = "";
   // Vul vaste deelnemers in op de eerste slots
-  vasteDeelnemers.slice(0, MAIN_SIZE).forEach((naam, i) => { main[i] = naam; });
+  vasteDeelnemers.slice(0, eventConfig.mainSize).forEach((naam, i) => { main[i] = naam; });
   await db.ref(`sessies/${datum}`).set({
-    title, time, main, reserve,
+    title, time, eventType: eventType || DEFAULT_EVENT_TYPE, main, reserve,
     aangemaaktOp: firebase.database.ServerValue.TIMESTAMP
   });
 }
@@ -1213,38 +1235,40 @@ function toLocalDateString(d) {
   return `${y}-${m}-${dd}`;
 }
 
-function volgendeVrijdag() {
+function volgendeSessiedag(dag) {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
-  const daysUntilFriday = (5 - d.getDay() + 7) % 7 || 7;
-  d.setDate(d.getDate() + daysUntilFriday);
+  const daysUntil = (dag - d.getDay() + 7) % 7 || 7;
+  d.setDate(d.getDate() + daysUntil);
   return toLocalDateString(d);
 }
 
 function datumNaarTitel(datum) {
   const d = new Date(datum + "T12:00:00");
   const maand = MONTHS[lang][d.getMonth()];
-  return t("vrijdagTitel", { dag: d.getDate(), maand });
+  const dagNaam = eventConfig.dagNaam[lang];
+  return `${dagNaam} ${d.getDate()} ${maand}`;
 }
 
-function getUpcomingFridays(count) {
-  const fridays = [];
+function getUpcomingSessionDays(count) {
+  const days = [];
   const d = new Date();
   d.setHours(0, 0, 0, 0);
-  const daysUntilFriday = (5 - d.getDay() + 7) % 7 || 7;
-  d.setDate(d.getDate() + daysUntilFriday);
+  const daysUntil = (eventConfig.dag - d.getDay() + 7) % 7 || 7;
+  d.setDate(d.getDate() + daysUntil);
   for (let i = 0; i < count; i++) {
     const datum = toLocalDateString(d);
-    fridays.push({ datum, label: datumNaarTitel(datum) });
+    days.push({ datum, label: datumNaarTitel(datum) });
     d.setDate(d.getDate() + 7);
   }
-  return fridays;
+  return days;
 }
 
 // ═══ VERLOPEN ═══════════════════════════════════════════
 function isLijstVerlopen() {
   if (!activeDatum) return true;
-  return new Date() >= new Date(activeDatum + "T09:00:00");
+  const uur = String(eventConfig.verloopUur).padStart(2, "0");
+  return new Date() >= new Date(activeDatum + `T${uur}:00:00`);
 }
 
 function updateVerlopenState() {
@@ -1266,12 +1290,13 @@ function render() {
   if (!currentSession) return;
   updateVerlopenState();
   updateViewBanner();
-  const main    = slotArray(currentSession.main,    MAIN_SIZE);
-  const reserve = slotArray(currentSession.reserve, RESERVE_SIZE);
+  document.getElementById("reserveDividerLabel").textContent = `Reserve (max ${eventConfig.reserveSize})`;
+  const main    = slotArray(currentSession.main,    eventConfig.mainSize);
+  const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
   renderList("mainList",    main,    "main");
   renderList("reserveList", reserve, "reserve");
   const filled = main.filter(n => n && n.trim()).length;
-  document.getElementById("countBadge").textContent = t("aantalDeelnemers", { filled, max: MAIN_SIZE });
+  document.getElementById("countBadge").textContent = t("aantalDeelnemers", { filled, max: eventConfig.mainSize });
   document.getElementById("whoLabel").textContent   = identity || t("nogNietIngesteld");
 }
 
@@ -1401,8 +1426,8 @@ function joinFirstFree() {
     return;
   }
 
-  const mainVrij    = slotArray(currentSession.main,    MAIN_SIZE).some(n    => !n || !n.trim());
-  const reserveVrij = slotArray(currentSession.reserve, RESERVE_SIZE).some(n => !n || !n.trim());
+  const mainVrij    = slotArray(currentSession.main,    eventConfig.mainSize).some(n    => !n || !n.trim());
+  const reserveVrij = slotArray(currentSession.reserve, eventConfig.reserveSize).some(n => !n || !n.trim());
 
   if (!mainVrij && !reserveVrij) { showToast(t("geenPlek")); return; }
 
@@ -1422,12 +1447,12 @@ function joinFirstFree() {
 function doJoinTransaction() {
   db.ref(`sessies/${currentDate}`).transaction(session => {
     if (!session) return;
-    for (let i = 0; i < MAIN_SIZE; i++) {
+    for (let i = 0; i < eventConfig.mainSize; i++) {
       if (!session.main[i] || !session.main[i].trim()) {
         session.main[i] = identity; return session;
       }
     }
-    for (let i = 0; i < RESERVE_SIZE; i++) {
+    for (let i = 0; i < eventConfig.reserveSize; i++) {
       if (!session.reserve[i] || !session.reserve[i].trim()) {
         session.reserve[i] = identity; return session;
       }
@@ -1467,7 +1492,7 @@ function doRemoveTransaction(naam, listType, fromIdx) {
   db.ref(`sessies/${currentDate}`).transaction(session => {
     if (!session) return;
     if (listType === "main") {
-      session.main = shiftUp(session.main, fromIdx, MAIN_SIZE);
+      session.main = shiftUp(session.main, fromIdx, eventConfig.mainSize);
       // Promoveer eerste reservist
       const eersteRKey = Object.keys(session.reserve || {})
         .sort((a, b) => +a - +b)
@@ -1478,11 +1503,11 @@ function doRemoveTransaction(naam, listType, fromIdx) {
           .find(k => !session.main[k] || !session.main[k].trim());
         if (leegMKey !== undefined) {
           session.main[leegMKey] = session.reserve[eersteRKey];
-          session.reserve = shiftUp(session.reserve, +eersteRKey, RESERVE_SIZE);
+          session.reserve = shiftUp(session.reserve, +eersteRKey, eventConfig.reserveSize);
         }
       }
     } else {
-      session.reserve = shiftUp(session.reserve, fromIdx, RESERVE_SIZE);
+      session.reserve = shiftUp(session.reserve, fromIdx, eventConfig.reserveSize);
     }
     return session;
   }, (error, committed) => {
@@ -1530,10 +1555,10 @@ function confirmAdminAdd() {
 
   db.ref(`sessies/${currentDate}`).transaction(session => {
     if (!session) return;
-    for (let i = 0; i < MAIN_SIZE; i++) {
+    for (let i = 0; i < eventConfig.mainSize; i++) {
       if (!session.main[i] || !session.main[i].trim()) { session.main[i] = naam; return session; }
     }
-    for (let i = 0; i < RESERVE_SIZE; i++) {
+    for (let i = 0; i < eventConfig.reserveSize; i++) {
       if (!session.reserve[i] || !session.reserve[i].trim()) { session.reserve[i] = naam; return session; }
     }
   }, (error, committed) => {
@@ -1552,8 +1577,8 @@ function confirmClearList() {
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
     const main = {}, reserve = {};
-    for (let i = 0; i < MAIN_SIZE; i++)    main[i]    = "";
-    for (let i = 0; i < RESERVE_SIZE; i++) reserve[i] = "";
+    for (let i = 0; i < eventConfig.mainSize; i++)    main[i]    = "";
+    for (let i = 0; i < eventConfig.reserveSize; i++) reserve[i] = "";
     db.ref(`sessies/${currentDate}`).update({ main, reserve });
     showToast(t("lijstLeeggemaakt"));
   };
@@ -1570,16 +1595,31 @@ function openAdminModal() {
   setTimeout(() => document.getElementById("adminPwInput").focus(), 100);
 }
 
-function openAdminPanel() {
+function vulAdminDagenDropdown() {
   const sel = document.getElementById("adminFriday");
   sel.innerHTML = "";
-  getUpcomingFridays(8).forEach(f => {
+  getUpcomingSessionDays(8).forEach(f => {
     const opt = document.createElement("option");
     opt.value = f.datum;
     opt.textContent = f.label;
     if (f.datum === currentDate) opt.selected = true;
     sel.appendChild(opt);
   });
+}
+
+function openAdminPanel() {
+  // Vul en zet event type dropdown
+  const typeEl = document.getElementById("adminEventType");
+  typeEl.innerHTML = "";
+  Object.values(EVENT_TYPES).forEach(et => {
+    const opt = document.createElement("option");
+    opt.value = et.id;
+    opt.textContent = et.label[lang] || et.label.nl;
+    typeEl.appendChild(opt);
+  });
+  typeEl.value = currentSession?.eventType || DEFAULT_EVENT_TYPE;
+  eventConfig = EVENT_TYPES[typeEl.value] || EVENT_TYPES[DEFAULT_EVENT_TYPE];
+  vulAdminDagenDropdown();
   document.getElementById("adminPanel").classList.add("open");
   laadBestaandeLijsten();
   renderBeheerderLijst();
@@ -1645,10 +1685,10 @@ function confirmAndereInschrijven() {
 
   db.ref(`sessies/${currentDate}`).transaction(session => {
     if (!session) return;
-    for (let i = 0; i < MAIN_SIZE; i++) {
+    for (let i = 0; i < eventConfig.mainSize; i++) {
       if (!session.main[i] || !session.main[i].trim()) { session.main[i] = naam; return session; }
     }
-    for (let i = 0; i < RESERVE_SIZE; i++) {
+    for (let i = 0; i < eventConfig.reserveSize; i++) {
       if (!session.reserve[i] || !session.reserve[i].trim()) { session.reserve[i] = naam; return session; }
     }
   }, (error, committed, snapshot) => {
@@ -1783,8 +1823,8 @@ function voegVasteDeelnemerToe() {
     showToast(t("vasteAlInLijst", { naam }));
     return;
   }
-  if (vasteDeelnemers.length >= MAIN_SIZE) {
-    showToast(t("maximumBereikt", { max: MAIN_SIZE }));
+  if (vasteDeelnemers.length >= eventConfig.mainSize) {
+    showToast(t("maximumBereikt", { max: eventConfig.mainSize }));
     return;
   }
   vasteDeelnemers.push(naam);
@@ -1830,7 +1870,7 @@ async function laadBestaandeLijsten() {
     const reserveSuf = s.aantalReserve > 0 ? t("reserveCount", { n: s.aantalReserve }) : "";
     const deelTxt = s.aantalMain === 1
       ? t("deelnemersCount", { n: s.aantalMain }) || `${s.aantalMain} deelnemer`
-      : t("aantalDeelnemers", { filled: s.aantalMain, max: MAIN_SIZE }).split(" / ")[0] + (lang === "en" ? " participants" : " deelnemers");
+      : t("aantalDeelnemers", { filled: s.aantalMain, max: eventConfig.mainSize }).split(" / ")[0] + (lang === "en" ? " participants" : " deelnemers");
     opt.textContent = `${datumNaarTitel(s.datum)} · ${s.aantalMain} ${lang === "en" ? "participants" : "deelnemers"}${reserveSuf}${huidigSuf}`;
     if (s.datum === currentDate) opt.selected = true;
     sel.appendChild(opt);
@@ -1880,6 +1920,8 @@ function updateViewBanner() {
 
 function nieuweLijstAanmaken() {
   const datum = document.getElementById("adminFriday").value;
+  const typeId = document.getElementById("adminEventType").value;
+  eventConfig = EVENT_TYPES[typeId] || EVENT_TYPES[DEFAULT_EVENT_TYPE];
   const title = datumNaarTitel(datum);
 
   closeModal("adminPanel");
@@ -1900,7 +1942,8 @@ function nieuweLijstAanmaken() {
     document.getElementById("confirmOkBtn").textContent = t("aanmakenKnop");
     document.getElementById("confirmOkBtn").onclick = () => {
       closeModal("confirmModal");
-      initialiseerSessie(datum, title, "9:00 – 10:30 uur").then(() => {
+      const time = `${eventConfig.startTijd} – ${eventConfig.eindTijd} uur`;
+      initialiseerSessie(datum, title, time, eventConfig.id).then(() => {
         switchToDatum(datum);
       });
       const n = vasteDeelnemers.length;
@@ -2010,8 +2053,8 @@ document.getElementById("andereInput").addEventListener("keydown", e => {
 // ═══ SHARE ══════════════════════════════════════════════
 function copyWhatsApp() {
   if (!currentSession) return;
-  const main    = slotArray(currentSession.main,    MAIN_SIZE);
-  const reserve = slotArray(currentSession.reserve, RESERVE_SIZE);
+  const main    = slotArray(currentSession.main,    eventConfig.mainSize);
+  const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
   let lines = [`${currentSession.title} · ${currentSession.time}:`, ""];
   main.forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
   lines.push("— reserve —");
@@ -2054,8 +2097,8 @@ async function maakScreenshot() {
     <div style="font-size:13px;color:#b0a890;margin-top:4px;">${currentSession?.time || ""}</div>`;
   el.appendChild(header);
 
-  const main    = slotArray(currentSession.main,    MAIN_SIZE);
-  const reserve = slotArray(currentSession.reserve, RESERVE_SIZE);
+  const main    = slotArray(currentSession.main,    eventConfig.mainSize);
+  const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
 
   const listEl = document.createElement("div");
   listEl.style.cssText = "background:#fffef9;border:1px solid #ddd8cc;border-top:none;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:12px;";
@@ -2115,8 +2158,8 @@ async function maakScreenshot() {
 
 function downloadCsv() {
   if (!currentSession) return;
-  const main    = slotArray(currentSession.main,    MAIN_SIZE).filter(n => n && n.trim());
-  const reserve = slotArray(currentSession.reserve, RESERVE_SIZE).filter(n => n && n.trim());
+  const main    = slotArray(currentSession.main,    eventConfig.mainSize).filter(n => n && n.trim());
+  const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize).filter(n => n && n.trim());
   const titel   = currentSession.title || currentDate;
   const sep     = ";"; // puntkomma voor Nederlandse Excel
   let rows = [["Nr", "Naam", "Lijst"]];
