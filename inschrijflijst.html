@@ -716,7 +716,7 @@
       </details>
     </div>
 
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+    <div class="superadmin-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
         <summary data-i18n="eventTypesSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🎯 Evenement types</summary>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
@@ -727,7 +727,7 @@
       </details>
     </div>
 
-    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+    <div class="superadmin-only" style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
         <summary data-i18n="beheerdersSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🔑 Beheerders</summary>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
@@ -737,6 +737,7 @@
             style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);color:var(--ink);outline:none;" />
           <input type="password" id="nieuwBeheerderWw" data-i18n-ph="beheerderWwPlaceholder" placeholder="Wachtwoord…" maxlength="40"
             style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:16px;background:var(--bg);color:var(--ink);outline:none;" />
+          <div id="nieuwBeheerderEtChecks" style="display:flex;flex-direction:column;gap:4px;margin:2px 0;"></div>
           <button data-i18n="beheerderToevoegenBtn" class="btn-confirm" style="background:var(--green);" onclick="voegBeheerderToe()">+ Beheerder toevoegen</button>
         </div>
       </details>
@@ -1370,6 +1371,7 @@ function applyLang() {
 let identity       = localStorage.getItem(IDENTITY_KEY) || "";
 let isAdmin        = false;
 let adminNaam      = null;   // naam van de ingelogde beheerder
+let adminEventTypes = "*";  // "*" = superadmin (alles), anders string[] van toegestane event type IDs
 let activeDatum    = null;   // actieve datum in Firebase (voor alle gebruikers)
 let currentDate    = null;   // datum die de beheerder lokaal bekijkt
 let currentSession = null;   // { title, time, main:{0..19:name}, reserve:{0..3:name} }
@@ -1389,10 +1391,20 @@ db.ref("instellingen").once("value", snap => {
   const data = snap.val() || {};
   if (data.admins) {
     ADMINS = data.admins;
+    // Migreer oud flat-string format { "Naam": "ww" } naar nieuw { "Naam": { ww, eventTypes } }
+    let gemigreerd = false;
+    Object.entries(ADMINS).forEach(([naam, val]) => {
+      if (typeof val === "string") {
+        const isSuperadmin = naam === "Joris van den Broek";
+        ADMINS[naam] = { ww: val, eventTypes: isSuperadmin ? "*" : Object.keys(EVENT_TYPES || {}) };
+        gemigreerd = true;
+      }
+    });
+    if (gemigreerd) db.ref("instellingen/admins").set(ADMINS);
   } else {
     // Migreer oud enkelvoudig wachtwoord of gebruik standaard
     const oudWw = data.adminWachtwoord || "padel";
-    ADMINS = { "Beheerder": oudWw };
+    ADMINS = { "Beheerder": { ww: oudWw, eventTypes: "*" } };
     db.ref("instellingen/admins").set(ADMINS);
     db.ref("instellingen/adminWachtwoord").remove();
   }
@@ -2070,11 +2082,17 @@ function vulAdminDagenDropdown() {
   });
 }
 
+function isSuperadmin() { return adminEventTypes === "*"; }
+
 function openAdminPanel() {
-  // Vul en zet event type dropdown
+  // Superadmin-only secties tonen/verbergen
+  const superOnly = document.querySelectorAll(".superadmin-only");
+  superOnly.forEach(el => { el.style.display = isSuperadmin() ? "" : "none"; });
+
+  // Vul en zet event type dropdown (gefilterd op toegang)
   const typeEl = document.getElementById("adminEventType");
   typeEl.innerHTML = "";
-  Object.values(EVENT_TYPES).forEach(et => {
+  Object.values(EVENT_TYPES).filter(et => heeftToegang(et.id)).forEach(et => {
     const opt = document.createElement("option");
     opt.value = et.id;
     opt.textContent = et.label[lang] || et.label.nl;
@@ -2093,15 +2111,23 @@ function openAdminPanel() {
   renderEventTypeLijst();
 }
 
+function heeftToegang(eventTypeId) {
+  if (adminEventTypes === "*") return true;
+  if (Array.isArray(adminEventTypes)) return adminEventTypes.includes(eventTypeId);
+  return false;
+}
+
 function checkAdminPw() {
   if (!ADMINS) { document.getElementById("adminPwError").textContent = t("verbindingNietGereed"); return; }
   const pw = document.getElementById("adminPwInput").value;
-  const gevonden = Object.entries(ADMINS).find(([, ww]) => ww === pw);
+  const gevonden = Object.entries(ADMINS).find(([, rec]) => (typeof rec === "object" ? rec.ww : rec) === pw);
   if (!gevonden) {
     document.getElementById("adminPwError").textContent = t("onjuistWachtwoord");
     return;
   }
   adminNaam = gevonden[0];
+  const rec = gevonden[1];
+  adminEventTypes = (typeof rec === "object" && rec.eventTypes !== undefined) ? rec.eventTypes : "*";
   isAdmin = true;
   document.getElementById("adminBanner").style.display = "flex";
   document.getElementById("adminBannerNaam").textContent = adminNaam;
@@ -2172,13 +2198,16 @@ function checkAdminPwEnWijzig() {
   const pw     = document.getElementById("adminPwInput").value;
   const nieuw  = document.getElementById("nieuwWwInput").value;
   const bevestig = document.getElementById("nieuwWwBevestig").value;
-  const gevonden = Object.entries(ADMINS).find(([, ww]) => ww === pw);
+  const gevonden = Object.entries(ADMINS).find(([, rec]) => (typeof rec === "object" ? rec.ww : rec) === pw);
   if (!gevonden) { document.getElementById("adminPwError").textContent = t("onjuistWachtwoord"); return; }
   if (!nieuw)             { showToast(t("voerNieuwWwIn")); return; }
   if (nieuw !== bevestig) { showToast(t("wachtwoordenNietOvereen")); return; }
   if (nieuw.length < 4)   { showToast(t("minimaalVierTekens")); return; }
   adminNaam = gevonden[0];
-  ADMINS[adminNaam] = nieuw;
+  const rec = gevonden[1];
+  adminEventTypes = (typeof rec === "object" && rec.eventTypes !== undefined) ? rec.eventTypes : "*";
+  const etArr = (typeof rec === "object") ? rec.eventTypes : "*";
+  ADMINS[adminNaam] = { ww: nieuw, eventTypes: etArr };
   db.ref("instellingen/admins").set(ADMINS).then(() => {
     isAdmin = true;
     document.getElementById("adminBanner").style.display = "flex";
@@ -2198,7 +2227,8 @@ function wijzigWachtwoord() {
   if (!nieuw)              { showToast(t("voerNieuwWwIn")); return; }
   if (nieuw !== bevestig)  { showToast(t("wachtwoordenNietOvereen")); return; }
   if (nieuw.length < 4)   { showToast(t("minimaalVierTekens")); return; }
-  ADMINS[adminNaam] = nieuw;
+  const huidig = ADMINS[adminNaam];
+  ADMINS[adminNaam] = typeof huidig === "object" ? { ...huidig, ww: nieuw } : { ww: nieuw, eventTypes: "*" };
   db.ref("instellingen/admins").set(ADMINS).then(() => {
     document.getElementById("nieuwWwInput").value = "";
     document.getElementById("nieuwWwBevestig").value = "";
@@ -2212,7 +2242,10 @@ function voegBeheerderToe() {
   if (!naam) { showToast(t("voerNaamIn")); return; }
   if (!ww || ww.length < 4) { showToast(t("wwMinimaal")); return; }
   if (Object.keys(ADMINS).some(n => n.toLowerCase() === naam.toLowerCase())) { showToast(t("isAlBeheerder", { naam })); return; }
-  ADMINS[naam] = ww;
+  // Lees geselecteerde event types uit checkboxes
+  const checkboxes = document.querySelectorAll(".nieuwBeheerderEtCheck:checked");
+  const etIds = Array.from(checkboxes).map(cb => cb.value);
+  ADMINS[naam] = { ww, eventTypes: etIds.length ? etIds : Object.keys(EVENT_TYPES) };
   db.ref("instellingen/admins").set(ADMINS).then(() => {
     document.getElementById("nieuwBeheerderNaam").value = "";
     document.getElementById("nieuwBeheerderWw").value = "";
@@ -2364,13 +2397,35 @@ function renderBeheerderLijst() {
   const el = document.getElementById("beheerderLijst");
   if (!el) return;
   el.innerHTML = "";
-  Object.keys(ADMINS).forEach(naam => {
+  Object.entries(ADMINS).forEach(([naam, rec]) => {
+    const etArr = (typeof rec === "object" && rec.eventTypes) ? rec.eventTypes : "*";
+    const etLabel = etArr === "*" ? "🔑 Alles" : (Array.isArray(etArr) && etArr.length
+      ? etArr.map(id => EVENT_TYPES[id]?.label?.[lang] || id).join(", ")
+      : "— geen toegang");
+    const jij = naam === adminNaam ? " <span style='font-size:10px;color:var(--mine);font-weight:700;'>(jij)</span>" : "";
+    const verwijderBtn = naam !== adminNaam
+      ? `<button onclick="verwijderBeheerder('${naam}')" style="font-size:11px;padding:2px 8px;border:1px solid var(--accent);color:var(--accent);border-radius:6px;background:none;cursor:pointer;margin-left:6px;">✕</button>`
+      : "";
     const row = document.createElement("div");
     row.style.cssText = "padding:5px 0;font-size:14px;";
-    const jij = naam === adminNaam ? " <span style='font-size:10px;color:var(--mine);font-weight:700;'>(jij)</span>" : "";
-    row.innerHTML = `<span>${naam}${jij}</span>`;
+    row.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;">
+      <span>${naam}${jij}${verwijderBtn}</span>
+    </div>
+    <div style="font-size:11px;color:var(--ink-light);margin-top:1px;">${etLabel}</div>`;
     el.appendChild(row);
   });
+
+  // Vul event type checkboxes voor nieuwe beheerder
+  const checksEl = document.getElementById("nieuwBeheerderEtChecks");
+  if (checksEl) {
+    checksEl.innerHTML = `<div style="font-size:11px;color:var(--ink-light);margin-bottom:2px;">Toegang tot event types:</div>`;
+    Object.values(EVENT_TYPES).forEach(et => {
+      const lbl = document.createElement("label");
+      lbl.style.cssText = "display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;";
+      lbl.innerHTML = `<input type="checkbox" class="nieuwBeheerderEtCheck" value="${et.id}" checked style="accent-color:var(--accent);"> ${et.label[lang] || et.label.nl}`;
+      checksEl.appendChild(lbl);
+    });
+  }
 }
 
 function openAdminHelp() {
@@ -2398,13 +2453,13 @@ function herlaadVdDropdown() {
   if (!sel) return;
   const huidig = sel.value;
   sel.innerHTML = "";
-  Object.values(EVENT_TYPES).forEach(et => {
+  Object.values(EVENT_TYPES).filter(et => heeftToegang(et.id)).forEach(et => {
     const opt = document.createElement("option");
     opt.value = et.id;
     opt.textContent = et.label[lang] || et.label.nl;
     sel.appendChild(opt);
   });
-  sel.value = EVENT_TYPES[huidig] ? huidig : Object.keys(EVENT_TYPES)[0];
+  sel.value = (EVENT_TYPES[huidig] && heeftToegang(huidig)) ? huidig : (sel.options[0]?.value || "");
 }
 
 async function wisselVdEventType() {
@@ -2528,6 +2583,7 @@ async function laadBestaandeLijsten() {
   const snap = await db.ref("sessies").once("value");
   const data = snap.val() || {};
   const sessies = Object.entries(data)
+    .filter(([, s]) => heeftToegang(s.eventType || DEFAULT_EVENT_TYPE))
     .map(([datum, s]) => {
       const tel = obj => Object.values(obj || {}).filter(n => n && n.trim()).length;
       const aantalMain    = s.main_padel !== undefined
