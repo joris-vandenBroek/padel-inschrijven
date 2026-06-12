@@ -2743,7 +2743,10 @@ function verwijderHuidigeLijst() {
   document.getElementById("confirmModal").classList.add("open");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
-    db.ref(`sessies/${currentDate}`).remove().then(() => {
+    const datumTeVerwijderen = currentDate;
+    // Listener uitzetten zodat de delete niet triggert op initialiseerSessie
+    if (sessieListenerRef) { sessieListenerRef.off(); sessieListenerRef = null; }
+    db.ref(`sessies/${datumTeVerwijderen}`).remove().then(() => {
       showToast(`✓ ${titel} verwijderd`);
       terugNaarActief();
     });
