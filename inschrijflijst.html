@@ -1956,8 +1956,25 @@ function slaEventTypeOp() {
   db.ref(`instellingen/eventTypes/${id}`).set(et).then(() => {
     showToast(lang === "en" ? "✓ Saved" : "✓ Opgeslagen");
     renderEventTypeLijst();
+    herlaadEventTypeDropdown();
     closeModal("eventTypeModal");
   });
+}
+
+function herlaadEventTypeDropdown() {
+  const typeEl = document.getElementById("adminEventType");
+  if (!typeEl) return;
+  const huidig = typeEl.value;
+  typeEl.innerHTML = "";
+  Object.values(EVENT_TYPES).forEach(et => {
+    const opt = document.createElement("option");
+    opt.value = et.id;
+    opt.textContent = et.label[lang] || et.label.nl;
+    typeEl.appendChild(opt);
+  });
+  typeEl.value = EVENT_TYPES[huidig] ? huidig : Object.keys(EVENT_TYPES)[0];
+  eventConfig = EVENT_TYPES[typeEl.value] || BUILTIN_EVENT_TYPE;
+  vulAdminDagenDropdown();
 }
 
 function verwijderEventType(id) {
@@ -1972,6 +1989,7 @@ function verwijderEventType(id) {
     db.ref(`instellingen/eventTypes/${id}`).remove().then(() => {
       showToast(lang === "en" ? "✓ Removed" : "✓ Verwijderd");
       renderEventTypeLijst();
+      herlaadEventTypeDropdown();
     });
   };
 }
