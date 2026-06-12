@@ -732,6 +732,10 @@
         </div>
       </div>
     </div>
+      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etShareUrl">Korte link (optioneel, bijv. tinyurl)</label>
+      <input id="etShareUrl" type="url" placeholder="https://tinyurl.com/…" maxlength="200" autocomplete="off"
+        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+    </div>
     <div style="display:flex;gap:8px;margin-top:20px;">
       <button data-i18n="sluiten" class="btn-confirm" style="flex:1;background:var(--ink-light);" onclick="closeModal('eventTypeModal')">Sluiten</button>
       <button id="etOpslaanBtn" data-i18n="etOpslaanBtn" class="btn-confirm" style="flex:1;" onclick="slaEventTypeOp()">Opslaan ✓</button>
@@ -766,6 +770,9 @@ const DAGNAMEN = {
 };
 
 const DEFAULT_EVENT_TYPE = "vrijdagochtend";
+// URL-param bepaalt welk event type getoond wordt: ?event=dinsdagavond
+const urlEventType = new URLSearchParams(location.search).get("event") || DEFAULT_EVENT_TYPE;
+
 const BUILTIN_EVENT_TYPE = {
   id: "vrijdagochtend",
   label: { nl: "Vrijdagochtend hussel", en: "Friday morning hussel" },
@@ -888,6 +895,7 @@ const TRANSLATIONS = {
     etVerloop: "Lijst sluit om (uur)",
     etMainSize: "Max deelnemers",
     etReserveSize: "Max reserve",
+    etShareUrl: "Korte link (optioneel, bijv. tinyurl)",
     etOpslaanBtn: "Opslaan ✓",
     beheerdersSummary: "🔑 Beheerders",
     nieuweBeheerderLabel: "Nieuwe beheerder toevoegen",
@@ -1058,6 +1066,7 @@ const TRANSLATIONS = {
     etVerloop: "List closes at (hour)",
     etMainSize: "Max participants",
     etReserveSize: "Max reserve",
+    etShareUrl: "Short link (optional, e.g. tinyurl)",
     etOpslaanBtn: "Save ✓",
     beheerdersSummary: "🔑 Admins",
     nieuweBeheerderLabel: "Add new admin",
@@ -1266,19 +1275,27 @@ db.ref("instellingen").once("value", snap => {
   } else {
     db.ref("instellingen/eventTypes").set({ [BUILTIN_EVENT_TYPE.id]: BUILTIN_EVENT_TYPE });
   }
-  // Zet actieve config op eerste beschikbare type als default niet bestaat
-  if (!EVENT_TYPES[DEFAULT_EVENT_TYPE]) {
-    eventConfig = Object.values(EVENT_TYPES)[0] || BUILTIN_EVENT_TYPE;
-  }
+  // Stel eventConfig in op basis van URL-param
+  eventConfig = EVENT_TYPES[urlEventType] || Object.values(EVENT_TYPES)[0] || BUILTIN_EVENT_TYPE;
 
   updateBeheerderFooter();
 });
 
 db.ref("instellingen/huidigeDatum").once("value", s => { if (s.val()) db.ref("instellingen/huidigeDatum").remove(); });
 
-db.ref("instellingen/datumActieveLijst").on("value", snap => {
+// Migreer datumActieveLijst → actiefPerType/vrijdagochtend (eenmalig)
+db.ref("instellingen/datumActieveLijst").once("value", s => {
+  if (s.val()) {
+    db.ref(`instellingen/actiefPerType/${DEFAULT_EVENT_TYPE}`).once("value", sp => {
+      if (!sp.val()) db.ref(`instellingen/actiefPerType/${DEFAULT_EVENT_TYPE}`).set(s.val());
+    });
+    db.ref("instellingen/datumActieveLijst").remove();
+  }
+});
+
+db.ref(`instellingen/actiefPerType/${urlEventType}`).on("value", snap => {
   const datum = snap.val() || volgendeSessiedag(eventConfig.dag);
-  if (!snap.val()) db.ref("instellingen/datumActieveLijst").set(datum);
+  if (!snap.val()) db.ref(`instellingen/actiefPerType/${urlEventType}`).set(datum);
   activeDatum = datum;
   // Niet overschrijven als beheerder bewust een andere lijst bekijkt
   if (!isAdmin || currentDate === null || currentDate === activeDatum) {
@@ -1911,6 +1928,7 @@ function openEventTypeForm(id) {
   document.getElementById("eventTypeModalTitle").textContent = id ? (lang === "en" ? "🎯 Edit event type" : "🎯 Evenement type bewerken") : (lang === "en" ? "🎯 Add event type" : "🎯 Nieuw evenement type");
   document.getElementById("etNaamNl").value    = et ? (et.label?.nl || "") : "";
   document.getElementById("etNaamEn").value    = et ? (et.label?.en || "") : "";
+  document.getElementById("etShareUrl").value  = et ? (et.shareUrl || "") : "";
   document.getElementById("etVerloop").value   = et ? et.verloopUur : 9;
   document.getElementById("etMainSize").value  = et ? et.mainSize : 20;
   document.getElementById("etReserveSize").value = et ? et.reserveSize : 4;
@@ -1949,8 +1967,9 @@ function slaEventTypeOp() {
   const eindTijd  = eindRaw;
 
   // ID: nieuw = slug van NL naam, bestaand = zelfde houden
+  const shareUrl = document.getElementById("etShareUrl").value.trim();
   const id = _editingEventTypeId || naamNl.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-  const et = { id, label: { nl: naamNl, en: naamEn || naamNl }, dag, startTijd, eindTijd, verloopUur, mainSize, reserveSize };
+  const et = { id, label: { nl: naamNl, en: naamEn || naamNl }, dag, startTijd, eindTijd, verloopUur, mainSize, reserveSize, ...(shareUrl && { shareUrl }) };
 
   EVENT_TYPES[id] = et;
   db.ref(`instellingen/eventTypes/${id}`).set(et).then(() => {
@@ -2123,7 +2142,7 @@ function terugNaarActief() {
 function maakLijstActief() {
   if (!currentDate || currentDate === activeDatum) return;
   const title = currentSession?.title || currentDate;
-  db.ref("instellingen/datumActieveLijst").set(currentDate);
+  db.ref(`instellingen/actiefPerType/${urlEventType}`).set(currentDate);
   document.getElementById("viewBanner").style.display = "none";
   const deelBanner = document.getElementById("deelBanner");
   document.getElementById("deelBannerText").textContent = t("lijstActiefGemaakt", { title });
@@ -2297,7 +2316,8 @@ function shareLink() {
   const titel  = currentSession?.title || "Padel";
   const tijd   = currentSession?.time  || "";
   const tekst  = `🎾 ${titel} · ${tijd}\nDe inschrijving is geopend – schrijf je snel in, vol = vol!\nSign-up is open – register quickly, spots fill up fast!`;
-  const url    = "https://tinyurl.com/padel-inschrijven";
+  const baseUrl = location.origin + location.pathname;
+  const url = eventConfig.shareUrl || `${baseUrl}?event=${urlEventType}`;
 
   if (navigator.share) {
     navigator.share({ text: tekst, url });
@@ -2361,7 +2381,8 @@ async function maakScreenshot() {
 
   const footer = document.createElement("div");
   footer.style.cssText = "text-align:center;font-size:11px;color:#6b6555;";
-  footer.textContent = "tinyurl.com/padel-inschrijven";
+  const shareUrl = eventConfig.shareUrl || (location.origin + location.pathname + "?event=" + urlEventType);
+  footer.textContent = shareUrl.replace(/^https?:\/\//, "");
   el.appendChild(footer);
 
   document.body.appendChild(el);
