@@ -627,6 +627,17 @@
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
+        <summary data-i18n="eventTypesSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🎯 Evenement types</summary>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
+          <div data-i18n="eventTypesDesc" style="font-size:12px;color:var(--ink-light);">Stel in welke soorten evenementen beschikbaar zijn bij het aanmaken van een nieuwe lijst.</div>
+          <div id="eventTypeLijst" style="display:flex;flex-direction:column;gap:6px;"></div>
+          <button data-i18n="eventTypeToevoegenBtn" class="btn-confirm" style="background:var(--green);margin-top:4px;" onclick="openEventTypeForm(null)">+ Evenement type toevoegen</button>
+        </div>
+      </details>
+    </div>
+
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <details>
         <summary data-i18n="beheerdersSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">🔑 Beheerders</summary>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">
           <div id="beheerderLijst"></div>
@@ -678,6 +689,56 @@
   </div>
 </div>
 
+<!-- Event type form modal -->
+<div class="modal-overlay" id="eventTypeModal">
+  <div class="modal">
+    <h2 id="eventTypeModalTitle" data-i18n="eventTypeFormTitel">🎯 Evenement type</h2>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
+      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etNaamNl">Naam (NL)</label>
+      <input id="etNaamNl" type="text" maxlength="50" autocomplete="off"
+        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etNaamEn">Naam (EN)</label>
+      <input id="etNaamEn" type="text" maxlength="50" autocomplete="off"
+        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etDag">Dag van de week</label>
+      <select id="etDag"
+        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
+      </select>
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--ink-light);" data-i18n="etStartTijd">Starttijd</label>
+          <input id="etStartTijd" type="time"
+            style="width:100%;margin-top:4px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--ink-light);" data-i18n="etEindTijd">Eindtijd</label>
+          <input id="etEindTijd" type="time"
+            style="width:100%;margin-top:4px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+        </div>
+      </div>
+      <label style="font-size:12px;color:var(--ink-light);" data-i18n="etVerloop">Lijst sluit om (uur)</label>
+      <input id="etVerloop" type="number" min="0" max="23" step="1"
+        style="padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--ink-light);" data-i18n="etMainSize">Max deelnemers</label>
+          <input id="etMainSize" type="number" min="1" max="100" step="1"
+            style="width:100%;margin-top:4px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:12px;color:var(--ink-light);" data-i18n="etReserveSize">Max reserve</label>
+          <input id="etReserveSize" type="number" min="0" max="20" step="1"
+            style="width:100%;margin-top:4px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:20px;">
+      <button data-i18n="sluiten" class="btn-confirm" style="flex:1;background:var(--ink-light);" onclick="closeModal('eventTypeModal')">Sluiten</button>
+      <button id="etOpslaanBtn" data-i18n="etOpslaanBtn" class="btn-confirm" style="flex:1;" onclick="slaEventTypeOp()">Opslaan ✓</button>
+    </div>
+  </div>
+</div>
+
 <datalist id="ledenList"></datalist>
 <div class="toast" id="toast"></div>
 
@@ -699,20 +760,25 @@ const FIREBASE_CONFIG = {
 };
 
 // ═══ EVENT TYPES ════════════════════════════════════════
-const EVENT_TYPES = {
-  vrijdagochtend: {
-    id: "vrijdagochtend",
-    label: { nl: "Vrijdagochtend hussel", en: "Friday morning hussel" },
-    dag: 5,
-    dagNaam: { nl: "Vrijdag", en: "Friday" },
-    startTijd: "9:00",
-    eindTijd: "10:30",
-    verloopUur: 9,
-    mainSize: 20,
-    reserveSize: 4,
-  },
+const DAGNAMEN = {
+  nl: ["Zondag","Maandag","Dinsdag","Woensdag","Donderdag","Vrijdag","Zaterdag"],
+  en: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
 };
+
 const DEFAULT_EVENT_TYPE = "vrijdagochtend";
+const BUILTIN_EVENT_TYPE = {
+  id: "vrijdagochtend",
+  label: { nl: "Vrijdagochtend hussel", en: "Friday morning hussel" },
+  dag: 5,
+  startTijd: "9:00",
+  eindTijd: "10:30",
+  verloopUur: 9,
+  mainSize: 20,
+  reserveSize: 4,
+};
+
+// Wordt gevuld vanuit Firebase (of gevoed met de ingebouwde default)
+let EVENT_TYPES = { [BUILTIN_EVENT_TYPE.id]: BUILTIN_EVENT_TYPE };
 
 // Actieve config — wordt ingesteld zodra een sessie geladen wordt
 let eventConfig = EVENT_TYPES[DEFAULT_EVENT_TYPE];
@@ -810,6 +876,19 @@ const TRANSLATIONS = {
     ledenlijstSummary: "👥 Ledenlijst verversen",
     ledenInfoLaden: "Leden: laden…",
     verversenBtn: "↻ Verversen",
+    eventTypesSummary: "🎯 Evenement types",
+    eventTypesDesc: "Stel in welke soorten evenementen beschikbaar zijn bij het aanmaken van een nieuwe lijst.",
+    eventTypeToevoegenBtn: "+ Evenement type toevoegen",
+    eventTypeFormTitel: "🎯 Evenement type",
+    etNaamNl: "Naam (NL)",
+    etNaamEn: "Naam (EN)",
+    etDag: "Dag van de week",
+    etStartTijd: "Starttijd",
+    etEindTijd: "Eindtijd",
+    etVerloop: "Lijst sluit om (uur)",
+    etMainSize: "Max deelnemers",
+    etReserveSize: "Max reserve",
+    etOpslaanBtn: "Opslaan ✓",
     beheerdersSummary: "🔑 Beheerders",
     nieuweBeheerderLabel: "Nieuwe beheerder toevoegen",
     beheerderNaamPlaceholder: "Naam…",
@@ -967,6 +1046,19 @@ const TRANSLATIONS = {
     ledenlijstSummary: "👥 Refresh member list",
     ledenInfoLaden: "Members: loading…",
     verversenBtn: "↻ Refresh",
+    eventTypesSummary: "🎯 Event types",
+    eventTypesDesc: "Configure which event types are available when creating a new list.",
+    eventTypeToevoegenBtn: "+ Add event type",
+    eventTypeFormTitel: "🎯 Event type",
+    etNaamNl: "Name (NL)",
+    etNaamEn: "Name (EN)",
+    etDag: "Day of the week",
+    etStartTijd: "Start time",
+    etEindTijd: "End time",
+    etVerloop: "List closes at (hour)",
+    etMainSize: "Max participants",
+    etReserveSize: "Max reserve",
+    etOpslaanBtn: "Save ✓",
     beheerdersSummary: "🔑 Admins",
     nieuweBeheerderLabel: "Add new admin",
     beheerderNaamPlaceholder: "Name…",
@@ -1164,6 +1256,21 @@ db.ref("instellingen").once("value", snap => {
     db.ref("instellingen/adminWachtwoord").remove();
   }
   vasteDeelnemers = Array.isArray(data.vasteDeelnemers) ? data.vasteDeelnemers : [];
+
+  // Event types laden — seed met ingebouwde default als Firebase leeg is
+  if (data.eventTypes && Object.keys(data.eventTypes).length > 0) {
+    EVENT_TYPES = {};
+    Object.entries(data.eventTypes).forEach(([id, et]) => {
+      EVENT_TYPES[id] = { ...et, id };
+    });
+  } else {
+    db.ref("instellingen/eventTypes").set({ [BUILTIN_EVENT_TYPE.id]: BUILTIN_EVENT_TYPE });
+  }
+  // Zet actieve config op eerste beschikbare type als default niet bestaat
+  if (!EVENT_TYPES[DEFAULT_EVENT_TYPE]) {
+    eventConfig = Object.values(EVENT_TYPES)[0] || BUILTIN_EVENT_TYPE;
+  }
+
   updateBeheerderFooter();
 });
 
@@ -1246,7 +1353,7 @@ function volgendeSessiedag(dag) {
 function datumNaarTitel(datum) {
   const d = new Date(datum + "T12:00:00");
   const maand = MONTHS[lang][d.getMonth()];
-  const dagNaam = eventConfig.dagNaam[lang];
+  const dagNaam = DAGNAMEN[lang][eventConfig.dag];
   return `${dagNaam} ${d.getDate()} ${maand}`;
 }
 
@@ -1624,6 +1731,7 @@ function openAdminPanel() {
   laadBestaandeLijsten();
   renderBeheerderLijst();
   renderVasteDeelnemers();
+  renderEventTypeLijst();
 }
 
 function checkAdminPw() {
@@ -1763,6 +1871,112 @@ function verwijderBeheerder(naam) {
     renderBeheerderLijst();
     updateBeheerderFooter();
   });
+}
+
+// ═══ EVENT TYPE BEHEER ══════════════════════════════════
+let _editingEventTypeId = null;
+
+function renderEventTypeLijst() {
+  const el = document.getElementById("eventTypeLijst");
+  if (!el) return;
+  el.innerHTML = "";
+  Object.values(EVENT_TYPES).forEach(et => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:10px;";
+    const naam = document.createElement("span");
+    naam.style.cssText = "flex:1;font-size:14px;";
+    naam.textContent = `${et.label[lang] || et.label.nl} · ${DAGNAMEN[lang][et.dag]} · ${et.startTijd}–${et.eindTijd} · max ${et.mainSize}`;
+    const bewerkBtn = document.createElement("button");
+    bewerkBtn.textContent = "✎";
+    bewerkBtn.className = "btn-confirm";
+    bewerkBtn.style.cssText = "flex:0 0 auto;padding:5px 10px;font-size:13px;";
+    bewerkBtn.onclick = () => openEventTypeForm(et.id);
+    row.appendChild(naam);
+    row.appendChild(bewerkBtn);
+    if (Object.keys(EVENT_TYPES).length > 1) {
+      const verwijderBtn = document.createElement("button");
+      verwijderBtn.textContent = "✕";
+      verwijderBtn.className = "btn-danger";
+      verwijderBtn.style.cssText = "flex:0 0 auto;padding:5px 10px;font-size:13px;border-radius:8px;border:none;color:#fff;cursor:pointer;background:var(--danger);font-family:'DM Sans',sans-serif;font-weight:600;";
+      verwijderBtn.onclick = () => verwijderEventType(et.id);
+      row.appendChild(verwijderBtn);
+    }
+    el.appendChild(row);
+  });
+}
+
+function openEventTypeForm(id) {
+  _editingEventTypeId = id;
+  const et = id ? EVENT_TYPES[id] : null;
+  document.getElementById("eventTypeModalTitle").textContent = id ? (lang === "en" ? "🎯 Edit event type" : "🎯 Evenement type bewerken") : (lang === "en" ? "🎯 Add event type" : "🎯 Nieuw evenement type");
+  document.getElementById("etNaamNl").value    = et ? (et.label?.nl || "") : "";
+  document.getElementById("etNaamEn").value    = et ? (et.label?.en || "") : "";
+  document.getElementById("etVerloop").value   = et ? et.verloopUur : 9;
+  document.getElementById("etMainSize").value  = et ? et.mainSize : 20;
+  document.getElementById("etReserveSize").value = et ? et.reserveSize : 4;
+
+  // Dag dropdown vullen
+  const dagSel = document.getElementById("etDag");
+  dagSel.innerHTML = "";
+  DAGNAMEN.nl.forEach((naam, i) => {
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = DAGNAMEN[lang][i];
+    dagSel.appendChild(opt);
+  });
+  dagSel.value = et ? et.dag : 5;
+
+  // Tijden
+  const toTime = t => { const [h,m] = t.split(":"); return `${h.padStart(2,"0")}:${(m||"00").padStart(2,"0")}`; };
+  document.getElementById("etStartTijd").value = et ? toTime(et.startTijd) : "09:00";
+  document.getElementById("etEindTijd").value  = et ? toTime(et.eindTijd)  : "10:30";
+
+  document.getElementById("eventTypeModal").classList.add("open");
+  setTimeout(() => document.getElementById("etNaamNl").focus(), 100);
+}
+
+function slaEventTypeOp() {
+  const naamNl = document.getElementById("etNaamNl").value.trim();
+  const naamEn = document.getElementById("etNaamEn").value.trim();
+  if (!naamNl) { showToast(lang === "en" ? "⚠️ Enter a name (NL)" : "⚠️ Voer een naam (NL) in"); return; }
+
+  const dag         = parseInt(document.getElementById("etDag").value);
+  const startRaw    = document.getElementById("etStartTijd").value;  // "HH:MM"
+  const eindRaw     = document.getElementById("etEindTijd").value;
+  const verloopUur  = parseInt(document.getElementById("etVerloop").value);
+  const mainSize    = parseInt(document.getElementById("etMainSize").value);
+  const reserveSize = parseInt(document.getElementById("etReserveSize").value);
+
+  const toDisplay = v => v.replace(/^0/, "");  // "09:00" → "9:00"
+  const startTijd = toDisplay(startRaw);
+  const eindTijd  = toDisplay(eindRaw);
+
+  // ID: nieuw = slug van NL naam, bestaand = zelfde houden
+  const id = _editingEventTypeId || naamNl.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+  const et = { id, label: { nl: naamNl, en: naamEn || naamNl }, dag, startTijd, eindTijd, verloopUur, mainSize, reserveSize };
+
+  EVENT_TYPES[id] = et;
+  db.ref(`instellingen/eventTypes/${id}`).set(et).then(() => {
+    showToast(lang === "en" ? "✓ Saved" : "✓ Opgeslagen");
+    renderEventTypeLijst();
+    closeModal("eventTypeModal");
+  });
+}
+
+function verwijderEventType(id) {
+  const naam = EVENT_TYPES[id]?.label?.[lang] || id;
+  document.getElementById("confirmTitle").textContent = lang === "en" ? "Delete event type?" : "Evenement type verwijderen?";
+  document.getElementById("confirmMsg").textContent   = lang === "en" ? `Remove "${naam}"?` : `"${naam}" verwijderen?`;
+  document.getElementById("confirmModal").classList.add("open");
+  document.getElementById("confirmOkBtn").textContent = lang === "en" ? "Delete" : "Verwijderen";
+  document.getElementById("confirmOkBtn").onclick = () => {
+    closeModal("confirmModal");
+    delete EVENT_TYPES[id];
+    db.ref(`instellingen/eventTypes/${id}`).remove().then(() => {
+      showToast(lang === "en" ? "✓ Removed" : "✓ Verwijderd");
+      renderEventTypeLijst();
+    });
+  };
 }
 
 function renderBeheerderLijst() {
