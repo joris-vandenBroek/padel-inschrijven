@@ -315,10 +315,10 @@
   .beide-kolommen {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
     gap: 0;
   }
-  .beide-kolom { min-width: 0; }
-  .beide-kolom:first-child { border-right: 1px solid var(--border); }
+  /* Headers zitten elk in eigen grid-cel op rij 1 → altijd gelijke hoogte */
   .sport-header {
     background: var(--card);
     border-bottom: 1px solid var(--border);
@@ -326,12 +326,19 @@
     top: 0;
     z-index: 1;
   }
+  .sport-header.padel-header  { grid-column: 1; grid-row: 1; border-right: 1px solid var(--border); }
+  .sport-header.tennis-header { grid-column: 2; grid-row: 1; }
+  .beide-list-padel   { grid-column: 1; grid-row: 2; border-right: 1px solid var(--border); }
+  .beide-list-tennis  { grid-column: 2; grid-row: 2; }
+  .beide-divider-padel  { grid-column: 1; grid-row: 3; border-right: 1px solid var(--border); }
+  .beide-divider-tennis { grid-column: 2; grid-row: 3; }
+  .beide-res-padel    { grid-column: 1; grid-row: 4; border-right: 1px solid var(--border); }
+  .beide-res-tennis   { grid-column: 2; grid-row: 4; }
   .sport-header-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 10px 12px 8px;
-    min-height: 48px;
   }
   .sport-header-label {
     display: flex;
@@ -363,11 +370,11 @@
   .sport-join-btn.padel  { background: #D85A30; color: #fff; }
   .sport-join-btn.tennis { background: #1D9E75; color: #fff; }
   .sport-join-btn:disabled { opacity: .35; cursor: default; }
-  .beide-kolom .slot { padding: 8px 12px; }
-  .beide-kolom .slot-name { font-size: 12px; }
-  .beide-kolom .slot-num { font-size: 11px; min-width: 14px; }
-  .beide-kolom .avatar { width: 26px; height: 26px; font-size: 9px; }
-  .beide-kolom .divider-reserve { padding: 5px 12px; font-size: 10px; }
+  .beide-kolommen .slot { padding: 8px 12px; }
+  .beide-kolommen .slot-name { font-size: 12px; }
+  .beide-kolommen .slot-num { font-size: 11px; min-width: 14px; }
+  .beide-kolommen .avatar { width: 26px; height: 26px; font-size: 9px; }
+  .beide-kolommen .divider-reserve { padding: 5px 12px; font-size: 10px; }
 
   .divider-reserve {
     background: #ede8dc;
@@ -1602,38 +1609,34 @@ function renderBeide() {
     `<button class="sport-join-btn ${sport}" id="${id}" onclick="joinFirstFree('${sport}')">${t("doeMeeBtn") || "Doe mee"}</button>`;
   container.innerHTML = `
     <div class="beide-kolommen">
-      <div class="beide-kolom">
-        <div class="sport-header">
-          <div class="sport-header-top">
-            <div class="sport-header-label">
-              <div class="sport-dot padel"></div>
-              <span class="sport-header-name">Padel</span>
-              <span class="sport-header-count" id="countPadel">— / ${s}</span>
-            </div>
-            ${joinBtn("padel","joinPadelBtn","#D85A30")}
+      <div class="sport-header padel-header">
+        <div class="sport-header-top">
+          <div class="sport-header-label">
+            <div class="sport-dot padel"></div>
+            <span class="sport-header-name">Padel</span>
+            <span class="sport-header-count" id="countPadel">— / ${s}</span>
           </div>
-          <div class="sport-stripe padel"></div>
+          ${joinBtn("padel","joinPadelBtn")}
         </div>
-        <div class="list" id="mainListPadel"></div>
-        <div class="divider-reserve"><span>Reserve (max ${r})</span></div>
-        <div class="list" id="reserveListPadel"></div>
+        <div class="sport-stripe padel"></div>
       </div>
-      <div class="beide-kolom">
-        <div class="sport-header">
-          <div class="sport-header-top">
-            <div class="sport-header-label">
-              <div class="sport-dot tennis"></div>
-              <span class="sport-header-name">Tennis</span>
-              <span class="sport-header-count" id="countTennis">— / ${s}</span>
-            </div>
-            ${joinBtn("tennis","joinTennisBtn","#1D9E75")}
+      <div class="sport-header tennis-header">
+        <div class="sport-header-top">
+          <div class="sport-header-label">
+            <div class="sport-dot tennis"></div>
+            <span class="sport-header-name">Tennis</span>
+            <span class="sport-header-count" id="countTennis">— / ${s}</span>
           </div>
-          <div class="sport-stripe tennis"></div>
+          ${joinBtn("tennis","joinTennisBtn")}
         </div>
-        <div class="list" id="mainListTennis"></div>
-        <div class="divider-reserve"><span>Reserve (max ${r})</span></div>
-        <div class="list" id="reserveListTennis"></div>
+        <div class="sport-stripe tennis"></div>
       </div>
+      <div class="beide-list-padel list" id="mainListPadel"></div>
+      <div class="beide-list-tennis list" id="mainListTennis"></div>
+      <div class="beide-divider-padel divider-reserve"><span>Reserve (max ${r})</span></div>
+      <div class="beide-divider-tennis divider-reserve"><span>Reserve (max ${r})</span></div>
+      <div class="beide-res-padel list" id="reserveListPadel"></div>
+      <div class="beide-res-tennis list" id="reserveListTennis"></div>
     </div>`;
 
   renderList("mainListPadel",    mainP, "main",    "padel");
