@@ -1319,7 +1319,15 @@ db.ref("instellingen").once("value", snap => {
     db.ref("instellingen/admins").set(ADMINS);
     db.ref("instellingen/adminWachtwoord").remove();
   }
-  vasteDeelnemers = Array.isArray(data.vasteDeelnemers) ? data.vasteDeelnemers : [];
+  // Vaste deelnemers per event type — migreer globale lijst naar vrijdagochtend als die nog bestaat
+  if (data.vasteDeelnemers && Array.isArray(data.vasteDeelnemers) && data.vasteDeelnemers.length > 0) {
+    db.ref(`instellingen/vasteDeelnemersPerType/${DEFAULT_EVENT_TYPE}`).once("value", sp => {
+      if (!sp.val()) db.ref(`instellingen/vasteDeelnemersPerType/${DEFAULT_EVENT_TYPE}`).set(data.vasteDeelnemers);
+    });
+    db.ref("instellingen/vasteDeelnemers").remove();
+  }
+  const vdPerType = data.vasteDeelnemersPerType || {};
+  vasteDeelnemers = Array.isArray(vdPerType[urlEventType]) ? vdPerType[urlEventType] : [];
 
   // Event types laden — seed met ingebouwde default als Firebase leeg is
   if (data.eventTypes && Object.keys(data.eventTypes).length > 0) {
@@ -2208,7 +2216,7 @@ function voegVasteDeelnemerToe() {
     return;
   }
   vasteDeelnemers.push(naam);
-  db.ref("instellingen/vasteDeelnemers").set(vasteDeelnemers).then(() => {
+  db.ref(`instellingen/vasteDeelnemersPerType/${urlEventType}`).set(vasteDeelnemers).then(() => {
     inp.value = "";
     renderVasteDeelnemers();
     showToast(t("vasteToegevoegd", { naam }));
@@ -2218,7 +2226,7 @@ function voegVasteDeelnemerToe() {
 function verwijderVasteDeelnemer(index) {
   const naam = vasteDeelnemers[index];
   vasteDeelnemers.splice(index, 1);
-  db.ref("instellingen/vasteDeelnemers").set(vasteDeelnemers).then(() => {
+  db.ref(`instellingen/vasteDeelnemersPerType/${urlEventType}`).set(vasteDeelnemers).then(() => {
     renderVasteDeelnemers();
     showToast(t("vasteVerwijderd", { naam }));
   });
