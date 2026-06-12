@@ -568,10 +568,13 @@
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details id="screenshotSection">
-        <summary data-i18n="screenshotSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📸 Screenshot inschrijflijst</summary>
+        <summary data-i18n="exportSummary" style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;">📤 Exporteren &amp; delen</summary>
         <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px;">
-          <div data-i18n="screenshotDesc" style="font-size:12px;color:var(--ink-light);">Maak een afbeelding van de huidige lijst om te delen in WhatsApp.</div>
-          <button data-i18n="maakScreenshotBtn" class="btn-confirm" style="width:100%;background:var(--ink);" onclick="maakScreenshot()">📸 Maak screenshot</button>
+          <div data-i18n="exportDesc" style="font-size:12px;color:var(--ink-light);">Maak een screenshot voor WhatsApp of download de namen als CSV voor Excel.</div>
+          <div style="display:flex;gap:8px;">
+            <button data-i18n="maakScreenshotBtn" class="btn-confirm" style="flex:1;background:var(--ink);" onclick="maakScreenshot()">📸 Screenshot</button>
+            <button data-i18n="downloadCsvBtn" class="btn-confirm" style="flex:1;background:var(--green);" onclick="downloadCsv()">📥 Excel (CSV)</button>
+          </div>
           <div id="screenshotPreview" style="display:none;">
             <img id="screenshotImg" style="width:100%;border-radius:10px;border:1px solid var(--border);" />
             <button data-i18n="deelScreenshotBtn" class="btn-share" style="width:100%;border-radius:10px;padding:11px;margin-top:8px;" onclick="deelScreenshot()">📤 Deel via WhatsApp</button>
@@ -768,9 +771,13 @@ const TRANSLATIONS = {
     nieuweLijstSummary: "📅 Nieuwe lijst aanmaken",
     aanmaken: "Aanmaken ✓",
     deLink: "🔗 De link voor WhatsApp",
+    exportSummary: "📤 Exporteren & delen",
+    exportDesc: "Maak een screenshot voor WhatsApp of download de namen als CSV voor Excel.",
+    maakScreenshotBtn: "📸 Screenshot",
+    downloadCsvBtn: "📥 Excel (CSV)",
+    csvGedownload: "📥 CSV gedownload",
     screenshotSummary: "📸 Screenshot inschrijflijst",
     screenshotDesc: "Maak een afbeelding van de huidige lijst om te delen in WhatsApp.",
-    maakScreenshotBtn: "📸 Maak screenshot",
     deelScreenshotBtn: "📤 Deel via WhatsApp",
     vasteDeelnemersSummary: "👥 Vaste deelnemers beheren",
     vasteDeelnemersDesc: "Deze deelnemers worden automatisch toegevoegd bij het aanmaken van een nieuwe lijst.",
@@ -922,9 +929,13 @@ const TRANSLATIONS = {
     nieuweLijstSummary: "📅 Create new list",
     aanmaken: "Create ✓",
     deLink: "🔗 The link for WhatsApp",
+    exportSummary: "📤 Export & share",
+    exportDesc: "Take a screenshot for WhatsApp or download the names as CSV for Excel.",
+    maakScreenshotBtn: "📸 Screenshot",
+    downloadCsvBtn: "📥 Excel (CSV)",
+    csvGedownload: "📥 CSV downloaded",
     screenshotSummary: "📸 Screenshot sign-up list",
     screenshotDesc: "Create an image of the current list to share on WhatsApp.",
-    maakScreenshotBtn: "📸 Take screenshot",
     deelScreenshotBtn: "📤 Share via WhatsApp",
     vasteDeelnemersSummary: "👥 Manage regular participants",
     vasteDeelnemersDesc: "These participants are automatically added when creating a new list.",
@@ -2099,6 +2110,23 @@ async function maakScreenshot() {
     if (btn) btn.textContent = t("screenshotKnop");
     showToast(t("screenshotMislukt"));
   }
+}
+
+function downloadCsv() {
+  if (!currentSession) return;
+  const main    = slotArray(currentSession.main,    MAIN_SIZE).filter(n => n && n.trim());
+  const reserve = slotArray(currentSession.reserve, RESERVE_SIZE).filter(n => n && n.trim());
+  const titel   = currentSession.title || currentDate;
+  const sep     = ";"; // puntkomma voor Nederlandse Excel
+  let rows = [["Nr", "Naam", "Lijst"]];
+  main.forEach((n, i)    => rows.push([i + 1, n, lang === "en" ? "Main" : "Hoofdlijst"]));
+  reserve.forEach((n, i) => rows.push([i + 1, n, lang === "en" ? "Reserve" : "Reserve"]));
+  const csv = "﻿" + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(sep)).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
+  a.download = `padel-${currentDate}.csv`;
+  a.click();
+  showToast(t("csvGedownload"));
 }
 
 async function deelScreenshot() {
