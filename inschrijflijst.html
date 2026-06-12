@@ -2474,7 +2474,8 @@ function terugNaarActief() {
 function maakLijstActief() {
   if (!currentDate || currentDate === activeDatum) return;
   const title = currentSession?.title || currentDate;
-  db.ref(`instellingen/actiefPerType/${urlEventType}`).set(currentDate);
+  const targetType = currentSession?.eventType || urlEventType;
+  db.ref(`instellingen/actiefPerType/${targetType}`).set(currentDate);
   document.getElementById("viewBanner").style.display = "none";
   const deelBanner = document.getElementById("deelBanner");
   document.getElementById("deelBannerText").textContent = t("lijstActiefGemaakt", { title });
