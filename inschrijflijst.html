@@ -1117,6 +1117,8 @@ db.ref("instellingen").once("value", snap => {
   updateBeheerderFooter();
 });
 
+db.ref("instellingen/huidigeDatum").once("value", s => { if (s.val()) db.ref("instellingen/huidigeDatum").remove(); });
+
 db.ref("instellingen/datumActieveLijst").on("value", snap => {
   const datum = snap.val() || volgendeVrijdag();
   if (!snap.val()) db.ref("instellingen/datumActieveLijst").set(datum);
