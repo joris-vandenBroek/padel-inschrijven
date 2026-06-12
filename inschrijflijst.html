@@ -312,6 +312,32 @@
   }
   .toast.show { opacity: 1; }
 
+  .beide-kolommen {
+    display: flex;
+    gap: 0;
+  }
+  .beide-kolom {
+    flex: 1;
+    min-width: 0;
+  }
+  .beide-kolom:first-child { border-right: 1px solid var(--border); }
+  .sport-header {
+    padding: 8px 10px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    text-align: center;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  .beide-kolom .slot { padding: 8px 8px; }
+  .beide-kolom .slot-name { font-size: 13px; }
+  .beide-kolom .slot-num { font-size: 11px; min-width: 16px; }
+  .beide-kolom .avatar { width: 26px; height: 26px; font-size: 10px; }
+  .beide-kolom .divider-reserve { padding: 5px 8px; }
+
   .divider-reserve {
     background: #ede8dc;
     padding: 8px 16px;
@@ -449,16 +475,21 @@
 <div id="actieBar" style="display:flex;align-items:center;justify-content:space-between;padding:18px 16px 8px;">
   <span data-i18n="deelnemers" style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;color:var(--ink-light);">Deelnemers</span>
   <div style="display:flex;gap:8px;">
-    <button data-i18n="iemandAndersBtn" class="btn-switch" style="font-size:12px;padding:7px 14px;" onclick="openAndereInschrijvenModal()">Iemand anders inschrijven</button>
-    <button data-i18n="doeMeeBtn" class="btn-join" style="font-size:12px;padding:6px 14px;" onclick="joinFirstFree()">Doe mee</button>
+    <button data-i18n="iemandAndersBtn" id="iemandAndersBtn" class="btn-switch" style="font-size:12px;padding:7px 14px;" onclick="openAndereInschrijvenModal()">Iemand anders inschrijven</button>
+    <!-- enkelvoudig sport -->
+    <button data-i18n="doeMeeBtn" id="doeMeeBtn" class="btn-join" style="font-size:12px;padding:6px 14px;" onclick="joinFirstFree(null)">Doe mee</button>
+    <!-- beide sport -->
+    <button data-i18n="doeMeePadelBtn" id="doeMeePadelBtn" class="btn-join" style="display:none;font-size:12px;padding:6px 14px;" onclick="joinFirstFree('padel')">🎾 Padel</button>
+    <button data-i18n="doeMeeTennisBtn" id="doeMeeTennisBtn" class="btn-join" style="display:none;font-size:12px;padding:6px 14px;background:var(--green);" onclick="joinFirstFree('tennis')">🎾 Tennis</button>
   </div>
 </div>
-<div class="list" id="mainList"></div>
-
-<div class="divider-reserve">
-  <span id="reserveDividerLabel">Reserve</span>
+<div id="listContainer">
+  <div class="list" id="mainList"></div>
+  <div class="divider-reserve">
+    <span id="reserveDividerLabel">Reserve</span>
+  </div>
+  <div class="list" id="reserveList"></div>
 </div>
-<div class="list" id="reserveList"></div>
 
 <div style="margin:20px 16px 0;text-align:center;">
   <button data-i18n="beheerKnop" class="btn-share copy" onclick="openAdminModal()" style="border-radius:10px;padding:10px 24px;">⚙️ Beheer</button>
@@ -834,6 +865,8 @@ const TRANSLATIONS = {
     deelnemers: "Deelnemers",
     iemandAndersBtn: "Iemand anders inschrijven",
     doeMeeBtn: "Doe mee",
+    doeMeePadelBtn: "🎾 Padel",
+    doeMeeTennisBtn: "🎾 Tennis",
     reserveLabel: "Reserve (max 4)",
     beheerKnop: "⚙️ Beheer",
     aantalDeelnemers: "{filled} / {max} deelnemers",
@@ -1012,6 +1045,8 @@ const TRANSLATIONS = {
     deelnemers: "Participants",
     iemandAndersBtn: "Sign up someone else",
     doeMeeBtn: "Join",
+    doeMeePadelBtn: "🎾 Padel",
+    doeMeeTennisBtn: "🎾 Tennis",
     reserveLabel: "Reserve (max 4)",
     beheerKnop: "⚙️ Admin",
     aantalDeelnemers: "{filled} / {max} participants",
@@ -1334,15 +1369,24 @@ function switchToDatum(datum) {
 }
 
 async function initialiseerSessie(datum, title, time, eventType) {
-  const main = {}, reserve = {};
-  for (let i = 0; i < eventConfig.mainSize; i++)    main[i]    = "";
-  for (let i = 0; i < eventConfig.reserveSize; i++) reserve[i] = "";
-  // Vul vaste deelnemers in op de eerste slots
-  vasteDeelnemers.slice(0, eventConfig.mainSize).forEach((naam, i) => { main[i] = naam; });
-  await db.ref(`sessies/${datum}`).set({
-    title, time, eventType: eventType || DEFAULT_EVENT_TYPE, main, reserve,
-    aangemaaktOp: firebase.database.ServerValue.TIMESTAMP
-  });
+  const s = eventConfig.mainSize, r = eventConfig.reserveSize;
+  const leeg = (size) => { const o = {}; for (let i = 0; i < size; i++) o[i] = ""; return o; };
+  const beide = eventConfig.sport === "beide";
+
+  let data;
+  if (beide) {
+    const main_padel = leeg(s), main_tennis = leeg(s);
+    vasteDeelnemers.slice(0, s).forEach((naam, i) => { main_padel[i] = naam; });
+    data = { title, time, eventType: eventType || DEFAULT_EVENT_TYPE,
+      main_padel, reserve_padel: leeg(r), main_tennis, reserve_tennis: leeg(r),
+      aangemaaktOp: firebase.database.ServerValue.TIMESTAMP };
+  } else {
+    const main = leeg(s), reserve = leeg(r);
+    vasteDeelnemers.slice(0, s).forEach((naam, i) => { main[i] = naam; });
+    data = { title, time, eventType: eventType || DEFAULT_EVENT_TYPE, main, reserve,
+      aangemaaktOp: firebase.database.ServerValue.TIMESTAMP };
+  }
+  await db.ref(`sessies/${datum}`).set(data);
 }
 
 // ═══ HULPFUNCTIES ═══════════════════════════════════════
@@ -1419,21 +1463,73 @@ function updateVerlopenState() {
 }
 
 // ═══ RENDER ═════════════════════════════════════════════
+function isBeideSport() { return eventConfig.sport === "beide"; }
+
 function render() {
   if (!currentSession) return;
   updateVerlopenState();
   updateViewBanner();
-  document.getElementById("reserveDividerLabel").textContent = `Reserve (max ${eventConfig.reserveSize})`;
-  const main    = slotArray(currentSession.main,    eventConfig.mainSize);
-  const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
-  renderList("mainList",    main,    "main");
-  renderList("reserveList", reserve, "reserve");
-  const filled = main.filter(n => n && n.trim()).length;
-  document.getElementById("countBadge").textContent = t("aantalDeelnemers", { filled, max: eventConfig.mainSize });
-  document.getElementById("whoLabel").textContent   = identity || t("nogNietIngesteld");
+
+  const beide = isBeideSport();
+  document.getElementById("doeMeeBtn").style.display      = beide ? "none"         : "";
+  document.getElementById("doeMeePadelBtn").style.display = beide ? ""             : "none";
+  document.getElementById("doeMeeTennisBtn").style.display= beide ? ""             : "none";
+  document.getElementById("iemandAndersBtn").style.display= beide ? "none"         : "";
+
+  if (beide) {
+    renderBeide();
+  } else {
+    document.getElementById("listContainer").innerHTML = `
+      <div class="list" id="mainList"></div>
+      <div class="divider-reserve"><span id="reserveDividerLabel">Reserve (max ${eventConfig.reserveSize})</span></div>
+      <div class="list" id="reserveList"></div>`;
+    const main    = slotArray(currentSession.main,    eventConfig.mainSize);
+    const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
+    renderList("mainList",    main,    "main",    null);
+    renderList("reserveList", reserve, "reserve", null);
+    const filled = main.filter(n => n && n.trim()).length;
+    document.getElementById("countBadge").textContent = t("aantalDeelnemers", { filled, max: eventConfig.mainSize });
+  }
+  document.getElementById("whoLabel").textContent = identity || t("nogNietIngesteld");
 }
 
-function renderList(containerId, arr, listType) {
+function renderBeide() {
+  const s = eventConfig.mainSize;
+  const r = eventConfig.reserveSize;
+  const mainP    = slotArray(currentSession.main_padel,    s);
+  const resP     = slotArray(currentSession.reserve_padel, r);
+  const mainT    = slotArray(currentSession.main_tennis,   s);
+  const resT     = slotArray(currentSession.reserve_tennis,r);
+
+  const container = document.getElementById("listContainer");
+  container.innerHTML = `
+    <div class="beide-kolommen">
+      <div class="beide-kolom">
+        <div class="sport-header">🎾 Padel</div>
+        <div class="list" id="mainListPadel"></div>
+        <div class="divider-reserve"><span>Reserve (max ${r})</span></div>
+        <div class="list" id="reserveListPadel"></div>
+      </div>
+      <div class="beide-kolom">
+        <div class="sport-header">🎾 Tennis</div>
+        <div class="list" id="mainListTennis"></div>
+        <div class="divider-reserve"><span>Reserve (max ${r})</span></div>
+        <div class="list" id="reserveListTennis"></div>
+      </div>
+    </div>`;
+
+  renderList("mainListPadel",    mainP, "main",    "padel");
+  renderList("reserveListPadel", resP,  "reserve", "padel");
+  renderList("mainListTennis",   mainT, "main",    "tennis");
+  renderList("reserveListTennis",resT,  "reserve", "tennis");
+
+  const filledP = mainP.filter(n => n && n.trim()).length;
+  const filledT = mainT.filter(n => n && n.trim()).length;
+  document.getElementById("countBadge").textContent =
+    `Padel ${filledP}/${s} · Tennis ${filledT}/${s}`;
+}
+
+function renderList(containerId, arr, listType, sport) {
   const el = document.getElementById(containerId);
   el.innerHTML = "";
   arr.forEach((name, i) => {
@@ -1485,7 +1581,7 @@ function renderList(containerId, arr, listType) {
       btn.style.cssText = "border-color:var(--gold);color:var(--gold);";
       btn.textContent = "✕";
       btn.title = t("uitschrijvenTitle", { naam: name });
-      btn.onclick = () => adminRemove(listType, i, name);
+      btn.onclick = () => adminRemove(listType, i, name, sport);
       action.appendChild(btn);
     } else if (mine) {
       const tag = document.createElement("span");
@@ -1496,7 +1592,7 @@ function renderList(containerId, arr, listType) {
         const btn = document.createElement("button");
         btn.className = "btn-leave";
         btn.textContent = t("uitschrijvenBtn");
-        btn.onclick = () => confirmRemove(name, listType, i);
+        btn.onclick = () => confirmRemove(name, listType, i, sport);
         action.appendChild(btn);
       }
     }
@@ -1531,17 +1627,20 @@ function confirmIdentity() {
   closeModal("identityModal");
   render();
   showToast(t("welkom", { naam: name }));
-  if (pendingJoin) { pendingJoin = false; joinFirstFree(); }
+  if (pendingJoin) { pendingJoin = false; joinFirstFree(_pendingJoinSport); _pendingJoinSport = null; }
 }
 
 // ═══ INSCHRIJVEN ════════════════════════════════════════
-function joinFirstFree() {
+// sport = null (enkelvoudig), "padel" of "tennis" (beide)
+let _pendingJoinSport = null;
+
+function joinFirstFree(sport) {
   if (isLijstVerlopen() && !isAdmin) return;
-  if (!identity) { pendingJoin = true; openIdentityModal(); return; }
+  if (!identity) { _pendingJoinSport = sport; pendingJoin = true; openIdentityModal(); return; }
   if (!currentSession) return;
 
   if (isAdmin) {
-    pendingAdminSlot = { listType: "auto" };
+    pendingAdminSlot = { listType: "auto", sport };
     document.getElementById("adminAddDesc").textContent = t("adminAddTitle");
     document.getElementById("adminAddInput").value = "";
     document.getElementById("adminAddModal").classList.add("open");
@@ -1549,98 +1648,103 @@ function joinFirstFree() {
     return;
   }
 
-  // Al op de lijst? (alleen voor gewone gebruikers)
-  const alles = [
-    ...Object.values(currentSession.main    || {}),
-    ...Object.values(currentSession.reserve || {})
-  ];
+  // Al op de lijst? (enkelvoudig of beide)
+  const mainKey    = sport ? `main_${sport}`    : "main";
+  const reserveKey = sport ? `reserve_${sport}` : "reserve";
+  const alles = isBeideSport()
+    ? [...Object.values(currentSession.main_padel    || {}),
+       ...Object.values(currentSession.reserve_padel || {}),
+       ...Object.values(currentSession.main_tennis   || {}),
+       ...Object.values(currentSession.reserve_tennis|| {})]
+    : [...Object.values(currentSession.main    || {}),
+       ...Object.values(currentSession.reserve || {})];
   if (alles.some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase())) {
-    showToast(t("alOpLijst"));
-    return;
+    showToast(t("alOpLijst")); return;
   }
 
-  const mainVrij    = slotArray(currentSession.main,    eventConfig.mainSize).some(n    => !n || !n.trim());
-  const reserveVrij = slotArray(currentSession.reserve, eventConfig.reserveSize).some(n => !n || !n.trim());
-
+  const mainVrij    = slotArray(currentSession[mainKey],    eventConfig.mainSize).some(n => !n || !n.trim());
+  const reserveVrij = slotArray(currentSession[reserveKey], eventConfig.reserveSize).some(n => !n || !n.trim());
   if (!mainVrij && !reserveVrij) { showToast(t("geenPlek")); return; }
 
   const isReserve = !mainVrij;
   document.getElementById("confirmTitle").textContent = t("inschrijvenVraag");
   document.getElementById("confirmMsg").textContent = isReserve
     ? t("inschrijvenMsgReserve", { naam: identity, title: currentSession.title, time: currentSession.time })
-    : t("inschrijvenMsg", { naam: identity, title: currentSession.title, time: currentSession.time });
+    : t("inschrijvenMsg",        { naam: identity, title: currentSession.title, time: currentSession.time });
   document.getElementById("confirmModal").classList.add("open");
   document.getElementById("confirmOkBtn").textContent = t("inschrijvenBevestig");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
-    doJoinTransaction();
+    doJoinTransaction(sport);
   };
 }
 
-function doJoinTransaction() {
+function doJoinTransaction(sport) {
+  const mainKey    = sport ? `main_${sport}`    : "main";
+  const reserveKey = sport ? `reserve_${sport}` : "reserve";
   db.ref(`sessies/${currentDate}`).transaction(session => {
     if (!session) return;
     for (let i = 0; i < eventConfig.mainSize; i++) {
-      if (!session.main[i] || !session.main[i].trim()) {
-        session.main[i] = identity; return session;
+      if (!session[mainKey][i] || !session[mainKey][i].trim()) {
+        session[mainKey][i] = identity; return session;
       }
     }
     for (let i = 0; i < eventConfig.reserveSize; i++) {
-      if (!session.reserve[i] || !session.reserve[i].trim()) {
-        session.reserve[i] = identity; return session;
+      if (!session[reserveKey][i] || !session[reserveKey][i].trim()) {
+        session[reserveKey][i] = identity; return session;
       }
     }
-    // Geen plek — aborteer transactie
   }, (error, committed, snapshot) => {
-    if (error)     { showToast(t("foutInschrijven")); return; }
+    if (error)      { showToast(t("foutInschrijven")); return; }
     if (!committed) { showToast(t("geenPlek")); return; }
     const data = snapshot.val();
-    const inReserve = Object.values(data.reserve || {})
+    const inReserve = Object.values(data[reserveKey] || {})
       .some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase());
     showToast(inReserve ? t("opReservelijst") : t("ingeschreven"));
   });
 }
 
 // ═══ UITSCHRIJVEN ═══════════════════════════════════════
-function confirmRemove(naam, listType, idx) {
-  const eersteRKey = Object.keys(currentSession.reserve || {})
+function confirmRemove(naam, listType, idx, sport) {
+  const reserveKey = sport ? `reserve_${sport}` : "reserve";
+  const eersteRKey = Object.keys(currentSession[reserveKey] || {})
     .sort((a, b) => +a - +b)
-    .find(k => currentSession.reserve[k] && currentSession.reserve[k].trim());
+    .find(k => currentSession[reserveKey][k] && currentSession[reserveKey][k].trim());
   const promotee = (listType === "main" && eersteRKey !== undefined)
-    ? currentSession.reserve[eersteRKey] : null;
+    ? currentSession[reserveKey][eersteRKey] : null;
 
   document.getElementById("confirmTitle").textContent = t("uitschrijvenVraag", { naam });
   document.getElementById("confirmMsg").textContent = promotee
-    ? t("doorschuiven", { promotee })
-    : t("weetJeHetZeker");
+    ? t("doorschuiven", { promotee }) : t("weetJeHetZeker");
   document.getElementById("confirmModal").classList.add("open");
   document.getElementById("confirmOkBtn").textContent = t("uitschrijvenKnop");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
-    doRemoveTransaction(naam, listType, idx);
+    doRemoveTransaction(naam, listType, idx, sport);
   };
 }
 
-function doRemoveTransaction(naam, listType, fromIdx) {
+function doRemoveTransaction(naam, listType, fromIdx, sport) {
+  const mainKey    = sport ? `main_${sport}`    : "main";
+  const reserveKey = sport ? `reserve_${sport}` : "reserve";
   db.ref(`sessies/${currentDate}`).transaction(session => {
     if (!session) return;
     if (listType === "main") {
-      session.main = shiftUp(session.main, fromIdx, eventConfig.mainSize);
-      // Promoveer eerste reservist
-      const eersteRKey = Object.keys(session.reserve || {})
+      session[mainKey] = shiftUp(session[mainKey], fromIdx, eventConfig.mainSize);
+      const eersteRKey = Object.keys(session[reserveKey] || {})
         .sort((a, b) => +a - +b)
-        .find(k => session.reserve[k] && session.reserve[k].trim());
+        .find(k => session[reserveKey][k] && session[reserveKey][k].trim());
       if (eersteRKey !== undefined) {
-        const leegMKey = Object.keys(session.main)
+        const leegMKey = Object.keys(session[mainKey])
           .sort((a, b) => +a - +b)
-          .find(k => !session.main[k] || !session.main[k].trim());
+          .find(k => !session[mainKey][k] || !session[mainKey][k].trim());
         if (leegMKey !== undefined) {
-          session.main[leegMKey] = session.reserve[eersteRKey];
-          session.reserve = shiftUp(session.reserve, +eersteRKey, eventConfig.reserveSize);
+          session[mainKey][leegMKey] = session[reserveKey][eersteRKey];
+          session[reserveKey] = shiftUp(session[reserveKey], +eersteRKey, eventConfig.reserveSize);
         }
       }
     } else {
-      session.reserve = shiftUp(session.reserve, fromIdx, eventConfig.reserveSize);
+      session[reserveKey] = shiftUp(session[reserveKey], fromIdx, eventConfig.reserveSize);
     }
     return session;
   }, (error, committed) => {
@@ -1658,25 +1762,31 @@ function shiftUp(obj, fromIdx, size) {
 }
 
 // ═══ ADMIN ══════════════════════════════════════════════
-function adminRemove(listType, idx, naam) {
+function adminRemove(listType, idx, naam, sport) {
   document.getElementById("confirmTitle").textContent = t("uitschrijvenVraag", { naam });
   document.getElementById("confirmMsg").textContent = t("uitschrijvenAlsBeheerder");
   document.getElementById("confirmModal").classList.add("open");
   document.getElementById("confirmOkBtn").textContent = t("uitschrijvenKnop");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
-    doRemoveTransaction(naam, listType, idx);
+    doRemoveTransaction(naam, listType, idx, sport);
   };
 }
 
 function confirmAdminAdd() {
-  const naam = document.getElementById("adminAddInput").value.trim();
+  const naam  = document.getElementById("adminAddInput").value.trim();
   if (!naam) { document.getElementById("adminAddInput").focus(); return; }
+  const sport = pendingAdminSlot?.sport || null;
+  const mainKey    = sport ? `main_${sport}`    : "main";
+  const reserveKey = sport ? `reserve_${sport}` : "reserve";
 
-  const alles = [
-    ...Object.values(currentSession?.main    || {}),
-    ...Object.values(currentSession?.reserve || {})
-  ];
+  const alles = isBeideSport()
+    ? [...Object.values(currentSession?.main_padel    || {}),
+       ...Object.values(currentSession?.reserve_padel || {}),
+       ...Object.values(currentSession?.main_tennis   || {}),
+       ...Object.values(currentSession?.reserve_tennis|| {})]
+    : [...Object.values(currentSession?.main    || {}),
+       ...Object.values(currentSession?.reserve || {})];
   if (alles.some(n => (n || "").trim().toLowerCase() === naam.toLowerCase())) {
     const inp = document.getElementById("adminAddInput");
     inp.style.borderColor = "var(--accent)";
@@ -1689,10 +1799,10 @@ function confirmAdminAdd() {
   db.ref(`sessies/${currentDate}`).transaction(session => {
     if (!session) return;
     for (let i = 0; i < eventConfig.mainSize; i++) {
-      if (!session.main[i] || !session.main[i].trim()) { session.main[i] = naam; return session; }
+      if (!session[mainKey][i] || !session[mainKey][i].trim()) { session[mainKey][i] = naam; return session; }
     }
     for (let i = 0; i < eventConfig.reserveSize; i++) {
-      if (!session.reserve[i] || !session.reserve[i].trim()) { session.reserve[i] = naam; return session; }
+      if (!session[reserveKey][i] || !session[reserveKey][i].trim()) { session[reserveKey][i] = naam; return session; }
     }
   }, (error, committed) => {
     if (!committed) { showToast(t("geenVrijePlekken")); return; }
@@ -1709,10 +1819,12 @@ function confirmClearList() {
   document.getElementById("confirmOkBtn").textContent = t("leegmakenKnop");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
-    const main = {}, reserve = {};
-    for (let i = 0; i < eventConfig.mainSize; i++)    main[i]    = "";
-    for (let i = 0; i < eventConfig.reserveSize; i++) reserve[i] = "";
-    db.ref(`sessies/${currentDate}`).update({ main, reserve });
+    const leeg = (size) => { const o = {}; for (let i = 0; i < size; i++) o[i] = ""; return o; };
+    const s = eventConfig.mainSize, r = eventConfig.reserveSize;
+    const update = isBeideSport()
+      ? { main_padel: leeg(s), reserve_padel: leeg(r), main_tennis: leeg(s), reserve_tennis: leeg(r) }
+      : { main: leeg(s), reserve: leeg(r) };
+    db.ref(`sessies/${currentDate}`).update(update);
     showToast(t("lijstLeeggemaakt"));
   };
 }
