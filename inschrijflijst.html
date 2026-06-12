@@ -331,6 +331,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 10px 12px 8px;
+    min-height: 48px;
   }
   .sport-header-label {
     display: flex;
@@ -346,13 +347,17 @@
   .sport-stripe.padel  { background: #D85A30; }
   .sport-stripe.tennis { background: #1D9E75; }
   .sport-join-btn {
+    font-family: 'DM Sans', sans-serif;
     font-size: 12px;
     font-weight: 500;
+    line-height: 1.2;
     padding: 6px 14px;
     border-radius: 8px;
     border: none;
     cursor: pointer;
     transition: opacity .15s;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .sport-join-btn:active { opacity: .75; }
   .sport-join-btn.padel  { background: #D85A30; color: #fff; }
