@@ -1319,15 +1319,13 @@ db.ref("instellingen").once("value", snap => {
     db.ref("instellingen/admins").set(ADMINS);
     db.ref("instellingen/adminWachtwoord").remove();
   }
-  // Vaste deelnemers per event type — migreer globale lijst naar vrijdagochtend als die nog bestaat
+  // Migreer globale vasteDeelnemers naar vrijdagochtend-type (eenmalig)
   if (data.vasteDeelnemers && Array.isArray(data.vasteDeelnemers) && data.vasteDeelnemers.length > 0) {
     db.ref(`instellingen/vasteDeelnemersPerType/${DEFAULT_EVENT_TYPE}`).once("value", sp => {
       if (!sp.val()) db.ref(`instellingen/vasteDeelnemersPerType/${DEFAULT_EVENT_TYPE}`).set(data.vasteDeelnemers);
     });
     db.ref("instellingen/vasteDeelnemers").remove();
   }
-  const vdPerType = data.vasteDeelnemersPerType || {};
-  vasteDeelnemers = Array.isArray(vdPerType[urlEventType]) ? vdPerType[urlEventType] : [];
 
   // Event types laden — seed met ingebouwde default als Firebase leeg is
   if (data.eventTypes && Object.keys(data.eventTypes).length > 0) {
@@ -1354,6 +1352,11 @@ db.ref("instellingen/datumActieveLijst").once("value", s => {
     });
     db.ref("instellingen/datumActieveLijst").remove();
   }
+});
+
+db.ref(`instellingen/vasteDeelnemersPerType/${urlEventType}`).on("value", snap => {
+  vasteDeelnemers = Array.isArray(snap.val()) ? snap.val() : [];
+  renderVasteDeelnemers();
 });
 
 db.ref(`instellingen/actiefPerType/${urlEventType}`).on("value", snap => {
