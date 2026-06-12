@@ -707,12 +707,12 @@
       <div style="display:flex;gap:10px;">
         <div style="flex:1;">
           <label style="font-size:12px;color:var(--ink-light);" data-i18n="etStartTijd">Starttijd</label>
-          <input id="etStartTijd" type="time"
+          <input id="etStartTijd" type="text" placeholder="9:00" maxlength="5"
             style="width:100%;margin-top:4px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
         </div>
         <div style="flex:1;">
           <label style="font-size:12px;color:var(--ink-light);" data-i18n="etEindTijd">Eindtijd</label>
-          <input id="etEindTijd" type="time"
+          <input id="etEindTijd" type="text" placeholder="10:30" maxlength="5"
             style="width:100%;margin-top:4px;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
         </div>
       </div>
@@ -1926,10 +1926,8 @@ function openEventTypeForm(id) {
   });
   dagSel.value = et ? et.dag : 5;
 
-  // Tijden
-  const toTime = t => { const [h,m] = t.split(":"); return `${h.padStart(2,"0")}:${(m||"00").padStart(2,"0")}`; };
-  document.getElementById("etStartTijd").value = et ? toTime(et.startTijd) : "09:00";
-  document.getElementById("etEindTijd").value  = et ? toTime(et.eindTijd)  : "10:30";
+  document.getElementById("etStartTijd").value = et ? et.startTijd : "9:00";
+  document.getElementById("etEindTijd").value  = et ? et.eindTijd  : "10:30";
 
   document.getElementById("eventTypeModal").classList.add("open");
   setTimeout(() => document.getElementById("etNaamNl").focus(), 100);
@@ -1941,15 +1939,14 @@ function slaEventTypeOp() {
   if (!naamNl) { showToast(lang === "en" ? "⚠️ Enter a name (NL)" : "⚠️ Voer een naam (NL) in"); return; }
 
   const dag         = parseInt(document.getElementById("etDag").value);
-  const startRaw    = document.getElementById("etStartTijd").value;  // "HH:MM"
-  const eindRaw     = document.getElementById("etEindTijd").value;
+  const startRaw    = document.getElementById("etStartTijd").value.trim();
+  const eindRaw     = document.getElementById("etEindTijd").value.trim();
   const verloopUur  = parseInt(document.getElementById("etVerloop").value);
   const mainSize    = parseInt(document.getElementById("etMainSize").value);
   const reserveSize = parseInt(document.getElementById("etReserveSize").value);
 
-  const toDisplay = v => v.replace(/^0/, "");  // "09:00" → "9:00"
-  const startTijd = toDisplay(startRaw);
-  const eindTijd  = toDisplay(eindRaw);
+  const startTijd = startRaw;
+  const eindTijd  = eindRaw;
 
   // ID: nieuw = slug van NL naam, bestaand = zelfde houden
   const id = _editingEventTypeId || naamNl.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
