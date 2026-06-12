@@ -312,71 +312,57 @@
   }
   .toast.show { opacity: 1; }
 
-  .beide-count-bar {
-    display: flex;
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
-  }
-  .beide-count-pill {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 6px 12px;
-    font-size: 12px;
-  }
-  .beide-count-pill:first-child { border-right: 1px solid var(--border); }
-  .beide-count-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .beide-count-label { color: var(--ink-light); }
-  .beide-count-val { font-weight: 600; color: var(--ink); margin-left: auto; }
   .beide-kolommen {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 0;
   }
-  .beide-kolom {
-    min-width: 0;
-  }
+  .beide-kolom { min-width: 0; }
   .beide-kolom:first-child { border-right: 1px solid var(--border); }
   .sport-header {
-    padding: 7px 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    background: var(--card);
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
     z-index: 1;
   }
-  .sport-header.padel  { background: #FFF4EE; border-bottom-color: #F0997B; }
-  .sport-header.tennis { background: #EAF6EE; border-bottom-color: #5DCAA5; }
-  .sport-header-name {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
+  .sport-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px 8px;
   }
-  .sport-header-name.padel  { color: #993C1D; }
-  .sport-header-name.tennis { color: #0F6E56; }
+  .sport-header-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sport-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .sport-dot.padel  { background: #D85A30; }
+  .sport-dot.tennis { background: #1D9E75; }
+  .sport-header-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+  .sport-header-count { font-size: 12px; color: var(--ink-light); }
+  .sport-stripe { height: 3px; }
+  .sport-stripe.padel  { background: #D85A30; }
+  .sport-stripe.tennis { background: #1D9E75; }
   .sport-join-btn {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 8px;
     border: none;
     cursor: pointer;
-    letter-spacing: 0.2px;
     transition: opacity .15s;
   }
   .sport-join-btn:active { opacity: .75; }
   .sport-join-btn.padel  { background: #D85A30; color: #fff; }
   .sport-join-btn.tennis { background: #1D9E75; color: #fff; }
   .sport-join-btn:disabled { opacity: .35; cursor: default; }
-  .beide-kolom .slot { padding: 7px 8px; }
+  .beide-kolom .slot { padding: 8px 12px; }
   .beide-kolom .slot-name { font-size: 12px; }
   .beide-kolom .slot-num { font-size: 11px; min-width: 14px; }
-  .beide-kolom .avatar { width: 24px; height: 24px; font-size: 9px; }
-  .beide-kolom .divider-reserve { padding: 4px 8px; font-size: 10px; }
+  .beide-kolom .avatar { width: 26px; height: 26px; font-size: 9px; }
+  .beide-kolom .divider-reserve { padding: 5px 12px; font-size: 10px; }
 
   .divider-reserve {
     background: #ede8dc;
@@ -1607,33 +1593,37 @@ function renderBeide() {
 
   const verlopen = isLijstVerlopen();
   const container = document.getElementById("listContainer");
+  const joinBtn = (sport, id, color) => verlopen ? "" :
+    `<button class="sport-join-btn ${sport}" id="${id}" onclick="joinFirstFree('${sport}')">${t("doeMeeBtn") || "Doe mee"}</button>`;
   container.innerHTML = `
-    <div class="beide-count-bar">
-      <div class="beide-count-pill">
-        <div class="beide-count-dot" style="background:#D85A30;"></div>
-        <span class="beide-count-label">Padel</span>
-        <span class="beide-count-val" id="countPadel">— / ${s}</span>
-      </div>
-      <div class="beide-count-pill">
-        <div class="beide-count-dot" style="background:#1D9E75;"></div>
-        <span class="beide-count-label">Tennis</span>
-        <span class="beide-count-val" id="countTennis">— / ${s}</span>
-      </div>
-    </div>
     <div class="beide-kolommen">
       <div class="beide-kolom">
-        <div class="sport-header padel">
-          <span class="sport-header-name padel">Padel</span>
-          ${!verlopen ? `<button class="sport-join-btn padel" id="joinPadelBtn" onclick="joinFirstFree('padel')">${t("doeMeeBtn") || "Doe mee"}</button>` : ""}
+        <div class="sport-header">
+          <div class="sport-header-top">
+            <div class="sport-header-label">
+              <div class="sport-dot padel"></div>
+              <span class="sport-header-name">Padel</span>
+              <span class="sport-header-count" id="countPadel">— / ${s}</span>
+            </div>
+            ${joinBtn("padel","joinPadelBtn","#D85A30")}
+          </div>
+          <div class="sport-stripe padel"></div>
         </div>
         <div class="list" id="mainListPadel"></div>
         <div class="divider-reserve"><span>Reserve (max ${r})</span></div>
         <div class="list" id="reserveListPadel"></div>
       </div>
       <div class="beide-kolom">
-        <div class="sport-header tennis">
-          <span class="sport-header-name tennis">Tennis</span>
-          ${!verlopen ? `<button class="sport-join-btn tennis" id="joinTennisBtn" onclick="joinFirstFree('tennis')">${t("doeMeeBtn") || "Doe mee"}</button>` : ""}
+        <div class="sport-header">
+          <div class="sport-header-top">
+            <div class="sport-header-label">
+              <div class="sport-dot tennis"></div>
+              <span class="sport-header-name">Tennis</span>
+              <span class="sport-header-count" id="countTennis">— / ${s}</span>
+            </div>
+            ${joinBtn("tennis","joinTennisBtn","#1D9E75")}
+          </div>
+          <div class="sport-stripe tennis"></div>
         </div>
         <div class="list" id="mainListTennis"></div>
         <div class="divider-reserve"><span>Reserve (max ${r})</span></div>
