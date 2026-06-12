@@ -864,6 +864,12 @@
       </select>
     </div>
 
+    <div style="margin-top:16px;">
+      <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">Deel-link <span style="opacity:.6;">(leeg = automatisch)</span></div>
+      <input id="etShareUrl" type="url" placeholder="https://tinyurl.com/…" maxlength="100" autocomplete="off"
+        style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
+    </div>
+
     <div style="display:flex;gap:8px;margin-top:20px;">
       <button data-i18n="sluiten" class="btn-confirm" style="flex:1;background:var(--ink-light);" onclick="closeModal('eventTypeModal')">Sluiten</button>
       <button id="etOpslaanBtn" data-i18n="etOpslaanBtn" class="btn-confirm" style="flex:1;" onclick="slaEventTypeOp()">Opslaan ✓</button>
@@ -2327,6 +2333,7 @@ function openEventTypeForm(id) {
   document.getElementById("etNaamEn").value    = et ? (et.label?.en || "") : "";
   document.getElementById("etEyebrowNl").value  = et ? (et.eyebrow?.nl || "") : "";
   document.getElementById("etEyebrowEn").value  = et ? (et.eyebrow?.en || "") : "";
+  document.getElementById("etShareUrl").value   = et ? (et.shareUrl || "") : "";
   document.getElementById("etSport").value     = et ? (et.sport || "padel") : "padel";
   document.getElementById("etVerloop").value   = et ? et.verloopUur : 9;
   document.getElementById("etMainSize").value  = et ? et.mainSize : 20;
@@ -2369,9 +2376,11 @@ function slaEventTypeOp() {
   const sport    = document.getElementById("etSport").value;
   const eyebrowNl = document.getElementById("etEyebrowNl").value.trim();
   const eyebrowEn = document.getElementById("etEyebrowEn").value.trim();
+  const shareUrl  = document.getElementById("etShareUrl").value.trim();
   const id = _editingEventTypeId || naamNl.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
   const et = { id, label: { nl: naamNl, en: naamEn || naamNl }, dag, startTijd, eindTijd, verloopUur, mainSize, reserveSize, sport };
   if (eyebrowNl || eyebrowEn) et.eyebrow = { nl: eyebrowNl, en: eyebrowEn || eyebrowNl };
+  if (shareUrl) et.shareUrl = shareUrl;
 
   EVENT_TYPES[id] = et;
   db.ref(`instellingen/eventTypes/${id}`).set(et).then(() => {
