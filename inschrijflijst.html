@@ -2825,12 +2825,18 @@ function andereLijstOpenen() {
   switchToDatum(datum);
   updateViewBanner();
   // Log na switchToDatum zodat currentDate al op de nieuwe datum staat
-  setTimeout(() => logEntry("geopend", adminNaam, adminNaam, { eventType: urlEventType }), 200);
+  setTimeout(() => {
+    logEntry("geopend", adminNaam, adminNaam, { eventType: urlEventType });
+    const details = document.getElementById("adminLogDetails");
+    if (details && details.open) laadLogboek("adminLog");
+  }, 200);
 }
 
 function terugNaarActief() {
   if (currentDate !== activeDatum) switchToDatum(activeDatum);
   updateViewBanner();
+  const details = document.getElementById("adminLogDetails");
+  if (details && details.open) laadLogboek("adminLog");
 }
 
 function verwijderHuidigeLijst() {
