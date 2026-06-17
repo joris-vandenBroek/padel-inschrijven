@@ -485,7 +485,7 @@
     <span><span id="adminBannerPre">⚙️ Beheer: </span><span id="adminBannerNaam"></span></span>
     <button data-i18n="uitloggen" class="btn-switch" style="border-color:var(--gold);color:var(--gold);" onclick="logoutAdmin()">Uitloggen</button>
   </div>
-  <details id="adminLogDetails" ontoggle="if(this.open){document.getElementById('adminLogArrow').textContent='▼';laadLogboek('adminLog');}else{document.getElementById('adminLogArrow').textContent='▶';}">
+  <details id="adminLogDetails" ontoggle="if(this.open){document.getElementById('adminLogArrow').textContent='▼';laadLogboek('adminLog', activeDatum);}else{document.getElementById('adminLogArrow').textContent='▶';}">
     <summary style="font-size:12px;color:var(--gold);opacity:.8;cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:4px;">
       <span id="adminLogArrow">▶</span> 📋 Logboek
     </summary>
@@ -1957,11 +1957,12 @@ function logEntry(actie, naam, door, extra) {
   });
 }
 
-function laadLogboek(targetElId) {
+function laadLogboek(targetElId, datum) {
   const el = document.getElementById(targetElId);
   if (!el) return;
+  const d = datum || currentDate;
   el.innerHTML = `<div style="font-size:11px;color:var(--ink-light);">Laden…</div>`;
-  db.ref(`sessies/${currentDate}/log`).once("value", snap => {
+  db.ref(`sessies/${d}/log`).once("value", snap => {
     const data = snap.val();
     if (!data) {
       el.innerHTML = `<div style="font-size:11px;color:var(--ink-light);font-style:italic;">Nog geen activiteit geregistreerd.</div>`;
