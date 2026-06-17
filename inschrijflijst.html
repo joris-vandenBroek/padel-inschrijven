@@ -492,6 +492,12 @@
     <button class="btn-switch" style="flex:1;border-color:var(--accent);color:var(--accent);text-align:center;" onclick="verwijderHuidigeLijst()">🗑 Verwijder</button>
     <button data-i18n="terugBtn" class="btn-switch" style="flex:1;border-color:var(--mine);color:var(--mine);text-align:center;" onclick="terugNaarActief()">← Terug</button>
   </div>
+  <details id="viewLogDetails" style="margin-top:2px;" ontoggle="if(this.open){document.getElementById('viewLogArrow').textContent='▼';laadLogboek('viewLog');}else{document.getElementById('viewLogArrow').textContent='▶';}">
+    <summary style="font-size:12px;color:var(--mine);opacity:.8;cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:4px;">
+      <span id="viewLogArrow">▶</span> 📋 Logboek
+    </summary>
+    <div id="viewLog" style="margin-top:8px;display:flex;flex-direction:column;gap:3px;max-height:200px;overflow-y:auto;"></div>
+  </details>
 </div>
 <!-- Viewbanner mode B: lijst net actief gemaakt → deel de link -->
 <div id="deelBanner" style="display:none;margin:8px 16px 0;background:#e8f5ec;border:1.5px solid var(--green);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--green);font-weight:600;align-items:center;justify-content:space-between;gap:10px;">
@@ -616,9 +622,16 @@
       <button onclick="openAdminHelp()" class="btn-help">?</button>
     </div>
 
-    <button data-i18n="beheerHuidigeBtn" class="btn-confirm" style="width:100%;margin-bottom:16px;" onclick="beheerHuidigeLijst()">
+    <button data-i18n="beheerHuidigeBtn" class="btn-confirm" style="width:100%;margin-bottom:8px;" onclick="beheerHuidigeLijst()">
       📋 Beheer huidige lijst
     </button>
+
+    <details id="panelLogDetails" style="margin-bottom:8px;" ontoggle="if(this.open){document.getElementById('panelLogArrow').textContent='▼';laadLogboek('panelLog');}else{document.getElementById('panelLogArrow').textContent='▶';}">
+      <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;padding:4px 0;">
+        <span id="panelLogArrow">▶</span> 📋 Logboek huidige lijst
+      </summary>
+      <div id="panelLog" style="margin-top:8px;display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto;"></div>
+    </details>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
@@ -1927,6 +1940,41 @@ function joinFirstFree(sport) {
   };
 }
 
+function logEntry(actie, naam, door) {
+  db.ref(`sessies/${currentDate}/log`).push({
+    actie, naam, door: door || naam, tijdstip: Date.now()
+  });
+}
+
+function laadLogboek(targetElId) {
+  const el = document.getElementById(targetElId);
+  if (!el) return;
+  el.innerHTML = `<div style="font-size:11px;color:var(--ink-light);">Laden…</div>`;
+  db.ref(`sessies/${currentDate}/log`).once("value", snap => {
+    const data = snap.val();
+    if (!data) {
+      el.innerHTML = `<div style="font-size:11px;color:var(--ink-light);font-style:italic;">Nog geen activiteit geregistreerd.</div>`;
+      return;
+    }
+    const entries = Object.values(data).sort((a, b) => b.tijdstip - a.tijdstip);
+    el.innerHTML = "";
+    entries.forEach(e => {
+      const d = new Date(e.tijdstip);
+      const tijdStr = d.toLocaleDateString("nl-NL", { day: "numeric", month: "short" })
+        + " " + d.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
+      const isIn = e.actie === "ingeschreven";
+      const doorTxt = e.door && e.door !== e.naam ? ` · door ${e.door}` : "";
+      const row = document.createElement("div");
+      row.style.cssText = "display:flex;align-items:baseline;gap:6px;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);";
+      row.innerHTML = `
+        <span style="flex-shrink:0;font-size:11px;">${isIn ? "✅" : "❌"}</span>
+        <span style="flex:1;color:var(--ink);"><strong>${e.naam}</strong> ${e.actie}<span style="color:var(--ink-light);">${doorTxt}</span></span>
+        <span style="flex-shrink:0;font-size:10px;color:var(--ink-light);white-space:nowrap;">${tijdStr}</span>`;
+      el.appendChild(row);
+    });
+  });
+}
+
 function doJoinTransaction(sport) {
   const mainKey    = sport ? `main_${sport}`    : "main";
   const reserveKey = sport ? `reserve_${sport}` : "reserve";
@@ -1948,6 +1996,7 @@ function doJoinTransaction(sport) {
     const data = snapshot.val();
     const inReserve = Object.values(data[reserveKey] || {})
       .some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase());
+    logEntry("ingeschreven", identity, identity);
     showToast(inReserve ? t("opReservelijst") : t("ingeschreven"));
   });
 }
@@ -1996,7 +2045,10 @@ function doRemoveTransaction(naam, listType, fromIdx, sport) {
     }
     return session;
   }, (error, committed) => {
-    if (committed) showToast(t("uitgeschreven", { naam }));
+    if (committed) {
+      logEntry("uitgeschreven", naam, isAdmin ? adminNaam : naam);
+      showToast(t("uitgeschreven", { naam }));
+    }
   });
 }
 
@@ -2055,6 +2107,7 @@ function confirmAdminAdd() {
   }, (error, committed) => {
     if (!committed) { showToast(t("geenVrijePlekken")); return; }
     closeModal("adminAddModal");
+    logEntry("ingeschreven", naam, adminNaam);
     showToast(`✓ ${naam} ingeschreven`);
   });
 }
@@ -2207,6 +2260,7 @@ function confirmAndereInschrijven() {
     const data = snapshot.val();
     const inReserve = Object.values(data.reserve || {}).some(n => (n || "").trim().toLowerCase() === naam.toLowerCase());
     closeModal("andereModal");
+    logEntry("ingeschreven", naam, identity || adminNaam || naam);
     showToast(inReserve ? t("opReservelijst") : t("ingeschreven", { naam }));
   });
 }
