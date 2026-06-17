@@ -1973,19 +1973,25 @@ function laadLogboek(targetElId) {
       const d = new Date(e.tijdstip);
       const tijdStr = d.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })
         + " · " + d.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
-      const isDoor  = e.actie === "doorgeschoven van reserve naar deelnemers";
-      const isIn    = e.actie === "ingeschreven";
-      const icon    = isDoor ? "⬆️" : isIn ? "✅" : "❌";
-      const doorTxt = e.door && e.door !== e.naam ? ` · door ${e.door}` : "";
-      let lijstTxt  = "";
+      const isDoor    = e.actie === "doorgeschoven van reserve naar deelnemers";
+      const isIn      = e.actie === "ingeschreven";
+      const isGeopend = e.actie === "geopend";
+      const icon      = isGeopend ? "👁" : isDoor ? "⬆️" : isIn ? "✅" : "❌";
+      const doorTxt   = e.door && e.door !== e.naam ? ` · door ${e.door}` : "";
+      let lijstTxt = "";
       if (e.lijstType === "reserve") lijstTxt = ` <span style="font-size:10px;color:var(--gold);font-weight:600;">reserve #${(e.positie ?? 0) + 1}</span>`;
-      else if (e.lijstType === "main") lijstTxt = ` <span style="font-size:10px;color:var(--green);font-weight:600;">#${(e.positie ?? 0) + 1}</span>`;
+      else if (e.lijstType === "main" && e.positie >= 0) lijstTxt = ` <span style="font-size:10px;color:var(--green);font-weight:600;">#${(e.positie ?? 0) + 1}</span>`;
+      const etLabel = e.eventType ? (EVENT_TYPES[e.eventType]?.label?.[lang] || e.eventType) : "";
+      let tekst;
+      if (isGeopend)   tekst = `<strong>${e.naam}</strong> heeft lijst geopend<span style="color:var(--ink-light);font-size:10px;"> ${etLabel}</span>`;
+      else if (isDoor) tekst = `<strong>${e.naam}</strong> doorgeschoven naar deelnemers<span style="color:var(--ink-light);"> (uitschrijving ${e.door})</span>`;
+      else             tekst = `<strong>${e.naam}</strong> ${e.actie}${lijstTxt}<span style="color:var(--ink-light);">${doorTxt}</span>`;
       const row = document.createElement("div");
       row.style.cssText = "display:flex;align-items:baseline;gap:6px;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);";
       row.innerHTML = `
         <span style="flex-shrink:0;font-size:10px;color:var(--ink-light);white-space:nowrap;">${tijdStr}</span>
         <span style="flex-shrink:0;">${icon}</span>
-        <span style="flex:1;color:var(--ink);">${isDoor ? `<strong>${e.naam}</strong> doorgeschoven naar deelnemers<span style="color:var(--ink-light);"> (uitschrijving ${e.door})</span>` : `<strong>${e.naam}</strong> ${e.actie}${lijstTxt}<span style="color:var(--ink-light);">${doorTxt}</span>`}</span>`;
+        <span style="flex:1;color:var(--ink);">${tekst}</span>`;
       el.appendChild(row);
     });
   });
@@ -2238,6 +2244,7 @@ function checkAdminPw() {
   document.getElementById("adminBannerNaam").textContent = adminNaam;
   closeModal("adminPwModal");
   render();
+  logEntry("geopend", adminNaam, adminNaam, { eventType: urlEventType });
   setTimeout(() => openAdminPanel(), 50);
 }
 
@@ -2822,6 +2829,8 @@ function andereLijstOpenen() {
   if (datum === currentDate) return;
   switchToDatum(datum);
   updateViewBanner();
+  // Log na switchToDatum zodat currentDate al op de nieuwe datum staat
+  setTimeout(() => logEntry("geopend", adminNaam, adminNaam, { eventType: urlEventType }), 200);
 }
 
 function terugNaarActief() {
