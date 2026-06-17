@@ -480,9 +480,17 @@
   </div>
 </div>
 
-<div id="adminBanner" style="display:none;margin:8px 16px 0;background:#fff8e8;border:1.5px solid var(--gold);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--gold);font-weight:600;align-items:center;justify-content:space-between;">
-  <span><span id="adminBannerPre">⚙️ Beheer: </span><span id="adminBannerNaam"></span></span>
-  <button data-i18n="uitloggen" class="btn-switch" style="border-color:var(--gold);color:var(--gold);" onclick="logoutAdmin()">Uitloggen</button>
+<div id="adminBanner" style="display:none;margin:8px 16px 0;background:#fff8e8;border:1.5px solid var(--gold);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--gold);font-weight:600;flex-direction:column;gap:8px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <span><span id="adminBannerPre">⚙️ Beheer: </span><span id="adminBannerNaam"></span></span>
+    <button data-i18n="uitloggen" class="btn-switch" style="border-color:var(--gold);color:var(--gold);" onclick="logoutAdmin()">Uitloggen</button>
+  </div>
+  <details id="adminLogDetails" ontoggle="if(this.open){document.getElementById('adminLogArrow').textContent='▼';laadLogboek('adminLog');}else{document.getElementById('adminLogArrow').textContent='▶';}">
+    <summary style="font-size:12px;color:var(--gold);opacity:.8;cursor:pointer;user-select:none;list-style:none;display:flex;align-items:center;gap:4px;">
+      <span id="adminLogArrow">▶</span> 📋 Logboek
+    </summary>
+    <div id="adminLog" style="margin-top:8px;display:flex;flex-direction:column;gap:3px;max-height:200px;overflow-y:auto;"></div>
+  </details>
 </div>
 <!-- Viewbanner mode A: lijst nog niet actief -->
 <div id="viewBanner" style="display:none;margin:8px 16px 0;background:#e8f0ff;border:1.5px solid var(--mine);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--mine);font-weight:600;flex-direction:column;gap:8px;">
@@ -622,16 +630,9 @@
       <button onclick="openAdminHelp()" class="btn-help">?</button>
     </div>
 
-    <button data-i18n="beheerHuidigeBtn" class="btn-confirm" style="width:100%;margin-bottom:8px;" onclick="beheerHuidigeLijst()">
+    <button data-i18n="beheerHuidigeBtn" class="btn-confirm" style="width:100%;margin-bottom:16px;" onclick="beheerHuidigeLijst()">
       📋 Beheer huidige lijst
     </button>
-
-    <details id="panelLogDetails" style="margin-bottom:8px;" ontoggle="if(this.open){document.getElementById('panelLogArrow').textContent='▼';laadLogboek('panelLog');}else{document.getElementById('panelLogArrow').textContent='▶';}">
-      <summary style="font-size:13px;color:var(--ink-light);cursor:pointer;user-select:none;display:flex;align-items:center;gap:4px;padding:4px 0;">
-        <span id="panelLogArrow">▶</span> 📋 Logboek huidige lijst
-      </summary>
-      <div id="panelLog" style="margin-top:8px;display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto;"></div>
-    </details>
 
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
       <details>
