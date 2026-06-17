@@ -2044,9 +2044,27 @@ function doRemoveTransaction(naam, listType, fromIdx, sport) {
       session[reserveKey] = shiftUp(session[reserveKey], fromIdx, eventConfig.reserveSize);
     }
     return session;
-  }, (error, committed) => {
+  }, (error, committed, snapshot) => {
     if (committed) {
-      logEntry("uitgeschreven", naam, isAdmin ? adminNaam : naam);
+      const door = isAdmin ? adminNaam : naam;
+      logEntry("uitgeschreven", naam, door);
+      // Detecteer doorschuiver: zoek in de nieuwe snapshot wie er nu op de eerste mainplek staat
+      // die eerder leeg was — dat is de gepromoveerde reservist
+      if (listType === "main" && snapshot) {
+        const data = snapshot.val();
+        const nieuweMain = data?.[mainKey] || {};
+        const nieuweReserve = data?.[reserveKey] || {};
+        // Vóór de transactie was de reserve niet leeg; daarna wél als iemand doorschoof
+        const reserveNaLeeg = !Object.values(nieuweReserve).some(n => n && n.trim());
+        const eersteMain = Object.keys(nieuweMain).sort((a,b)=>+a-+b)
+          .map(k => nieuweMain[k]).find(n => n && n.trim());
+        // Bepaal promotee: staat niet op de originele main maar wel nu in main
+        // Eenvoudigste aanpak: vergelijk met currentSession vóór commit
+        const origineleMain = Object.values(currentSession?.[mainKey] || {}).filter(n=>n&&n.trim());
+        const nieuweMainArr = Object.values(nieuweMain).filter(n=>n&&n.trim());
+        const gepromoveerd = nieuweMainArr.find(n => !origineleMain.includes(n) && n !== naam);
+        if (gepromoveerd) logEntry("doorgeschoven van reserve naar deelnemers", gepromoveerd, `uitschrijving ${naam}`);
+      }
       showToast(t("uitgeschreven", { naam }));
     }
   });
