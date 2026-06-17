@@ -1941,9 +1941,9 @@ function joinFirstFree(sport) {
   };
 }
 
-function logEntry(actie, naam, door) {
+function logEntry(actie, naam, door, extra) {
   db.ref(`sessies/${currentDate}/log`).push({
-    actie, naam, door: door || naam, tijdstip: Date.now()
+    actie, naam, door: door || naam, tijdstip: Date.now(), ...extra
   });
 }
 
@@ -1961,16 +1961,21 @@ function laadLogboek(targetElId) {
     el.innerHTML = "";
     entries.forEach(e => {
       const d = new Date(e.tijdstip);
-      const tijdStr = d.toLocaleDateString("nl-NL", { day: "numeric", month: "short" })
-        + " " + d.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" });
-      const isIn = e.actie === "ingeschreven";
+      const tijdStr = d.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })
+        + " · " + d.toLocaleDateString("nl-NL", { day: "numeric", month: "short" });
+      const isDoor  = e.actie === "doorgeschoven van reserve naar deelnemers";
+      const isIn    = e.actie === "ingeschreven";
+      const icon    = isDoor ? "⬆️" : isIn ? "✅" : "❌";
       const doorTxt = e.door && e.door !== e.naam ? ` · door ${e.door}` : "";
+      let lijstTxt  = "";
+      if (e.lijstType === "reserve") lijstTxt = ` <span style="font-size:10px;color:var(--gold);font-weight:600;">reserve #${(e.positie ?? 0) + 1}</span>`;
+      else if (e.lijstType === "main") lijstTxt = ` <span style="font-size:10px;color:var(--green);font-weight:600;">#${(e.positie ?? 0) + 1}</span>`;
       const row = document.createElement("div");
-      row.style.cssText = "display:flex;align-items:baseline;gap:6px;font-size:12px;padding:3px 0;border-bottom:1px solid var(--border);";
+      row.style.cssText = "display:flex;align-items:baseline;gap:6px;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border);";
       row.innerHTML = `
-        <span style="flex-shrink:0;font-size:11px;">${isIn ? "✅" : "❌"}</span>
-        <span style="flex:1;color:var(--ink);"><strong>${e.naam}</strong> ${e.actie}<span style="color:var(--ink-light);">${doorTxt}</span></span>
-        <span style="flex-shrink:0;font-size:10px;color:var(--ink-light);white-space:nowrap;">${tijdStr}</span>`;
+        <span style="flex-shrink:0;font-size:10px;color:var(--ink-light);white-space:nowrap;">${tijdStr}</span>
+        <span style="flex-shrink:0;">${icon}</span>
+        <span style="flex:1;color:var(--ink);">${isDoor ? `<strong>${e.naam}</strong> doorgeschoven naar deelnemers<span style="color:var(--ink-light);"> (uitschrijving ${e.door})</span>` : `<strong>${e.naam}</strong> ${e.actie}${lijstTxt}<span style="color:var(--ink-light);">${doorTxt}</span>`}</span>`;
       el.appendChild(row);
     });
   });
@@ -1995,9 +2000,15 @@ function doJoinTransaction(sport) {
     if (error)      { showToast(t("foutInschrijven")); return; }
     if (!committed) { showToast(t("geenPlek")); return; }
     const data = snapshot.val();
-    const inReserve = Object.values(data[reserveKey] || {})
-      .some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase());
-    logEntry("ingeschreven", identity, identity);
+    const reserveArr = Object.entries(data[reserveKey] || {});
+    const mainArr    = Object.entries(data[mainKey]    || {});
+    const inReserveIdx = reserveArr.findIndex(([,n]) => (n||"").trim().toLowerCase() === identity.trim().toLowerCase());
+    const inMainIdx    = mainArr.findIndex(([,n])    => (n||"").trim().toLowerCase() === identity.trim().toLowerCase());
+    const inReserve    = inReserveIdx !== -1;
+    logEntry("ingeschreven", identity, identity, {
+      lijstType: inReserve ? "reserve" : "main",
+      positie:   inReserve ? inReserveIdx : inMainIdx
+    });
     showToast(inReserve ? t("opReservelijst") : t("ingeschreven"));
   });
 }
@@ -2048,7 +2059,7 @@ function doRemoveTransaction(naam, listType, fromIdx, sport) {
   }, (error, committed, snapshot) => {
     if (committed) {
       const door = isAdmin ? adminNaam : naam;
-      logEntry("uitgeschreven", naam, door);
+      logEntry("uitgeschreven", naam, door, { lijstType: listType, positie: fromIdx });
       // Detecteer doorschuiver: zoek in de nieuwe snapshot wie er nu op de eerste mainplek staat
       // die eerder leeg was — dat is de gepromoveerde reservist
       if (listType === "main" && snapshot) {
