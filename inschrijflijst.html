@@ -1941,6 +1941,16 @@ function joinFirstFree(sport) {
   };
 }
 
+function detectLijstPositie(data, naam, mainKey, reserveKey) {
+  const zoek = n => (n || "").trim().toLowerCase() === naam.trim().toLowerCase();
+  const mainEntries    = Object.entries(data[mainKey]    || {}).sort((a,b) => +a[0]-+b[0]);
+  const reserveEntries = Object.entries(data[reserveKey] || {}).sort((a,b) => +a[0]-+b[0]);
+  const rIdx = reserveEntries.findIndex(([,n]) => zoek(n));
+  if (rIdx !== -1) return { lijstType: "reserve", positie: rIdx };
+  const mIdx = mainEntries.findIndex(([,n]) => zoek(n));
+  return { lijstType: "main", positie: mIdx };
+}
+
 function logEntry(actie, naam, door, extra) {
   db.ref(`sessies/${currentDate}/log`).push({
     actie, naam, door: door || naam, tijdstip: Date.now(), ...extra
@@ -2000,16 +2010,9 @@ function doJoinTransaction(sport) {
     if (error)      { showToast(t("foutInschrijven")); return; }
     if (!committed) { showToast(t("geenPlek")); return; }
     const data = snapshot.val();
-    const reserveArr = Object.entries(data[reserveKey] || {});
-    const mainArr    = Object.entries(data[mainKey]    || {});
-    const inReserveIdx = reserveArr.findIndex(([,n]) => (n||"").trim().toLowerCase() === identity.trim().toLowerCase());
-    const inMainIdx    = mainArr.findIndex(([,n])    => (n||"").trim().toLowerCase() === identity.trim().toLowerCase());
-    const inReserve    = inReserveIdx !== -1;
-    logEntry("ingeschreven", identity, identity, {
-      lijstType: inReserve ? "reserve" : "main",
-      positie:   inReserve ? inReserveIdx : inMainIdx
-    });
-    showToast(inReserve ? t("opReservelijst") : t("ingeschreven"));
+    const pos = detectLijstPositie(data, identity, mainKey, reserveKey);
+    logEntry("ingeschreven", identity, identity, pos);
+    showToast(pos.lijstType === "reserve" ? t("opReservelijst") : t("ingeschreven"));
   });
 }
 
@@ -2134,10 +2137,11 @@ function confirmAdminAdd() {
     for (let i = 0; i < eventConfig.reserveSize; i++) {
       if (!session[reserveKey][i] || !session[reserveKey][i].trim()) { session[reserveKey][i] = naam; return session; }
     }
-  }, (error, committed) => {
+  }, (error, committed, snapshot) => {
     if (!committed) { showToast(t("geenVrijePlekken")); return; }
     closeModal("adminAddModal");
-    logEntry("ingeschreven", naam, adminNaam);
+    const pos = snapshot ? detectLijstPositie(snapshot.val(), naam, mainKey, reserveKey) : {};
+    logEntry("ingeschreven", naam, adminNaam, pos);
     showToast(`✓ ${naam} ingeschreven`);
   });
 }
@@ -2288,10 +2292,10 @@ function confirmAndereInschrijven() {
   }, (error, committed, snapshot) => {
     if (!committed) { showToast(t("geenPlek")); return; }
     const data = snapshot.val();
-    const inReserve = Object.values(data.reserve || {}).some(n => (n || "").trim().toLowerCase() === naam.toLowerCase());
+    const pos = detectLijstPositie(data, naam, "main", "reserve");
     closeModal("andereModal");
-    logEntry("ingeschreven", naam, identity || adminNaam || naam);
-    showToast(inReserve ? t("opReservelijst") : t("ingeschreven", { naam }));
+    logEntry("ingeschreven", naam, identity || adminNaam || naam, pos);
+    showToast(pos.lijstType === "reserve" ? t("opReservelijst") : t("ingeschreven", { naam }));
   });
 }
 
