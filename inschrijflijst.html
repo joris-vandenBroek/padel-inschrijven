@@ -1541,7 +1541,13 @@ function isMine(name) {
 
 function initials(name) {
   if (!name) return "–";
-  return name.trim().split(/\s+/).map(w => w[0]).join("").toUpperCase().slice(0, 2);
+  const TUSSENVOEGELS = new Set(["van","de","den","der","ter","te","het","'t","in","op","aan","bij","uit"]);
+  const words = name.trim().split(/\s+/);
+  const significant = words.filter(w => !TUSSENVOEGELS.has(w.toLowerCase()));
+  const first = significant[0] || words[0];
+  const last  = significant.length > 1 ? significant[significant.length - 1] : null;
+  const take2 = w => w ? w.slice(0, 2) : "";
+  return (take2(first) + take2(last)).slice(0, 4);
 }
 
 function toLocalDateString(d) {
