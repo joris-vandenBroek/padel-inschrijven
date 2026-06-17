@@ -1983,7 +1983,7 @@ function laadLogboek(targetElId) {
       else if (e.lijstType === "main" && e.positie >= 0) lijstTxt = ` <span style="font-size:10px;color:var(--green);font-weight:600;">#${(e.positie ?? 0) + 1}</span>`;
       const etLabel = e.eventType ? (EVENT_TYPES[e.eventType]?.label?.[lang] || e.eventType) : "";
       let tekst;
-      if (isGeopend)   tekst = `<strong>${e.naam}</strong> heeft lijst geopend<span style="color:var(--ink-light);font-size:10px;"> ${etLabel}</span>`;
+      if (isGeopend)   tekst = `<strong>${e.naam}</strong> heeft lijst geopend`;
       else if (isDoor) tekst = `<strong>${e.naam}</strong> doorgeschoven naar deelnemers<span style="color:var(--ink-light);"> (uitschrijving ${e.door})</span>`;
       else             tekst = `<strong>${e.naam}</strong> ${e.actie}${lijstTxt}<span style="color:var(--ink-light);">${doorTxt}</span>`;
       const row = document.createElement("div");
