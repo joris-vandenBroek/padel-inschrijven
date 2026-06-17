@@ -1333,7 +1333,8 @@ function closeLangDropdown() {
 
 function applyLang() {
   document.documentElement.lang = lang;
-  document.title = lang === "nl" ? "Inschrijflijst – Padel" : "Sign-up list – Padel";
+  const etLabel = eventConfig?.label?.[lang] || eventConfig?.label?.nl || "Padel";
+  document.title = (lang === "nl" ? "Inschrijflijst" : "Sign-up list") + " – " + etLabel;
 
   const langFlag = document.getElementById("langFlag");
   const langCode = document.getElementById("langCode");
