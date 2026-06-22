@@ -1743,14 +1743,6 @@ function createBeideSlot(name, i, listType, sport, verlopen) {
   nm.className = "slot-name";
   if (filled) {
     nm.textContent = name;
-    const lid = leden.find(l => l.naam === name);
-    if (lid && lid.rating_padel) {
-      const rating = lid.rating_padel.replace(",", ".").replace(/\.0+$/, "");
-      const rt = document.createElement("span");
-      rt.textContent = ` (${rating})`;
-      rt.style.cssText = "font-size:11px;color:var(--ink-light);font-weight:400;";
-      nm.appendChild(rt);
-    }
   } else {
     nm.textContent = t("vrij");
   }
@@ -1809,14 +1801,6 @@ function renderList(containerId, arr, listType, sport) {
     nm.className = "slot-name";
     if (filled) {
       nm.textContent = name;
-      const lid = leden.find(l => l.naam === name);
-      if (lid && lid.rating_padel) {
-        const rating = lid.rating_padel.replace(",", ".").replace(/\.0+$/, "");
-        const rt = document.createElement("span");
-        rt.textContent = ` (${rating})`;
-        rt.style.cssText = "font-size:11px;color:var(--ink-light);font-weight:400;";
-        nm.appendChild(rt);
-      }
     } else {
       nm.textContent = t("vrij");
     }
