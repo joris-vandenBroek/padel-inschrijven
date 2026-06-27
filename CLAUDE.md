@@ -6,6 +6,7 @@ This file provides guidance to Claude Code when working with code in this reposi
 
 Single-file standalone HTML app (`inschrijflijst.html`) for weekly padel/tennis sign-up sessions. No build step, no framework, no server. Hosted on GitHub Pages. Data lives in Firebase Realtime Database.
 
+**Lokale locatie:** `L:\ETV-Volley\padel-inschrijven`  
 **Live URL (vrijdag):** https://tinyurl.com/padel-inschrijven  
 **Live URL (dinsdag):** https://tinyurl.com/LossePols
 

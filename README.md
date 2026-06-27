@@ -2,6 +2,7 @@
 
 Realtime inschrijfformulier voor wekelijkse padel- en tennissessies. Deelnemers openen de link, kiezen hun naam en schrijven zich in. Alle wijzigingen zijn direct zichtbaar voor iedereen.
 
+**Lokale locatie:** `L:\ETV-Volley\padel-inschrijven`  
 **Live (vrijdagochtend):** https://tinyurl.com/padel-inschrijven  
 **Live (dinsdag Losse Pols):** https://tinyurl.com/LossePols
 
