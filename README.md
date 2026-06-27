@@ -10,7 +10,6 @@ Realtime inschrijfformulier voor wekelijkse padel- en tennissessies. Deelnemers 
 - Configureerbaar aantal plekken (hoofdlijst + reserve) per event type
 - Automatisch doorschuiven van reserve naar hoofdlijst bij uitschrijving
 - Naam kiezen uit de ledenlijst — vrije invoer is niet toegestaan
-- Iemand anders inschrijven via "Iemand anders inschrijven" knop (ook alleen uit ledenlijst)
 - Naam wordt onthouden op het apparaat (localStorage) — eenmalig invoeren
 - Ledenlijst wordt automatisch opgehaald uit de KNLTB-ledenregistratie
 - Realtime sync via Firebase — alle gebruikers zien wijzigingen direct
@@ -41,13 +40,18 @@ Elke event type met een eigen tinyurl heeft een bijbehorend HTML-wrapper bestand
 Klik op **⚙️ Beheer** en voer het wachtwoord in. Meerdere beheerders kunnen elk hun eigen wachtwoord hebben. Als beheerder kun je:
 
 - Deelnemers toevoegen of verwijderen
+- Iemand anders inschrijven via de **"Iemand anders inschrijven"** knop — ook alleen uit de ledenlijst
 - Een eerdere lijst bekijken via "Andere lijst openen" — zonder dat dit de actieve lijst wijzigt
 - Een niet-actieve lijst verwijderen via de 🗑 knop in de blauwe balk
 - Een nieuwe lijst aanmaken voor de volgende sessiedag, en daarna pas activeren
 - **Vaste deelnemers beheren** — worden automatisch toegevoegd bij elke nieuwe lijst, per event type; bij beide-sport apart voor padel en tennis
 - **Evenement types beheren** — naam, koptekst, dag/tijd, capaciteit, sport, deel-link instellen
 - Beheerders toevoegen en hun event type toegang beheren (alleen superadmin)
-- De ledenlijst verversen
+- De ledenlijst verversen (wordt automatisch gecacht — verversen is alleen nodig als er nieuwe leden zijn bijgekomen)
+
+### Logboek
+
+In de gouden beheerbalk staat een inklapbaar **📋 Logboek**. Dit toont per sessie een chronologisch overzicht van alle activiteit: wie zich heeft ingeschreven of uitgeschreven, wie automatisch is doorgeschoven van reserve naar de hoofdlijst, en welke beheerder de lijst heeft geopend. Het logboek volgt altijd de lijst die je op dat moment bekijkt.
 
 ### Rol-gebaseerde toegang
 
@@ -123,7 +127,7 @@ sessies/
 1. Klik **⚙️ Beheer → Nieuwe lijst aanmaken**, kies het event type en de datum en bevestig. Vaste deelnemers worden automatisch ingevuld.
 2. De nieuwe lijst is nog **niet actief** — deelnemers zien de oude lijst totdat jij de nieuwe activeert.
 3. Open de nieuwe lijst via **Andere lijst openen**, controleer hem, en klik **✓ Maak lijst actief**.
-4. Deel daarna de link via **🔗 Deel link** in WhatsApp. De link blijft hetzelfde voor iedereen.
+4. Zodra de lijst actief is, verschijnt automatisch een groene balk met een **🔗 Deel link** knop. Gebruik die om de link te kopiëren en te delen via WhatsApp. De link blijft hetzelfde voor iedereen.
 
 Een lijst vervalt automatisch op de dag van de sessie op het ingestelde sluitingsuur.
 
@@ -131,5 +135,6 @@ Een lijst vervalt automatisch op de dag van de sessie op het ingestelde sluiting
 
 Via **⚙️ Beheer → Exporteren & Screenshot** kun je:
 
-- **Screenshot maken** — slaat een afbeelding van de lijst op, geschikt om in WhatsApp te plaatsen.
-- **Download CSV** — downloadt een `.csv`-bestand met alle namen (hoofdlijst + reserve).
+- **📸 Screenshot** — slaat een afbeelding van de lijst op, geschikt om in WhatsApp te plaatsen.
+- **📤 Deel via WhatsApp** — maakt een screenshot en deelt die direct via WhatsApp.
+- **📥 Excel (CSV)** — downloadt een `.csv`-bestand met alle namen (hoofdlijst + reserve), geschikt om te openen in Excel.
