@@ -2393,9 +2393,11 @@ function renderEventTypeLijst() {
 }
 
 function toTimeInput(t) {
-  if (!t) return "";
+  if (t === null || t === undefined || t === "") return "";
   const [h, m] = String(t).split(":");
-  return `${String(h).padStart(2,"0")}:${(m || "00").padStart(2,"0")}`;
+  const hour = parseInt(h, 10);
+  if (isNaN(hour) || hour > 23) return "";
+  return `${String(hour).padStart(2,"0")}:${(m || "00").padStart(2,"0")}`;
 }
 
 function fromTimeInput(val) {
