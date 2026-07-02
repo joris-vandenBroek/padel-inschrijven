@@ -845,7 +845,7 @@
             <span style="font-size:11px;color:var(--ink-light);">Lijst sluit om</span>
             <button type="button" onclick="toggleVerloopTip()" style="width:15px;height:15px;border-radius:50%;border:1.5px solid var(--ink-light);background:none;color:var(--ink-light);font-size:9px;font-weight:700;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">?</button>
           </div>
-          <input id="etVerloop" type="time"
+          <input id="etVerloop" type="text" placeholder="21:00" maxlength="5" pattern="[0-2]?[0-9]:[0-5][0-9]"
             style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
           <div id="verloopTip" style="display:none;font-size:11px;color:var(--ink-light);margin-top:5px;line-height:1.4;grid-column:1/-1;">Op de sessiedag sluit de inschrijflijst om dit tijdstip. Daarna kunnen deelnemers niet meer in- of uitschrijven.</div>
         </div>
