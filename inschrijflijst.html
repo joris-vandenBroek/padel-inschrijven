@@ -845,9 +845,9 @@
             <span style="font-size:11px;color:var(--ink-light);">Lijst sluit om</span>
             <button type="button" onclick="toggleVerloopTip()" style="width:15px;height:15px;border-radius:50%;border:1.5px solid var(--ink-light);background:none;color:var(--ink-light);font-size:9px;font-weight:700;cursor:pointer;padding:0;line-height:1;flex-shrink:0;">?</button>
           </div>
-          <input id="etVerloop" type="number" min="0" max="23" step="1" placeholder="9"
+          <input id="etVerloop" type="time"
             style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
-          <div id="verloopTip" style="display:none;font-size:11px;color:var(--ink-light);margin-top:5px;line-height:1.4;grid-column:1/-1;">Op de sessiedag sluit de inschrijflijst om dit uur (0–23). Daarna kunnen deelnemers niet meer in- of uitschrijven.</div>
+          <div id="verloopTip" style="display:none;font-size:11px;color:var(--ink-light);margin-top:5px;line-height:1.4;grid-column:1/-1;">Op de sessiedag sluit de inschrijflijst om dit tijdstip. Daarna kunnen deelnemers niet meer in- of uitschrijven.</div>
         </div>
       </div>
     </div>
@@ -1038,7 +1038,7 @@ const TRANSLATIONS = {
     etDag: "Dag van de week",
     etStartTijd: "Starttijd",
     etEindTijd: "Eindtijd",
-    etVerloop: "Lijst sluit om (uur)",
+    etVerloop: "Lijst sluit om",
     etMainSize: "Max deelnemers",
     etReserveSize: "Max reserve",
     etSport: "Sport",
@@ -1214,7 +1214,7 @@ const TRANSLATIONS = {
     etDag: "Day of the week",
     etStartTijd: "Start time",
     etEindTijd: "End time",
-    etVerloop: "List closes at (hour)",
+    etVerloop: "List closes at",
     etMainSize: "Max participants",
     etReserveSize: "Max reserve",
     etSport: "Sport",
@@ -2420,7 +2420,7 @@ function openEventTypeForm(id) {
   document.getElementById("etEyebrowEn").value  = et ? (et.eyebrow?.en || "") : "";
   document.getElementById("etShareUrl").value   = et ? (et.shareUrl || "") : "";
   document.getElementById("etSport").value     = et ? (et.sport || "padel") : "padel";
-  document.getElementById("etVerloop").value   = et ? et.verloopUur : 9;
+  document.getElementById("etVerloop").value   = toTimeInput(et ? et.verloopUur : 9);
   document.getElementById("etMainSize").value  = et ? et.mainSize : 20;
   document.getElementById("etReserveSize").value = et ? et.reserveSize : 4;
 
