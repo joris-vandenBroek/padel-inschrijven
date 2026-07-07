@@ -2933,6 +2933,8 @@ function updateLedenInfo() {
   el.textContent = t("aantalLeden", { count: leden.length, tijd: tijdStr });
 }
 
+const LEDEN_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 uur
+
 async function laadLeden(forceFetch = false) {
   if (!forceFetch) {
     try {
@@ -2941,7 +2943,10 @@ async function laadLeden(forceFetch = false) {
         const parsed = JSON.parse(cached);
         // Migreer oude cache (namen = string array) naar nieuwe structuur (data = object array)
         if (parsed.namen && !parsed.data) { localStorage.removeItem(LEDEN_CACHE); }
-        else {
+        else if (Date.now() - parsed.timestamp > LEDEN_CACHE_TTL_MS) {
+          // Cache te oud -- val door naar verse fetch hieronder zodat leden
+          // ook zonder admin-toegang tot "Ververs leden" bijgewerkt raken.
+        } else {
           leden = parsed.data; ledenNamen = leden.map(l => l.naam);
           ledenTimestamp = parsed.timestamp;
           vulDatalist(); updateLedenInfo(); return;

@@ -72,7 +72,7 @@ Vaste deelnemers zijn gekoppeld aan een specifiek event type. In het beheerpanee
 |---|---|
 | Hosting | GitHub Pages |
 | Database | Firebase Realtime Database (europe-west1) |
-| Ledenlijst | `leden.json` uit [knltb-autoboek](https://github.com/joris-vandenBroek/knltb-autoboek) |
+| Ledenlijst | `leden.json` uit [knltb-autoboek](https://github.com/joris-vandenBroek/knltb-autoboek), lokaal gecached in `localStorage` (24u TTL, of handmatig via admin-knop "Ververs leden") |
 | Frontend | Vanilla HTML/CSS/JS, geen framework |
 
 De app gebruikt Firebase-transacties voor gelijktijdige inschrijvingen, zodat twee mensen niet dezelfde plek kunnen claimen.
