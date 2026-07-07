@@ -781,7 +781,7 @@
       <div><strong>👥 Vaste deelnemers beheren</strong><br>Stel in welke deelnemers automatisch worden toegevoegd bij het aanmaken van een nieuwe lijst. Voeg namen toe via de ledenlijst of verwijder ze met <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">✕</span>. De volgorde bepaalt de positie op de lijst.</div>
       <div><strong>📂 Andere lijst openen</strong><br>Bekijk een eerdere lijst zonder dat dit de actieve lijst voor andere gebruikers wijzigt. Een blauwe banner verschijnt bovenaan — klik <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">← Terug</span> om terug te gaan naar de actieve lijst.</div>
       <div><strong>📋 Logboek</strong><br>In de gouden beheerbalk staat een inklapbaar logboek. Dit toont wie zich heeft ingeschreven of uitgeschreven, wie automatisch is doorgeschoven van reserve, en welke beheerder de lijst heeft geopend.</div>
-      <div><strong>👥 Ledenlijst verversen</strong><br>Haalt de meest recente ledenlijst op uit de KNLTB-registratie. Wordt automatisch gecacht — verversen is alleen nodig als er nieuwe leden zijn bijgekomen.</div>
+      <div><strong>👥 Ledenlijst verversen</strong><br>De ledenlijst wordt altijd vers opgehaald bij het laden van de pagina, dus dit is normaal niet nodig. Handig als je toch direct een net bijgewerkte lijst wilt zien zonder de pagina te herladen.</div>
       <div><strong>🔑 Beheerders</strong><br>Toont de huidige beheerders. Voeg een nieuwe beheerder toe via naam en een wachtwoord naar keuze. Wachtwoord wijzigen doe je bij het inloggen via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);color:var(--ink-light);border-radius:6px;">🔑 Wachtwoord wijzigen</span>.</div>
       <div><strong>🧪 Testdata</strong><br>Vult de huidige lijst met 19 willekeurige namen uit de ledenlijst. Alleen bedoeld voor testen.</div>
     </div>
@@ -938,7 +938,6 @@ let eventConfig = EVENT_TYPES[DEFAULT_EVENT_TYPE];
 // eventConfig.mainSize en eventConfig.reserveSize worden dynamisch uit eventConfig gelezen
 let   ADMINS       = null; // geladen vanuit Firebase — null = nog niet klaar
 const LEDEN_URL    = "https://raw.githubusercontent.com/joris-vandenBroek/knltb-autoboek/main/leden.json";
-const LEDEN_CACHE  = "padel_leden_cache_v2"; // v2: forceer eenmalige cache-invalidatie (Jan Brugmans ontbrak in v1-cache)
 const IDENTITY_KEY = "padel_identity";
 const LANG_KEY     = "padel_lang";
 
@@ -1132,7 +1131,7 @@ const TRANSLATIONS = {
       <div><strong>🎯 Evenement types</strong><br>Beheer de beschikbare sessietypen. Per type stel je in: naam (NL + EN), koptekst in de header (bijv. "Losse Pols"), dag, tijdstip, capaciteit en sport (Padel / Tennis / Padel &amp; Tennis). De koptekst is meertalig instelbaar.</div>
       <div><strong>📂 Andere lijst openen</strong><br>Bekijk een eerdere lijst zonder dat dit de actieve lijst voor andere gebruikers wijzigt. Een blauwe banner verschijnt bovenaan — klik <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">← Terug</span> om terug te gaan naar de actieve lijst.</div>
       <div><strong>📋 Logboek</strong><br>In de gouden beheerbalk staat een inklapbaar logboek. Dit toont wie zich heeft ingeschreven of uitgeschreven, wie automatisch is doorgeschoven van reserve, en welke beheerder de lijst heeft geopend.</div>
-      <div><strong>👥 Ledenlijst verversen</strong><br>Haalt de meest recente ledenlijst op uit de KNLTB-registratie. Wordt automatisch gecacht — verversen is alleen nodig als er nieuwe leden zijn bijgekomen.</div>
+      <div><strong>👥 Ledenlijst verversen</strong><br>De ledenlijst wordt altijd vers opgehaald bij het laden van de pagina, dus dit is normaal niet nodig. Handig als je toch direct een net bijgewerkte lijst wilt zien zonder de pagina te herladen.</div>
       <div><strong>🔑 Beheerders</strong><br>Toont de huidige beheerders. Voeg een nieuwe beheerder toe via naam en een wachtwoord naar keuze. Wachtwoord wijzigen doe je bij het inloggen via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);color:var(--ink-light);border-radius:6px;">🔑 Wachtwoord wijzigen</span>.</div>
 `
   },
@@ -1307,7 +1306,7 @@ const TRANSLATIONS = {
       <div><strong>🎯 Event types</strong><br>Manage available session types. Per type you configure: name (NL + EN), header label (e.g. "Drop-in"), day, time, capacity and sport (Padel / Tennis / Padel &amp; Tennis). The header label supports NL and EN.</div>
       <div><strong>📂 Open another list</strong><br>View an earlier list without changing the active list for other users. A blue banner appears at the top — click <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--mine);color:var(--mine);border-radius:6px;">← Back</span> to return to the active list.</div>
       <div><strong>📋 Activity log</strong><br>The gold admin banner contains a collapsible activity log. It shows who signed up or withdrew, who was automatically promoted from reserve, and which admin opened the list.</div>
-      <div><strong>👥 Refresh member list</strong><br>Fetches the most recent member list from the KNLTB registration. Automatically cached — refresh is only needed when new members have been added.</div>
+      <div><strong>👥 Refresh member list</strong><br>The member list is always fetched fresh when the page loads, so this normally isn't needed. Useful if you want to see a just-updated list immediately without reloading the page.</div>
       <div><strong>🔑 Admins</strong><br>Shows the current admins. Add a new admin via name and a password of your choice. Change password at login via <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border:1.5px solid var(--border);color:var(--ink-light);border-radius:6px;">🔑 Change password</span>.</div>
 `
   }
@@ -2933,34 +2932,13 @@ function updateLedenInfo() {
   el.textContent = t("aantalLeden", { count: leden.length, tijd: tijdStr });
 }
 
-const LEDEN_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 uur
-
-async function laadLeden(forceFetch = false) {
-  if (!forceFetch) {
-    try {
-      const cached = localStorage.getItem(LEDEN_CACHE);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        // Migreer oude cache (namen = string array) naar nieuwe structuur (data = object array)
-        if (parsed.namen && !parsed.data) { localStorage.removeItem(LEDEN_CACHE); }
-        else if (Date.now() - parsed.timestamp > LEDEN_CACHE_TTL_MS) {
-          // Cache te oud -- val door naar verse fetch hieronder zodat leden
-          // ook zonder admin-toegang tot "Ververs leden" bijgewerkt raken.
-        } else {
-          leden = parsed.data; ledenNamen = leden.map(l => l.naam);
-          ledenTimestamp = parsed.timestamp;
-          vulDatalist(); updateLedenInfo(); return;
-        }
-      }
-    } catch(e) {}
-  }
+async function laadLeden() {
   try {
     const resp = await fetch(LEDEN_URL + '?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) throw new Error();
     leden = await resp.json();
     ledenNamen = leden.map(l => l.naam);
     ledenTimestamp = Date.now();
-    localStorage.setItem(LEDEN_CACHE, JSON.stringify({ data: leden, timestamp: ledenTimestamp }));
     vulDatalist(); updateLedenInfo();
   } catch(e) { updateLedenInfo(); }
 }
@@ -2968,7 +2946,7 @@ async function laadLeden(forceFetch = false) {
 async function verversLeden() {
   const btn = document.querySelector("#adminPanel button[onclick='verversLeden()']");
   if (btn) btn.textContent = t("verversenBezig");
-  await laadLeden(true);
+  await laadLeden();
   if (btn) btn.textContent = t("verversenBtn");
   showToast(t("ledenGeladen", { count: leden.length }));
 }
