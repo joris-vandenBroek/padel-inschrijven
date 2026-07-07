@@ -938,7 +938,7 @@ let eventConfig = EVENT_TYPES[DEFAULT_EVENT_TYPE];
 // eventConfig.mainSize en eventConfig.reserveSize worden dynamisch uit eventConfig gelezen
 let   ADMINS       = null; // geladen vanuit Firebase — null = nog niet klaar
 const LEDEN_URL    = "https://raw.githubusercontent.com/joris-vandenBroek/knltb-autoboek/main/leden.json";
-const LEDEN_CACHE  = "padel_leden_cache";
+const LEDEN_CACHE  = "padel_leden_cache_v2"; // v2: forceer eenmalige cache-invalidatie (Jan Brugmans ontbrak in v1-cache)
 const IDENTITY_KEY = "padel_identity";
 const LANG_KEY     = "padel_lang";
 
