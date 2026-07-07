@@ -2950,7 +2950,7 @@ async function laadLeden(forceFetch = false) {
     } catch(e) {}
   }
   try {
-    const resp = await fetch(LEDEN_URL);
+    const resp = await fetch(LEDEN_URL + '?t=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) throw new Error();
     leden = await resp.json();
     ledenNamen = leden.map(l => l.naam);
