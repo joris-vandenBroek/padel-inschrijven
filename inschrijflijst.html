@@ -1860,7 +1860,7 @@ function renderList(containerId, arr, listType, sport) {
 // ═══ IDENTITEIT ═════════════════════════════════════════
 function openIdentityModal() {
   document.getElementById("identityInput").value = identity;
-  document.getElementById("identityModal").classList.add("open");
+  openModal("identityModal");
   setTimeout(() => document.getElementById("identityInput").focus(), 100);
 }
 
@@ -1895,7 +1895,7 @@ function joinFirstFree(sport) {
     pendingAdminSlot = { listType: "auto", sport };
     document.getElementById("adminAddDesc").textContent = t("adminAddTitle");
     document.getElementById("adminAddInput").value = "";
-    document.getElementById("adminAddModal").classList.add("open");
+    openModal("adminAddModal");
     setTimeout(() => document.getElementById("adminAddInput").focus(), 100);
     return;
   }
@@ -1923,7 +1923,7 @@ function joinFirstFree(sport) {
   document.getElementById("confirmMsg").textContent = isReserve
     ? t("inschrijvenMsgReserve", { naam: identity, title: currentSession.title, time: currentSession.time })
     : t("inschrijvenMsg",        { naam: identity, title: currentSession.title, time: currentSession.time });
-  document.getElementById("confirmModal").classList.add("open");
+  openModal("confirmModal");
   document.getElementById("confirmOkBtn").textContent = t("inschrijvenBevestig");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
@@ -2025,7 +2025,7 @@ function confirmRemove(naam, listType, idx, sport) {
   document.getElementById("confirmTitle").textContent = t("uitschrijvenVraag", { naam });
   document.getElementById("confirmMsg").textContent = promotee
     ? t("doorschuiven", { promotee }) : t("weetJeHetZeker");
-  document.getElementById("confirmModal").classList.add("open");
+  openModal("confirmModal");
   document.getElementById("confirmOkBtn").textContent = t("uitschrijvenKnop");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
@@ -2095,7 +2095,7 @@ function shiftUp(obj, fromIdx, size) {
 function adminRemove(listType, idx, naam, sport) {
   document.getElementById("confirmTitle").textContent = t("uitschrijvenVraag", { naam });
   document.getElementById("confirmMsg").textContent = t("uitschrijvenAlsBeheerder");
-  document.getElementById("confirmModal").classList.add("open");
+  openModal("confirmModal");
   document.getElementById("confirmOkBtn").textContent = t("uitschrijvenKnop");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
@@ -2147,7 +2147,7 @@ function confirmClearList() {
   closeModal("adminPanel");
   document.getElementById("confirmTitle").textContent = t("lijstLeegmaken");
   document.getElementById("confirmMsg").textContent = t("lijstLeegmakenMsg", { title: currentSession?.title || currentDate });
-  document.getElementById("confirmModal").classList.add("open");
+  openModal("confirmModal");
   document.getElementById("confirmOkBtn").textContent = t("leegmakenKnop");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
@@ -2168,7 +2168,7 @@ function openAdminModal() {
   }
   document.getElementById("adminPwInput").value = "";
   document.getElementById("adminPwError").textContent = "";
-  document.getElementById("adminPwModal").classList.add("open");
+  openModal("adminPwModal");
   setTimeout(() => document.getElementById("adminPwInput").focus(), 100);
 }
 
@@ -2203,7 +2203,7 @@ function openAdminPanel() {
   typeEl.value = currentSession?.eventType || DEFAULT_EVENT_TYPE;
   eventConfig = EVENT_TYPES[typeEl.value] || EVENT_TYPES[DEFAULT_EVENT_TYPE];
   vulAdminDagenDropdown();
-  document.getElementById("adminPanel").classList.add("open");
+  openModal("adminPanel");
   laadBestaandeLijsten();
   renderBeheerderLijst();
   herlaadVdDropdown();
@@ -2251,7 +2251,7 @@ function logoutAdmin() {
 
 function openAndereInschrijvenModal() {
   document.getElementById("andereInput").value = "";
-  document.getElementById("andereModal").classList.add("open");
+  openModal("andereModal");
   setTimeout(() => document.getElementById("andereInput").focus(), 100);
 }
 
@@ -2449,7 +2449,7 @@ function openEventTypeForm(id) {
   document.getElementById("etStartTijd").value = toTimeInput(et ? et.startTijd : "9:00");
   document.getElementById("etEindTijd").value  = toTimeInput(et ? et.eindTijd  : "10:30");
 
-  document.getElementById("eventTypeModal").classList.add("open");
+  openModal("eventTypeModal");
   setTimeout(() => document.getElementById("etNaamNl").focus(), 100);
 }
 
@@ -2507,7 +2507,7 @@ function verwijderEventType(id) {
   const naam = EVENT_TYPES[id]?.label?.[lang] || id;
   document.getElementById("confirmTitle").textContent = lang === "en" ? "Delete event type?" : "Evenement type verwijderen?";
   document.getElementById("confirmMsg").textContent   = lang === "en" ? `Remove "${naam}"?` : `"${naam}" verwijderen?`;
-  document.getElementById("confirmModal").classList.add("open");
+  openModal("confirmModal");
   document.getElementById("confirmOkBtn").textContent = lang === "en" ? "Delete" : "Verwijderen";
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
@@ -2633,11 +2633,11 @@ function slaEtAccessOp(naam) {
 }
 
 function openAdminHelp() {
-  document.getElementById("adminHelpModal").classList.add("open");
+  openModal("adminHelpModal");
 }
 
 function openDeelnemerHelp() {
-  document.getElementById("deelnemerHelpModal").classList.add("open");
+  openModal("deelnemerHelpModal");
 }
 
 function updateBeheerderFooter() {
@@ -2843,7 +2843,7 @@ function verwijderHuidigeLijst() {
   document.getElementById("confirmTitle").textContent = "Lijst verwijderen?";
   document.getElementById("confirmMsg").textContent   = `"${titel}" permanent verwijderen uit Firebase?`;
   document.getElementById("confirmOkBtn").textContent = "Verwijderen";
-  document.getElementById("confirmModal").classList.add("open");
+  openModal("confirmModal");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
     const datumTeVerwijderen = currentDate;
@@ -2904,7 +2904,7 @@ function nieuweLijstAanmaken() {
       document.getElementById("confirmTitle").textContent = t("nieuweLijstVraag");
       document.getElementById("confirmMsg").textContent = t("legalListVoor", { title });
     }
-    document.getElementById("confirmModal").classList.add("open");
+    openModal("confirmModal");
     document.getElementById("confirmOkBtn").textContent = t("aanmakenKnop");
     document.getElementById("confirmOkBtn").onclick = () => {
       closeModal("confirmModal");
@@ -2962,6 +2962,11 @@ async function verversLeden() {
 }
 
 // ═══ MODALS & TOAST ═════════════════════════════════════
+function openModal(id) {
+  window.scrollTo(0, 0);
+  document.getElementById(id).classList.add("open");
+}
+
 function closeModal(id) {
   document.getElementById(id).classList.remove("open");
 }
