@@ -387,15 +387,18 @@
   .confirm-modal {
     z-index: 150;
     align-items: flex-start;
-    padding-top: max(16px, env(safe-area-inset-top));
   }
   .confirm-modal .modal {
-    border-radius: 16px;
-    padding: 24px;
+    width: 100%;
+    max-width: none;
+    border-radius: 0 0 16px 16px;
+    padding: max(20px, env(safe-area-inset-top)) 24px 24px;
     animation: slideDown 0.25s ease;
   }
-  .confirm-modal .modal h2 { font-size: 20px; margin-bottom: 8px; }
-  .confirm-modal .modal .sub { font-size: 13px; color: var(--ink-light); margin-bottom: 20px; line-height: 1.5; }
+  .confirm-modal .modal h2 { font-size: 24px; margin-bottom: 10px; }
+  .confirm-modal .modal .sub { font-size: 16px; color: var(--ink-light); margin-bottom: 24px; line-height: 1.5; }
+  .confirm-modal .btn-danger,
+  .confirm-modal .btn-cancel { font-size: 16px; padding: 16px; }
   @keyframes slideDown { from { transform: translateY(-30px); opacity:0 } to { transform: translateY(0); opacity:1 } }
   .btn-danger {
     flex: 1;
