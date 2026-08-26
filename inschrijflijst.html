@@ -1540,10 +1540,11 @@ async function initialiseerSessie(datum, title, time, eventType) {
   const s = eventConfig.mainSize, r = eventConfig.reserveSize;
   const leeg = (size) => { const o = {}; for (let i = 0; i < size; i++) o[i] = ""; return o; };
   const beide = eventConfig.sport === "beide";
+  const split = eventConfig.sport === "split";
 
   // Laad vaste deelnemers voor het juiste event type
   const et = eventType || DEFAULT_EVENT_TYPE;
-  let vd = [], vdP = [], vdT = [];
+  let vd = [], vdP = [], vdT = [], vdA = [], vdB = [];
   if (beide) {
     const [sp, st] = await Promise.all([
       db.ref(`instellingen/vasteDeelnemersPerType/${et}_padel`).once("value"),
@@ -1551,6 +1552,13 @@ async function initialiseerSessie(datum, title, time, eventType) {
     ]);
     vdP = Array.isArray(sp.val()) ? sp.val() : [];
     vdT = Array.isArray(st.val()) ? st.val() : [];
+  } else if (split) {
+    const [sa, sb] = await Promise.all([
+      db.ref(`instellingen/vasteDeelnemersPerType/${et}_a`).once("value"),
+      db.ref(`instellingen/vasteDeelnemersPerType/${et}_b`).once("value"),
+    ]);
+    vdA = Array.isArray(sa.val()) ? sa.val() : [];
+    vdB = Array.isArray(sb.val()) ? sb.val() : [];
   } else {
     const snap = await db.ref(`instellingen/vasteDeelnemersPerType/${et}`).once("value");
     vd = Array.isArray(snap.val()) ? snap.val() : [];
@@ -1564,6 +1572,13 @@ async function initialiseerSessie(datum, title, time, eventType) {
     data = { title, time, eventType: eventType || DEFAULT_EVENT_TYPE,
       main_padel, reserve_padel: leeg(r), main_tennis, reserve_tennis: leeg(r),
       aangemaaktOp: firebase.database.ServerValue.TIMESTAMP };
+  } else if (split) {
+    const main_a = leeg(eventConfig.blokA.mainSize), main_b = leeg(eventConfig.blokB.mainSize);
+    vdA.slice(0, eventConfig.blokA.mainSize).forEach((naam, i) => { main_a[i] = naam; });
+    vdB.slice(0, eventConfig.blokB.mainSize).forEach((naam, i) => { main_b[i] = naam; });
+    data = { title, time, eventType: eventType || DEFAULT_EVENT_TYPE,
+      main_a, reserve_a: {}, main_b, reserve_b: {},
+      aangemaaktOp: firebase.database.ServerValue.TIMESTAMP };
   } else {
     const main = leeg(s), reserve = leeg(r);
     vd.slice(0, s).forEach((naam, i) => { main[i] = naam; });
@@ -1571,7 +1586,7 @@ async function initialiseerSessie(datum, title, time, eventType) {
       aangemaaktOp: firebase.database.ServerValue.TIMESTAMP };
   }
   await db.ref(`sessies/${datum}`).set(data);
-  return beide ? vdP.length + vdT.length : vd.length;
+  return beide ? vdP.length + vdT.length : split ? vdA.length + vdB.length : vd.length;
 }
 
 // ═══ HULPFUNCTIES ═══════════════════════════════════════
