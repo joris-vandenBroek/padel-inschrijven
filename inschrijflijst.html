@@ -868,7 +868,7 @@
 
     <div style="margin-top:16px;">
       <div style="font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-light);margin-bottom:8px;">Capaciteit &amp; sport</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div id="etCapaciteitGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
         <div>
           <div style="font-size:11px;color:var(--ink-light);margin-bottom:4px;">Max deelnemers</div>
           <input id="etMainSize" type="number" min="1" max="100" step="1"
@@ -880,12 +880,33 @@
             style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;" />
         </div>
       </div>
-      <select id="etSport"
+      <select id="etSport" onchange="toggleEtSportVelden()"
         style="width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:15px;background:var(--bg);color:var(--ink);outline:none;">
         <option value="padel">🎾 Padel</option>
         <option value="tennis">🎾 Tennis</option>
         <option value="beide">🎾 Padel &amp; Tennis</option>
+        <option value="split">🎾 Padel (gesplitst in 2 tijdvakken)</option>
       </select>
+      <div id="etSplitVelden" style="display:none;flex-direction:column;gap:10px;margin-top:12px;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink-light);margin-bottom:6px;">Blok A</div>
+          <input id="etBlokANaamNl" type="text" maxlength="60" autocomplete="off" placeholder="Label NL, bv. 9:00 - 11:30 (20 plekken)"
+            style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
+          <input id="etBlokANaamEn" type="text" maxlength="60" autocomplete="off" placeholder="Label EN, e.g. 9:00 - 11:30 (20 spots)"
+            style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
+          <input id="etBlokAMainSize" type="number" min="1" max="100" step="1" placeholder="Max plekken blok A"
+            style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--ink-light);margin-bottom:6px;">Blok B</div>
+          <input id="etBlokBNaamNl" type="text" maxlength="60" autocomplete="off" placeholder="Label NL, bv. 11:30 - 12:00 (12 plekken)"
+            style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
+          <input id="etBlokBNaamEn" type="text" maxlength="60" autocomplete="off" placeholder="Label EN, e.g. 11:30 - 12:00 (12 spots)"
+            style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
+          <input id="etBlokBMainSize" type="number" min="1" max="100" step="1" placeholder="Max plekken blok B"
+            style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+        </div>
+      </div>
     </div>
 
     <div style="margin-top:16px;">
@@ -2425,6 +2446,12 @@ function toggleVerloopTip() {
   if (el) el.style.display = el.style.display === "none" ? "block" : "none";
 }
 
+function toggleEtSportVelden() {
+  const split = document.getElementById("etSport").value === "split";
+  document.getElementById("etCapaciteitGrid").style.display = split ? "none" : "grid";
+  document.getElementById("etSplitVelden").style.display = split ? "flex" : "none";
+}
+
 function openEventTypeForm(id) {
   _editingEventTypeId = id;
   const et = id ? EVENT_TYPES[id] : null;
@@ -2438,6 +2465,12 @@ function openEventTypeForm(id) {
   document.getElementById("etVerloop").value   = toTimeInput(et ? et.verloopUur : 9);
   document.getElementById("etMainSize").value  = et ? et.mainSize : 20;
   document.getElementById("etReserveSize").value = et ? et.reserveSize : 4;
+  document.getElementById("etBlokANaamNl").value   = et?.blokA?.label?.nl || "";
+  document.getElementById("etBlokANaamEn").value   = et?.blokA?.label?.en || "";
+  document.getElementById("etBlokAMainSize").value = et?.blokA?.mainSize || 20;
+  document.getElementById("etBlokBNaamNl").value   = et?.blokB?.label?.nl || "";
+  document.getElementById("etBlokBNaamEn").value   = et?.blokB?.label?.en || "";
+  document.getElementById("etBlokBMainSize").value = et?.blokB?.mainSize || 12;
 
   // Dag dropdown vullen
   const dagSel = document.getElementById("etDag");
@@ -2453,6 +2486,7 @@ function openEventTypeForm(id) {
   document.getElementById("etStartTijd").value = toTimeInput(et ? et.startTijd : "9:00");
   document.getElementById("etEindTijd").value  = toTimeInput(et ? et.eindTijd  : "10:30");
 
+  toggleEtSportVelden();
   openModal("eventTypeModal");
   setTimeout(() => document.getElementById("etNaamNl").focus(), 100);
 }
@@ -2481,6 +2515,14 @@ function slaEventTypeOp() {
   const et = { id, label: { nl: naamNl, en: naamEn || naamNl }, dag, startTijd, eindTijd, verloopUur, mainSize, reserveSize, sport };
   if (eyebrowNl || eyebrowEn) et.eyebrow = { nl: eyebrowNl, en: eyebrowEn || eyebrowNl };
   if (shareUrl) et.shareUrl = shareUrl;
+  if (sport === "split") {
+    const blokANl = document.getElementById("etBlokANaamNl").value.trim();
+    const blokAEn = document.getElementById("etBlokANaamEn").value.trim();
+    const blokBNl = document.getElementById("etBlokBNaamNl").value.trim();
+    const blokBEn = document.getElementById("etBlokBNaamEn").value.trim();
+    et.blokA = { label: { nl: blokANl, en: blokAEn || blokANl }, mainSize: parseInt(document.getElementById("etBlokAMainSize").value) || 1 };
+    et.blokB = { label: { nl: blokBNl, en: blokBEn || blokBNl }, mainSize: parseInt(document.getElementById("etBlokBMainSize").value) || 1 };
+  }
 
   EVENT_TYPES[id] = et;
   db.ref(`instellingen/eventTypes/${id}`).set(et).then(() => {
