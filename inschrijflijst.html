@@ -2522,6 +2522,8 @@ function slaEventTypeOp() {
     const blokBEn = document.getElementById("etBlokBNaamEn").value.trim();
     et.blokA = { label: { nl: blokANl, en: blokAEn || blokANl }, mainSize: parseInt(document.getElementById("etBlokAMainSize").value) || 1 };
     et.blokB = { label: { nl: blokBNl, en: blokBEn || blokBNl }, mainSize: parseInt(document.getElementById("etBlokBMainSize").value) || 1 };
+    delete et.mainSize;
+    delete et.reserveSize;
   }
 
   EVENT_TYPES[id] = et;
