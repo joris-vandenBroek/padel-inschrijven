@@ -918,19 +918,31 @@
       <div id="etSplitVelden" style="display:none;flex-direction:column;gap:10px;margin-top:12px;">
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--ink-light);margin-bottom:6px;">Blok A</div>
-          <input id="etBlokANaamNl" type="text" maxlength="60" autocomplete="off" placeholder="Label NL, bv. 9:00 - 11:30"
+          <input id="etBlokANaamNl" type="text" maxlength="60" autocomplete="off" placeholder="Label NL, bv. Blok 1"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
-          <input id="etBlokANaamEn" type="text" maxlength="60" autocomplete="off" placeholder="Label EN, e.g. 9:00 - 11:30"
+          <input id="etBlokANaamEn" type="text" maxlength="60" autocomplete="off" placeholder="Label EN, e.g. Block 1"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+            <input id="etBlokAStartTijd" type="time" placeholder="Start"
+              style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+            <input id="etBlokAEindTijd" type="time" placeholder="Eind"
+              style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+          </div>
           <input id="etBlokAMainSize" type="number" min="1" max="100" step="1" placeholder="Max plekken blok A"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--ink-light);margin-bottom:6px;">Blok B</div>
-          <input id="etBlokBNaamNl" type="text" maxlength="60" autocomplete="off" placeholder="Label NL, bv. 11:30 - 12:00"
+          <input id="etBlokBNaamNl" type="text" maxlength="60" autocomplete="off" placeholder="Label NL, bv. Blok 2"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
-          <input id="etBlokBNaamEn" type="text" maxlength="60" autocomplete="off" placeholder="Label EN, e.g. 11:30 - 12:00"
+          <input id="etBlokBNaamEn" type="text" maxlength="60" autocomplete="off" placeholder="Label EN, e.g. Block 2"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px;">
+            <input id="etBlokBStartTijd" type="time" placeholder="Start"
+              style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+            <input id="etBlokBEindTijd" type="time" placeholder="Eind"
+              style="width:100%;box-sizing:border-box;padding:10px 10px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
+          </div>
           <input id="etBlokBMainSize" type="number" min="1" max="100" step="1" placeholder="Max plekken blok B"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
         </div>
@@ -1572,7 +1584,10 @@ function switchToDatum(datum, expectedEventType) {
   sessieListenerRef.on("value", snap => {
     const data = snap.val();
     if (!data) {
-      const time = `${eventConfig.startTijd} – ${eventConfig.eindTijd} uur`;
+      const isSplit = eventConfig.sport === "split";
+      const timeStart = (isSplit && eventConfig.blokA?.startTijd) ? eventConfig.blokA.startTijd : eventConfig.startTijd;
+      const timeEind  = (isSplit && eventConfig.blokB?.eindTijd)  ? eventConfig.blokB.eindTijd  : eventConfig.eindTijd;
+      const time = `${timeStart} – ${timeEind} uur`;
       initialiseerSessie(datum, datumNaarTitel(datum), time, eventConfig.id);
     } else if (expectedEventType && data.eventType && data.eventType !== expectedEventType) {
       const anderType = EVENT_TYPES[data.eventType]?.label?.[lang] || EVENT_TYPES[data.eventType]?.label?.nl || data.eventType;
@@ -1917,22 +1932,26 @@ function renderSplit() {
 
   const verlopen = isLijstVerlopen();
   const container = document.getElementById("listContainer");
-  const joinBtnHtml = (blokKey, id, tijd) => verlopen
-    ? `<span class="sport-header-name" style="margin-left:auto;">${tijd}</span>`
-    : `<button class="sport-join-btn ${cssBlokKlasse(blokKey)}" id="${id}" style="margin-left:auto;" onclick="joinSplitFirstFree('${blokKey}')">${t("doeMeeBtn") || "Doe mee"} ${tijd}</button>`;
+  const blokTijdStr = (blok) => blok.startTijd && blok.eindTijd ? ` · ${blok.startTijd}–${blok.eindTijd}` : "";
+  const joinBtnHtml = (blokKey, id, label, blok) => {
+    const tekst = label + blokTijdStr(blok);
+    return verlopen
+      ? `<span class="sport-header-name" style="margin-left:auto;">${tekst}</span>`
+      : `<button class="sport-join-btn ${cssBlokKlasse(blokKey)}" id="${id}" style="margin-left:auto;" onclick="joinSplitFirstFree('${blokKey}')">${t("doeMeeBtn") || "Doe mee"} ${tekst}</button>`;
+  };
   const labelA = blokA.label[lang] || blokA.label.nl, labelB = blokB.label[lang] || blokB.label.nl;
 
   container.innerHTML = `
     <div class="beide-kolommen" id="splitGrid">
       <div class="sport-header padel-header">
         <div class="sport-header-top">
-          ${joinBtnHtml("a","joinBlokABtn", labelA)}
+          ${joinBtnHtml("a","joinBlokABtn", labelA, blokA)}
         </div>
         <div class="sport-stripe padel"></div>
       </div>
       <div class="sport-header tennis-header">
         <div class="sport-header-top">
-          ${joinBtnHtml("b","joinBlokBBtn", labelB)}
+          ${joinBtnHtml("b","joinBlokBBtn", labelB, blokB)}
         </div>
         <div class="sport-stripe tennis"></div>
       </div>
@@ -2833,7 +2852,9 @@ function renderEventTypeLijst() {
     const naam = document.createElement("span");
     naam.style.cssText = "flex:1;font-size:14px;";
     const maxTekst = et.sport === "split" ? `max ${et.blokA?.mainSize} + ${et.blokB?.mainSize}` : `max ${et.mainSize}`;
-    naam.textContent = `${et.label[lang] || et.label.nl} · ${DAGNAMEN[lang][et.dag]} · ${et.startTijd}–${et.eindTijd} · ${maxTekst}`;
+    const etTijdStart = (et.sport === "split" && et.blokA?.startTijd) ? et.blokA.startTijd : et.startTijd;
+    const etTijdEind  = (et.sport === "split" && et.blokB?.eindTijd)  ? et.blokB.eindTijd  : et.eindTijd;
+    naam.textContent = `${et.label[lang] || et.label.nl} · ${DAGNAMEN[lang][et.dag]} · ${etTijdStart}–${etTijdEind} · ${maxTekst}`;
     const bewerkBtn = document.createElement("button");
     bewerkBtn.textContent = "✎";
     bewerkBtn.className = "btn-confirm";
@@ -2892,12 +2913,16 @@ function openEventTypeForm(id) {
   document.getElementById("etVerloop").value   = toTimeInput(et ? et.verloopUur : 9);
   document.getElementById("etMainSize").value  = et ? (et.mainSize ?? 20) : 20;
   document.getElementById("etReserveSize").value = et ? (et.reserveSize ?? 4) : 4;
-  document.getElementById("etBlokANaamNl").value   = et?.blokA?.label?.nl || "";
-  document.getElementById("etBlokANaamEn").value   = et?.blokA?.label?.en || "";
-  document.getElementById("etBlokAMainSize").value = et?.blokA?.mainSize || 20;
-  document.getElementById("etBlokBNaamNl").value   = et?.blokB?.label?.nl || "";
-  document.getElementById("etBlokBNaamEn").value   = et?.blokB?.label?.en || "";
-  document.getElementById("etBlokBMainSize").value = et?.blokB?.mainSize || 12;
+  document.getElementById("etBlokANaamNl").value    = et?.blokA?.label?.nl || "";
+  document.getElementById("etBlokANaamEn").value    = et?.blokA?.label?.en || "";
+  document.getElementById("etBlokAStartTijd").value = toTimeInput(et?.blokA?.startTijd || "");
+  document.getElementById("etBlokAEindTijd").value  = toTimeInput(et?.blokA?.eindTijd  || "");
+  document.getElementById("etBlokAMainSize").value  = et?.blokA?.mainSize || 20;
+  document.getElementById("etBlokBNaamNl").value    = et?.blokB?.label?.nl || "";
+  document.getElementById("etBlokBNaamEn").value    = et?.blokB?.label?.en || "";
+  document.getElementById("etBlokBStartTijd").value = toTimeInput(et?.blokB?.startTijd || "");
+  document.getElementById("etBlokBEindTijd").value  = toTimeInput(et?.blokB?.eindTijd  || "");
+  document.getElementById("etBlokBMainSize").value  = et?.blokB?.mainSize || 12;
 
   // Dag dropdown vullen
   const dagSel = document.getElementById("etDag");
@@ -2947,8 +2972,16 @@ function slaEventTypeOp() {
     const blokAEn = document.getElementById("etBlokANaamEn").value.trim();
     const blokBNl = document.getElementById("etBlokBNaamNl").value.trim();
     const blokBEn = document.getElementById("etBlokBNaamEn").value.trim();
+    const blokAStart = fromTimeInput(document.getElementById("etBlokAStartTijd").value);
+    const blokAEind  = fromTimeInput(document.getElementById("etBlokAEindTijd").value);
+    const blokBStart = fromTimeInput(document.getElementById("etBlokBStartTijd").value);
+    const blokBEind  = fromTimeInput(document.getElementById("etBlokBEindTijd").value);
     et.blokA = { label: { nl: blokANl, en: blokAEn || blokANl }, mainSize: parseInt(document.getElementById("etBlokAMainSize").value) || 1 };
     et.blokB = { label: { nl: blokBNl, en: blokBEn || blokBNl }, mainSize: parseInt(document.getElementById("etBlokBMainSize").value) || 1 };
+    if (blokAStart) et.blokA.startTijd = blokAStart;
+    if (blokAEind)  et.blokA.eindTijd  = blokAEind;
+    if (blokBStart) et.blokB.startTijd = blokBStart;
+    if (blokBEind)  et.blokB.eindTijd  = blokBEind;
     delete et.mainSize;
     delete et.reserveSize;
   } else {
@@ -3421,7 +3454,10 @@ function nieuweLijstAanmaken() {
     document.getElementById("confirmOkBtn").textContent = t("aanmakenKnop");
     document.getElementById("confirmOkBtn").onclick = () => {
       closeModal("confirmModal");
-      const time = `${eventConfig.startTijd} – ${eventConfig.eindTijd} uur`;
+      const _isSplit = eventConfig.sport === "split";
+      const _tStart = (_isSplit && eventConfig.blokA?.startTijd) ? eventConfig.blokA.startTijd : eventConfig.startTijd;
+      const _tEind  = (_isSplit && eventConfig.blokB?.eindTijd)  ? eventConfig.blokB.eindTijd  : eventConfig.eindTijd;
+      const time = `${_tStart} – ${_tEind} uur`;
       initialiseerSessie(datum, title, time, eventConfig.id).then(aantalVd => {
         switchToDatum(datum);
         const n = aantalVd || 0;
