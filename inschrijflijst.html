@@ -1030,6 +1030,7 @@ const TRANSLATIONS = {
     doeMeeTennisBtn: "🎾 Tennis",
     reserveLabel: "Reserve (max 4)",
     reserveLabelOnbeperkt: "Reserve",
+    oudFormaatWaarschuwing: "Deze lijst heeft nog het oude formaat — maak een nieuwe lijst aan voor dit event type.",
     nogGeenReserves: "Nog geen reserves",
     beheerKnop: "⚙️ Beheer",
     aantalDeelnemers: "{filled} / {max} deelnemers",
@@ -1214,6 +1215,7 @@ const TRANSLATIONS = {
     doeMeeTennisBtn: "🎾 Tennis",
     reserveLabel: "Reserve (max 4)",
     reserveLabelOnbeperkt: "Reserve",
+    oudFormaatWaarschuwing: "This list still has the old format — create a new list for this event type.",
     nogGeenReserves: "No reserves yet",
     beheerKnop: "⚙️ Admin",
     aantalDeelnemers: "{filled} / {max} participants",
@@ -1863,7 +1865,21 @@ function reserveArray(obj) {
   return Object.keys(obj || {}).sort((a, b) => +a - +b).map(k => obj[k]);
 }
 
+// Telt deelnemers in een sessie-veld ("main" of "reserve"), ongeacht of de
+// sessie enkelvoudig, beide-sport (_padel/_tennis) of split (_a/_b) is.
+function telDeelnemersSessie(s, prefix = "main") {
+  const tel = obj => Object.values(obj || {}).filter(n => n && n.trim()).length;
+  if (s[`${prefix}_padel`] !== undefined) return tel(s[`${prefix}_padel`]) + tel(s[`${prefix}_tennis`]);
+  if (s[`${prefix}_a`]     !== undefined) return tel(s[`${prefix}_a`])     + tel(s[`${prefix}_b`]);
+  return tel(s[prefix]);
+}
+
 function renderSplit() {
+  if (currentSession && currentSession.main !== undefined && currentSession.main_a === undefined) {
+    document.getElementById("listContainer").innerHTML =
+      `<div class="divider-reserve" style="text-align:center;">${t("oudFormaatWaarschuwing")}</div>`;
+    return;
+  }
   const blokA = eventConfig.blokA, blokB = eventConfig.blokB;
   const mainA = slotArray(currentSession.main_a, blokA.mainSize);
   const mainB = slotArray(currentSession.main_b, blokB.mainSize);
@@ -2840,8 +2856,8 @@ function openEventTypeForm(id) {
   document.getElementById("etShareUrl").value   = et ? (et.shareUrl || "") : "";
   document.getElementById("etSport").value     = et ? (et.sport || "padel") : "padel";
   document.getElementById("etVerloop").value   = toTimeInput(et ? et.verloopUur : 9);
-  document.getElementById("etMainSize").value  = et ? et.mainSize : 20;
-  document.getElementById("etReserveSize").value = et ? et.reserveSize : 4;
+  document.getElementById("etMainSize").value  = et ? (et.mainSize ?? 20) : 20;
+  document.getElementById("etReserveSize").value = et ? (et.reserveSize ?? 4) : 4;
   document.getElementById("etBlokANaamNl").value   = et?.blokA?.label?.nl || "";
   document.getElementById("etBlokANaamEn").value   = et?.blokA?.label?.en || "";
   document.getElementById("etBlokAMainSize").value = et?.blokA?.mainSize || 20;
@@ -2901,6 +2917,9 @@ function slaEventTypeOp() {
     et.blokB = { label: { nl: blokBNl, en: blokBEn || blokBNl }, mainSize: parseInt(document.getElementById("etBlokBMainSize").value) || 1 };
     delete et.mainSize;
     delete et.reserveSize;
+  } else {
+    delete et.blokA;
+    delete et.blokB;
   }
 
   EVENT_TYPES[id] = et;
@@ -3231,13 +3250,8 @@ async function laadBestaandeLijsten() {
   const sessies = Object.entries(data)
     .filter(([, s]) => heeftToegang(s.eventType || DEFAULT_EVENT_TYPE))
     .map(([datum, s]) => {
-      const tel = obj => Object.values(obj || {}).filter(n => n && n.trim()).length;
-      const aantalMain    = s.main_padel !== undefined
-        ? tel(s.main_padel) + tel(s.main_tennis)
-        : tel(s.main);
-      const aantalReserve = s.reserve_padel !== undefined
-        ? tel(s.reserve_padel) + tel(s.reserve_tennis)
-        : tel(s.reserve);
+      const aantalMain    = telDeelnemersSessie(s, "main");
+      const aantalReserve = telDeelnemersSessie(s, "reserve");
       return { datum, title: s.title || datum, aantalMain, aantalReserve };
     })
     .sort((a, b) => b.datum.localeCompare(a.datum)); // nieuwste eerst
@@ -3336,8 +3350,8 @@ function nieuweLijstAanmaken() {
   db.ref(`sessies/${datum}`).once("value").then(snap => {
     if (snap.exists()) {
       const s = snap.val();
-      const aantalMain    = Object.values(s.main    || {}).filter(n => n && n.trim()).length;
-      const aantalReserve = Object.values(s.reserve || {}).filter(n => n && n.trim()).length;
+      const aantalMain    = telDeelnemersSessie(s, "main");
+      const aantalReserve = telDeelnemersSessie(s, "reserve");
       const reserveTekst  = aantalReserve > 0 ? t("reserveCount", { n: aantalReserve }) : "";
       const suf = aantalMain !== 1 ? "s" : "";
       document.getElementById("confirmTitle").textContent = t("lijstBestaatAl");
