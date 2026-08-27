@@ -1903,26 +1903,21 @@ function renderSplit() {
 
   const verlopen = isLijstVerlopen();
   const container = document.getElementById("listContainer");
-  const joinBtnHtml = (blokKey, id, tijd) => verlopen ? "" :
-    `<button class="sport-join-btn ${cssBlokKlasse(blokKey)}" id="${id}" onclick="joinSplitFirstFree('${blokKey}')">${t("doeMeeBtn") || "Doe mee"} ${tijd}</button>`;
+  const joinBtnHtml = (blokKey, id, tijd) => verlopen
+    ? `<span class="sport-header-name" style="flex:1;text-align:center;">${tijd}</span>`
+    : `<button class="sport-join-btn ${cssBlokKlasse(blokKey)}" id="${id}" style="flex:1;" onclick="joinSplitFirstFree('${blokKey}')">${t("doeMeeBtn") || "Doe mee"} ${tijd}</button>`;
   const labelA = blokA.label[lang] || blokA.label.nl, labelB = blokB.label[lang] || blokB.label.nl;
 
   container.innerHTML = `
     <div class="beide-kolommen" id="splitGrid">
       <div class="sport-header padel-header">
         <div class="sport-header-top">
-          <div class="sport-header-label">
-            <span class="sport-header-name">${labelA}</span>
-          </div>
           ${joinBtnHtml("a","joinBlokABtn", labelA)}
         </div>
         <div class="sport-stripe padel"></div>
       </div>
       <div class="sport-header tennis-header">
         <div class="sport-header-top">
-          <div class="sport-header-label">
-            <span class="sport-header-name">${labelB}</span>
-          </div>
           ${joinBtnHtml("b","joinBlokBBtn", labelB)}
         </div>
         <div class="sport-stripe tennis"></div>
