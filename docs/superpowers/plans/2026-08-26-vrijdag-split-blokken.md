@@ -1397,7 +1397,65 @@ git commit -m "Werk WhatsApp-tekst bij voor 2 tijdblokken op vrijdag"
 
 ---
 
-### Task 9: Cutover — apply the real vrijdagochtend config in production Firebase
+### Task 9: Make the participant help text capacity-agnostic
+
+**Files:**
+- Modify: `inschrijflijst.html:799` (static fallback HTML inside `#deelnemerHelpContent`, shown briefly before JS applies the i18n text)
+- Modify: `inschrijflijst.html:1182` (`TRANSLATIONS.nl.deelnemerHelpContent`)
+- Modify: `inschrijflijst.html:1359` (`TRANSLATIONS.en.deelnemerHelpContent`)
+
+**Interfaces:** none — this is copy-only, no function signatures change.
+
+The participant help modal (opened via the "?" button next to "Jij bent:") hardcodes "20 plekken"/"max 4 plekken" in its "✅ Inschrijven"/"✅ Signing up" paragraph. This text is shown identically regardless of which event type is being viewed, so it's already a simplification today — but once vrijdag becomes a split session (two different-sized blocks, unlimited reserve), it will be flatly wrong for that list specifically. Fix: remove the specific numbers so the sentence stays accurate for every event type (single-sport, beide, and split alike).
+
+- [ ] **Step 1: Update the static fallback HTML**
+
+In `inschrijflijst.html`, find (`inschrijflijst.html:799`, inside the static `#deelnemerHelpContent` div — the exact sentence also appears twice more in Steps 2-3, all three must change together):
+
+```html
+<div><strong>✅ Inschrijven</strong><br>Tik op <span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;">Doe mee</span> om jezelf in te schrijven. Je krijgt een bevestiging met de datum. Is de hoofdlijst vol (20 plekken)? Dan kom je automatisch op de reservelijst (max 4 plekken). Is ook die vol, dan krijg je een melding dat er geen plek meer is.</div>
+```
+
+Replace `Is de hoofdlijst vol (20 plekken)? Dan kom je automatisch op de reservelijst (max 4 plekken). Is ook die vol, dan krijg je een melding dat er geen plek meer is.` with:
+
+```
+Is de hoofdlijst vol? Dan kom je automatisch op de reservelijst. Is die ook vol, dan krijg je een melding dat er geen plek meer is.
+```
+
+(Keep everything else in that `<div>` — the "👤 Jouw naam"/"✅ Inschrijven" heading, the "Doe mee" span, the surrounding markup — exactly as-is; only the sentence about capacity changes.)
+
+- [ ] **Step 2: Update `TRANSLATIONS.nl.deelnemerHelpContent`**
+
+At `inschrijflijst.html:1182`, inside the `TRANSLATIONS.nl.deelnemerHelpContent` template literal, make the identical replacement as Step 1 (same Dutch sentence, same replacement text).
+
+- [ ] **Step 3: Update `TRANSLATIONS.en.deelnemerHelpContent`**
+
+At `inschrijflijst.html:1359`, inside the `TRANSLATIONS.en.deelnemerHelpContent` template literal, find:
+
+```
+Is the main list full (20 spots)? Then you are automatically placed on the reserve list (max 4 spots). If that is also full, you will receive a notification that there are no spots left.
+```
+
+Replace with:
+
+```
+Is the main list full? Then you are automatically placed on the reserve list. If that is also full, you will receive a notification that there are no spots left.
+```
+
+- [ ] **Step 4: Manual verification**
+
+Open the local file in the Browser tool, click the "?" button next to "Jij bent:" to open the participant help modal, confirm the "✅ Inschrijven" paragraph no longer mentions "20 plekken"/"max 4 plekken" and reads naturally in Dutch. Switch language to EN (via the language dropdown), reopen the help modal, confirm the English text is also updated and reads naturally. Confirm no other part of either help modal changed (the other paragraphs — "👤 Jouw naam", "👥 Iemand anders inschrijven", "❌ Uitschrijven" — must be untouched).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add inschrijflijst.html
+git commit -m "Maak deelnemershulp capaciteit-onafhankelijk (geen vaste aantallen meer)"
+```
+
+---
+
+### Task 10: Cutover — apply the real vrijdagochtend config in production Firebase
 
 **⚠️ Checkpoint — do not run this task's Firebase writes without the user explicitly confirming timing.** This changes the live `vrijdagochtend` event type that real participants see. It should happen right before creating the next week's list (not mid-week while a session is active in the old shape), and must be followed immediately by creating + activating a fresh split-shaped session for the upcoming Friday — an already-active old-shaped session (`main`/`reserve` keys) will not render correctly once the event type's `sport` flips to `"split"`.
 
@@ -1425,7 +1483,7 @@ Use "📅 Nieuwe lijst aanmaken" for vrijdagochtend, pick the upcoming Friday da
 
 ---
 
-### Task 10: Deploy
+### Task 11: Deploy
 
 **⚠️ Checkpoint — confirm with the user before pushing.** This publishes the code change to the live GitHub Pages site (origin/main), visible to everyone using the app.
 
@@ -1444,7 +1502,7 @@ git push origin main
 
 ---
 
-### Task 11: Clean up test artifacts
+### Task 12: Clean up test artifacts
 
 **Files:** none (Firebase data only)
 
@@ -1456,8 +1514,13 @@ In the browser console, against the live app:
 db.ref('instellingen/eventTypes/test_split').remove();
 db.ref('instellingen/vasteDeelnemersPerType/test_split_a').remove();
 db.ref('instellingen/vasteDeelnemersPerType/test_split_b').remove();
-db.ref('sessies/2099-01-02').remove();
+db.ref('instellingen/actiefPerType/test_split').remove();
+for (const d of ['2099-01-02','2099-01-03','2099-01-04','2099-01-05','2099-01-06','2099-01-07']) {
+  db.ref('sessies/' + d).remove();
+}
 ```
+
+(The date list covers every fake test date used across Tasks 1-8's manual verification — check `sessies` in the console first if unsure which dates actually got written, and remove whichever exist.)
 
 - [ ] **Step 2: Confirm cleanup**
 
