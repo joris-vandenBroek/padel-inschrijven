@@ -1160,8 +1160,8 @@ const TRANSLATIONS = {
     lijstBestaatAlMsg: "{title} heeft al {n} deelnemer{s}{reserve}. Wil je de bestaande lijst overschrijven met een lege lijst?",
     datumInGebruikAnderType: "⚠️ Datum in gebruik door ander event type",
     datumInGebruikAnderTypeMsg: "{title} heeft al een actieve lijst voor \"{anderType}\" met {n} deelnemer(s). Kies een andere datum — lijsten van verschillende event types kunnen niet dezelfde datum delen zonder elkaar te overschrijven.",
-    kolomUitlegSplit: " Bij deze lijst kies je het gewenste tijdsblok via de bijbehorende <span style=\"display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;\">Doe mee</span>-knop.",
-    kolomUitlegBeide: " Bij deze lijst kies je tussen tennis of padel via de bijbehorende <span style=\"display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;\">Doe mee</span>-knop.",
+    inschrijvenTekstSplit: "Kies eerst het tijdsblok waarin je wilt spelen en tik daar op <span style=\"display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;\">Doe mee</span> om jezelf in te schrijven. Je krijgt een bevestiging met de datum. Is dat blok vol? Dan kom je automatisch op de reservelijst van dat blok. Is die ook vol, dan krijg je een melding dat er geen plek meer is.",
+    inschrijvenTekstBeide: "Kies eerst tennis of padel en tik daar op <span style=\"display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;\">Doe mee</span> om jezelf in te schrijven. Je krijgt een bevestiging met de datum. Is die lijst vol? Dan kom je automatisch op de reservelijst. Is die ook vol, dan krijg je een melding dat er geen plek meer is.",
     nieuweLijstVraag: "Nieuwe lijst aanmaken?",
     legalListVoor: "Er wordt een lege lijst aangemaakt voor {title}.",
     aanmakenKnop: "Aanmaken ✓",
@@ -1342,8 +1342,8 @@ const TRANSLATIONS = {
     lijstBestaatAlMsg: "{title} already has {n} participant{s}{reserve}. Do you want to overwrite the existing list?",
     datumInGebruikAnderType: "⚠️ Date already used by another event type",
     datumInGebruikAnderTypeMsg: "{title} already has an active list for \"{anderType}\" with {n} participant(s). Choose a different date — lists for different event types cannot share the same date without overwriting each other.",
-    kolomUitlegSplit: " For this list, choose your preferred time block using the matching <span style=\"display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;\">Join</span> button.",
-    kolomUitlegBeide: " For this list, choose between tennis or padel using the matching <span style=\"display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;\">Join</span> button.",
+    inschrijvenTekstSplit: "First choose the time block you want to play in, then tap <span style=\"display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;\">Join</span> there to sign yourself up. You will receive a confirmation with the date. Is that block full? Then you are automatically placed on that block's reserve list. If that is also full, you will receive a notification that there are no spots left.",
+    inschrijvenTekstBeide: "First choose tennis or padel, then tap <span style=\"display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;background:var(--accent);color:white;border-radius:6px;\">Join</span> there to sign yourself up. You will receive a confirmation with the date. Is that list full? Then you are automatically placed on the reserve list. If that is also full, you will receive a notification that there are no spots left.",
     nieuweLijstVraag: "Create new list?",
     legalListVoor: "An empty list will be created for {title}.",
     aanmakenKnop: "Create ✓",
@@ -3096,9 +3096,12 @@ function renderDeelnemerHelpContent() {
   const helpEl = document.getElementById("deelnemerHelpContent");
   if (!helpEl) return;
   helpEl.innerHTML = t("deelnemerHelpContent");
-  const kolomUitleg = isSplitSport() ? t("kolomUitlegSplit") : isBeideSport() ? t("kolomUitlegBeide") : "";
   const inschrijvenPar = helpEl.children[1];
-  if (kolomUitleg && inschrijvenPar) inschrijvenPar.insertAdjacentHTML("beforeend", kolomUitleg);
+  const tekst = isSplitSport() ? t("inschrijvenTekstSplit") : isBeideSport() ? t("inschrijvenTekstBeide") : null;
+  if (tekst && inschrijvenPar) {
+    const label = lang === "en" ? "Signing up" : "Inschrijven";
+    inschrijvenPar.innerHTML = `<strong>✅ ${label}</strong><br>${tekst}`;
+  }
 }
 
 function openDeelnemerHelp() {
