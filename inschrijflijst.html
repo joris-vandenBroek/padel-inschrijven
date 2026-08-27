@@ -2349,6 +2349,85 @@ function shiftUp(obj, fromIdx, size) {
   return result;
 }
 
+function shiftUpDynamic(obj, fromIdx) {
+  const keys = Object.keys(obj || {}).sort((a, b) => +a - +b);
+  const len = keys.length;
+  const result = {};
+  for (let i = 0; i < fromIdx; i++) result[i] = obj[i];
+  for (let i = fromIdx; i < len - 1; i++) result[i] = obj[i + 1];
+  return result;
+}
+
+function confirmSplitRemove(naam, listType, idx, blokKey) {
+  const reserveKey = `reserve_${blokKey}`;
+  const eersteRKey = Object.keys(currentSession[reserveKey] || {})
+    .sort((a, b) => +a - +b)
+    .find(k => currentSession[reserveKey][k] && currentSession[reserveKey][k].trim());
+  const promotee = (listType === "main" && eersteRKey !== undefined)
+    ? currentSession[reserveKey][eersteRKey] : null;
+
+  document.getElementById("confirmTitle").textContent = t("uitschrijvenVraag", { naam });
+  document.getElementById("confirmMsg").textContent = promotee
+    ? t("doorschuiven", { promotee }) : t("weetJeHetZeker");
+  openModal("confirmModal");
+  document.getElementById("confirmOkBtn").textContent = t("uitschrijvenKnop");
+  document.getElementById("confirmOkBtn").onclick = () => {
+    closeModal("confirmModal");
+    doRemoveSplitTransaction(naam, listType, idx, blokKey);
+  };
+}
+
+function adminSplitRemove(listType, idx, naam, blokKey) {
+  document.getElementById("confirmTitle").textContent = t("uitschrijvenVraag", { naam });
+  document.getElementById("confirmMsg").textContent = t("uitschrijvenAlsBeheerder");
+  openModal("confirmModal");
+  document.getElementById("confirmOkBtn").textContent = t("uitschrijvenKnop");
+  document.getElementById("confirmOkBtn").onclick = () => {
+    closeModal("confirmModal");
+    doRemoveSplitTransaction(naam, listType, idx, blokKey);
+  };
+}
+
+function doRemoveSplitTransaction(naam, listType, fromIdx, blokKey) {
+  const mainKey = `main_${blokKey}`, reserveKey = `reserve_${blokKey}`;
+  const mainSize = eventConfig[blokKey === "a" ? "blokA" : "blokB"].mainSize;
+  db.ref(`sessies/${currentDate}`).transaction(session => {
+    if (!session) return;
+    if (listType === "main") {
+      session[mainKey] = shiftUp(session[mainKey], fromIdx, mainSize);
+      const eersteRKey = Object.keys(session[reserveKey] || {})
+        .sort((a, b) => +a - +b)
+        .find(k => session[reserveKey][k] && session[reserveKey][k].trim());
+      if (eersteRKey !== undefined) {
+        const leegMKey = Object.keys(session[mainKey])
+          .sort((a, b) => +a - +b)
+          .find(k => !session[mainKey][k] || !session[mainKey][k].trim());
+        if (leegMKey !== undefined) {
+          session[mainKey][leegMKey] = session[reserveKey][eersteRKey];
+          session[reserveKey] = shiftUpDynamic(session[reserveKey], +eersteRKey);
+        }
+      }
+    } else {
+      session[reserveKey] = shiftUpDynamic(session[reserveKey], fromIdx);
+    }
+    return session;
+  }, (error, committed, snapshot) => {
+    if (committed) {
+      const door = isAdmin ? adminNaam : naam;
+      logEntry("uitgeschreven", naam, door, { lijstType: listType, positie: fromIdx });
+      if (listType === "main" && snapshot) {
+        const data = snapshot.val();
+        const nieuweMain = data?.[mainKey] || {};
+        const origineleMain = Object.values(currentSession?.[mainKey] || {}).filter(n=>n&&n.trim());
+        const nieuweMainArr = Object.values(nieuweMain).filter(n=>n&&n.trim());
+        const gepromoveerd = nieuweMainArr.find(n => !origineleMain.includes(n) && n !== naam);
+        if (gepromoveerd) logEntry("doorgeschoven van reserve naar deelnemers", gepromoveerd, `uitschrijving ${naam}`);
+      }
+      showToast(t("uitgeschreven", { naam }));
+    }
+  });
+}
+
 // ═══ ADMIN ══════════════════════════════════════════════
 function adminRemove(listType, idx, naam, sport) {
   document.getElementById("confirmTitle").textContent = t("uitschrijvenVraag", { naam });
@@ -2448,10 +2527,16 @@ function confirmClearList() {
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
     const leeg = (size) => { const o = {}; for (let i = 0; i < size; i++) o[i] = ""; return o; };
-    const s = eventConfig.mainSize, r = eventConfig.reserveSize;
-    const update = isBeideSport()
-      ? { main_padel: leeg(s), reserve_padel: leeg(r), main_tennis: leeg(s), reserve_tennis: leeg(r) }
-      : { main: leeg(s), reserve: leeg(r) };
+    let update;
+    if (isBeideSport()) {
+      const s = eventConfig.mainSize, r = eventConfig.reserveSize;
+      update = { main_padel: leeg(s), reserve_padel: leeg(r), main_tennis: leeg(s), reserve_tennis: leeg(r) };
+    } else if (isSplitSport()) {
+      update = { main_a: leeg(eventConfig.blokA.mainSize), reserve_a: null, main_b: leeg(eventConfig.blokB.mainSize), reserve_b: null };
+    } else {
+      const s = eventConfig.mainSize, r = eventConfig.reserveSize;
+      update = { main: leeg(s), reserve: leeg(r) };
+    }
     db.ref(`sessies/${currentDate}`).update(update);
     showToast(t("lijstLeeggemaakt"));
   };
