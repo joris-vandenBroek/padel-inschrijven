@@ -1008,6 +1008,8 @@ const TRANSLATIONS = {
     doeMeePadelBtn: "🎾 Padel",
     doeMeeTennisBtn: "🎾 Tennis",
     reserveLabel: "Reserve (max 4)",
+    reserveLabelOnbeperkt: "Reserve",
+    nogGeenReserves: "Nog geen reserves",
     beheerKnop: "⚙️ Beheer",
     aantalDeelnemers: "{filled} / {max} deelnemers",
     // Slots
@@ -1190,6 +1192,8 @@ const TRANSLATIONS = {
     doeMeePadelBtn: "🎾 Padel",
     doeMeeTennisBtn: "🎾 Tennis",
     reserveLabel: "Reserve (max 4)",
+    reserveLabelOnbeperkt: "Reserve",
+    nogGeenReserves: "No reserves yet",
     beheerKnop: "⚙️ Admin",
     aantalDeelnemers: "{filled} / {max} participants",
     vrij: "Free",
@@ -1677,13 +1681,16 @@ function render() {
   updateViewBanner();
 
   const beide = isBeideSport();
-  document.getElementById("doeMeeBtn").style.display       = beide ? "none" : "";
+  const split = isSplitSport();
+  document.getElementById("doeMeeBtn").style.display       = (beide || split) ? "none" : "";
   document.getElementById("doeMeePadelBtn").style.display  = "none";
   document.getElementById("doeMeeTennisBtn").style.display = "none";
-  document.getElementById("iemandAndersBtn").style.display = beide ? "none" : "";
+  document.getElementById("iemandAndersBtn").style.display = (beide || split) ? "none" : "";
 
   if (beide) {
     renderBeide();
+  } else if (split) {
+    renderSplit();
   } else {
     document.getElementById("listContainer").innerHTML = `
       <div class="list" id="mainList"></div>
@@ -1821,6 +1828,146 @@ function createBeideSlot(name, i, listType, sport, verlopen) {
       btn.style.cssText = "padding:4px 8px;font-size:11px;";
       btn.textContent = "✕";
       btn.onclick = () => confirmRemove(name, listType, i, sport);
+      action.appendChild(btn);
+    }
+  }
+
+  div.appendChild(num); div.appendChild(av); div.appendChild(nm); div.appendChild(action);
+  return div;
+}
+
+function isSplitSport() { return eventConfig.sport === "split"; }
+
+function reserveArray(obj) {
+  return Object.keys(obj || {}).sort((a, b) => +a - +b).map(k => obj[k]);
+}
+
+function renderSplit() {
+  const blokA = eventConfig.blokA, blokB = eventConfig.blokB;
+  const mainA = slotArray(currentSession.main_a, blokA.mainSize);
+  const mainB = slotArray(currentSession.main_b, blokB.mainSize);
+  const resA  = reserveArray(currentSession.reserve_a);
+  const resB  = reserveArray(currentSession.reserve_b);
+
+  const verlopen = isLijstVerlopen();
+  const container = document.getElementById("listContainer");
+  const joinBtnHtml = (blokKey, id) => verlopen ? "" :
+    `<button class="sport-join-btn padel" id="${id}" onclick="joinSplitFirstFree('${blokKey}')">${t("doeMeeBtn") || "Doe mee"}</button>`;
+
+  container.innerHTML = `
+    <div class="beide-kolommen" id="splitGrid">
+      <div class="sport-header padel-header">
+        <div class="sport-header-top">
+          <div class="sport-header-label">
+            <span class="sport-header-name">${blokA.label[lang] || blokA.label.nl}</span>
+            <span class="sport-header-count" id="countBlokA">— / ${blokA.mainSize}</span>
+          </div>
+          ${joinBtnHtml("a","joinBlokABtn")}
+        </div>
+        <div class="sport-stripe padel"></div>
+      </div>
+      <div class="sport-header tennis-header">
+        <div class="sport-header-top">
+          <div class="sport-header-label">
+            <span class="sport-header-name">${blokB.label[lang] || blokB.label.nl}</span>
+            <span class="sport-header-count" id="countBlokB">— / ${blokB.mainSize}</span>
+          </div>
+          ${joinBtnHtml("b","joinBlokBBtn")}
+        </div>
+        <div class="sport-stripe padel"></div>
+      </div>
+    </div>`;
+
+  const grid = document.getElementById("splitGrid");
+  const leegVulling = () => { const d = document.createElement("div"); d.className = "beide-slot-padel"; return d; };
+  const maxMain = Math.max(blokA.mainSize, blokB.mainSize);
+  for (let i = 0; i < maxMain; i++) {
+    if (i < blokA.mainSize) grid.appendChild(createSplitSlot(mainA[i], i, "main", "a", verlopen));
+    else grid.appendChild(leegVulling());
+    if (i < blokB.mainSize) grid.appendChild(createSplitSlot(mainB[i], i, "main", "b", verlopen));
+    else grid.appendChild(document.createElement("div"));
+  }
+
+  const dA = document.createElement("div");
+  dA.className = "divider-reserve beide-divider-padel";
+  dA.innerHTML = `<span>${t("reserveLabelOnbeperkt")}</span>`;
+  grid.appendChild(dA);
+  const dB = document.createElement("div");
+  dB.className = "divider-reserve beide-divider-tennis";
+  dB.innerHTML = `<span>${t("reserveLabelOnbeperkt")}</span>`;
+  grid.appendChild(dB);
+
+  const maxRes = Math.max(resA.length, resB.length, 1);
+  for (let i = 0; i < maxRes; i++) {
+    if (i < resA.length) grid.appendChild(createSplitSlot(resA[i], i, "reserve", "a", verlopen));
+    else if (i === 0) grid.appendChild(createSplitLegePlaceholder("a"));
+    else grid.appendChild(leegVulling());
+    if (i < resB.length) grid.appendChild(createSplitSlot(resB[i], i, "reserve", "b", verlopen));
+    else if (i === 0) grid.appendChild(createSplitLegePlaceholder("b"));
+    else grid.appendChild(document.createElement("div"));
+  }
+
+  const filledA = mainA.filter(n => n && n.trim()).length;
+  const filledB = mainB.filter(n => n && n.trim()).length;
+  document.getElementById("countBadge").textContent = `${filledA + filledB} / ${blokA.mainSize + blokB.mainSize}`;
+  document.getElementById("countBlokA").textContent = `${filledA} / ${blokA.mainSize}`;
+  document.getElementById("countBlokB").textContent = `${filledB} / ${blokB.mainSize}`;
+}
+
+// Hergebruikt de bestaande .beide-slot-padel/.beide-divider-padel CSS-klassen (rechter rand)
+// puur voor de styling — heeft verder niets met de sport padel te maken.
+function cssBlokKlasse(blokKey) { return blokKey === "a" ? "padel" : "tennis"; }
+
+function createSplitLegePlaceholder(blokKey) {
+  const div = document.createElement("div");
+  div.className = "slot beide-slot-" + cssBlokKlasse(blokKey) + " empty";
+  div.innerHTML = `<span class="slot-num"></span><div class="avatar empty">?</div><span class="slot-name">${t("nogGeenReserves")}</span><div class="slot-action"></div>`;
+  return div;
+}
+
+function createSplitSlot(name, i, listType, blokKey, verlopen) {
+  const filled = name && name.trim();
+  const mine   = isMine(name);
+
+  const div = document.createElement("div");
+  div.className = ["slot", "beide-slot-" + cssBlokKlasse(blokKey),
+    filled ? (mine ? "is-mine" : listType === "reserve" ? "reserve" : "filled") : "empty"
+  ].join(" ");
+
+  const num = document.createElement("span");
+  num.className = "slot-num";
+  num.textContent = i + 1;
+
+  const av = document.createElement("div");
+  av.className = `avatar ${mine ? "is-mine" : filled ? (listType === "reserve" ? "reserve" : "filled") : "empty"}`;
+  av.textContent = filled ? initials(name) : "?";
+
+  const nm = document.createElement("span");
+  nm.className = "slot-name";
+  nm.textContent = filled ? name : t("vrij");
+
+  const action = document.createElement("div");
+  action.className = "slot-action";
+  action.style.cssText = "display:flex;align-items:center;gap:6px;flex-shrink:0;";
+
+  if (isAdmin && filled) {
+    if (mine) {
+      const tag = document.createElement("span"); tag.className = "mine-tag"; tag.textContent = t("jijTag"); action.appendChild(tag);
+    }
+    const btn = document.createElement("button");
+    btn.className = "btn-leave";
+    btn.style.cssText = "border-color:var(--gold);color:var(--gold);padding:4px 8px;font-size:11px;";
+    btn.textContent = "✕"; btn.title = name;
+    btn.onclick = () => adminSplitRemove(listType, i, name, blokKey);
+    action.appendChild(btn);
+  } else if (mine) {
+    const tag = document.createElement("span"); tag.className = "mine-tag"; tag.textContent = t("jijTag"); action.appendChild(tag);
+    if (!verlopen) {
+      const btn = document.createElement("button");
+      btn.className = "btn-leave";
+      btn.style.cssText = "padding:4px 8px;font-size:11px;";
+      btn.textContent = "✕";
+      btn.onclick = () => confirmSplitRemove(name, listType, i, blokKey);
       action.appendChild(btn);
     }
   }
