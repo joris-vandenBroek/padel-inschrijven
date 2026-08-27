@@ -1457,7 +1457,9 @@ git commit -m "Maak deelnemershulp capaciteit-onafhankelijk (geen vaste aantalle
 
 ### Task 10: Cutover — apply the real vrijdagochtend config in production Firebase
 
-**⚠️ Checkpoint — do not run this task's Firebase writes without the user explicitly confirming timing.** This changes the live `vrijdagochtend` event type that real participants see. It should happen right before creating the next week's list (not mid-week while a session is active in the old shape), and must be followed immediately by creating + activating a fresh split-shaped session for the upcoming Friday — an already-active old-shaped session (`main`/`reserve` keys) will not render correctly once the event type's `sport` flips to `"split"`.
+**⚠️ Execution order: Task 11 (Deploy) MUST run before this task, not after.** As numbered, this task appears before Task 11 — that ordering is wrong and must not be followed literally. If the production event type is flipped to `sport: "split"` while the live GitHub Pages site is still serving the pre-branch code (which has no `renderSplit()`/`isSplitSport()` and doesn't understand the `"split"` sport value), every real visitor hits a broken/blank Friday list until the deploy catches up. Do Task 11 first, confirm the deployed site loads correctly, then do this task.
+
+**⚠️ Checkpoint — do not run this task's Firebase writes without the user explicitly confirming timing.** This changes the live `vrijdagochtend` event type that real participants see. It should happen right before creating the next week's list (not mid-week while a session is active in the old shape), and must be followed immediately by creating + activating a fresh split-shaped session for the upcoming Friday — an already-active old-shaped session (`main`/`reserve` keys) will not render correctly once the event type's `sport` flips to `"split"` (Task 9's fix wave added a visible warning banner for this case, but the goal is still to avoid hitting it in practice).
 
 **Files:** none (Firebase data only, via the app's own admin UI)
 
@@ -1484,6 +1486,8 @@ Use "📅 Nieuwe lijst aanmaken" for vrijdagochtend, pick the upcoming Friday da
 ---
 
 ### Task 11: Deploy
+
+**⚠️ Run this BEFORE Task 10**, despite the numbering (see the note at the top of Task 10) — deploying the code first, then flipping production data, avoids a window where the live site can't render the event type it's being pointed at.
 
 **⚠️ Checkpoint — confirm with the user before pushing.** This publishes the code change to the live GitHub Pages site (origin/main), visible to everyone using the app.
 
