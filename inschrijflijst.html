@@ -39,8 +39,14 @@
     color: var(--ink);
     min-height: 100vh;
     padding: 0 0 80px;
-    max-width: 480px;
     margin: 0 auto;
+  }
+
+  /* Leesbare breedte alleen op tablet/desktop — telefoons (ook met een
+     grotere CSS-viewport door schermzoom-instellingen) gebruiken altijd
+     de volle breedte. */
+  @media (min-width: 768px) {
+    body { max-width: 480px; }
   }
 
   header {
