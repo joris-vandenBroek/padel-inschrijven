@@ -3526,6 +3526,14 @@ async function maakScreenshot() {
     divider.textContent = tekst;
     listEl.appendChild(divider);
   };
+  const appendGeenReserves = () => {
+    const row = document.createElement("div");
+    row.style.cssText = `display:flex;align-items:center;padding:10px 16px;gap:12px;border-bottom:1px solid #ddd8cc;`;
+    row.innerHTML = `
+      <span style="font-size:13px;color:#6b6555;width:20px;text-align:right;"></span>
+      <span style="font-size:14px;font-weight:300;color:#ddd8cc;font-style:italic;">${t("nogGeenReserves")}</span>`;
+    listEl.appendChild(row);
+  };
 
   if (isSplitSport()) {
     const blokA = eventConfig.blokA, blokB = eventConfig.blokB;
@@ -3533,13 +3541,13 @@ async function maakScreenshot() {
     slotArray(currentSession.main_a, blokA.mainSize).forEach((n, i) => appendRow(i, n, "#1a1810"));
     appendDivider("Reserve");
     const resA = reserveArray(currentSession.reserve_a);
-    if (!resA.length) appendRow(0, "", "#6b6555");
+    if (!resA.length) appendGeenReserves();
     else resA.forEach((n, i) => appendRow(i, n, "#6b6555"));
     appendDivider(blokB.label[lang] || blokB.label.nl);
     slotArray(currentSession.main_b, blokB.mainSize).forEach((n, i) => appendRow(i, n, "#1a1810"));
     appendDivider("Reserve");
     const resB = reserveArray(currentSession.reserve_b);
-    if (!resB.length) appendRow(0, "", "#6b6555");
+    if (!resB.length) appendGeenReserves();
     else resB.forEach((n, i) => appendRow(i, n, "#6b6555"));
   } else {
     const main    = slotArray(currentSession.main,    eventConfig.mainSize);
@@ -3581,10 +3589,11 @@ async function maakScreenshot() {
 function downloadCsv() {
   if (!currentSession) return;
   const sep = ";"; // puntkomma voor Nederlandse Excel
-  let rows = [["Nr", "Naam", "Blok", "Lijst"]];
+  let rows;
   if (isSplitSport()) {
     const blokA = eventConfig.blokA, blokB = eventConfig.blokB;
     const labelA = blokA.label[lang] || blokA.label.nl, labelB = blokB.label[lang] || blokB.label.nl;
+    rows = [["Nr", "Naam", "Blok", "Lijst"]];
     slotArray(currentSession.main_a, blokA.mainSize).filter(n => n && n.trim())
       .forEach((n, i) => rows.push([i + 1, n, labelA, lang === "en" ? "Main" : "Hoofdlijst"]));
     reserveArray(currentSession.reserve_a).filter(n => n && n.trim())
@@ -3596,8 +3605,9 @@ function downloadCsv() {
   } else {
     const main    = slotArray(currentSession.main,    eventConfig.mainSize).filter(n => n && n.trim());
     const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize).filter(n => n && n.trim());
-    main.forEach((n, i)    => rows.push([i + 1, n, "", lang === "en" ? "Main" : "Hoofdlijst"]));
-    reserve.forEach((n, i) => rows.push([i + 1, n, "", "Reserve"]));
+    rows = [["Nr", "Naam", "Lijst"]];
+    main.forEach((n, i)    => rows.push([i + 1, n, lang === "en" ? "Main" : "Hoofdlijst"]));
+    reserve.forEach((n, i) => rows.push([i + 1, n, "Reserve"]));
   }
   const csv = "﻿" + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(sep)).join("\r\n");
   const a = document.createElement("a");
