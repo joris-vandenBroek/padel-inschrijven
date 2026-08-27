@@ -7,7 +7,7 @@
 
 <!-- WhatsApp / Social preview -->
 <meta property="og:title"       content="🎾 Vrijdagochtend padel – Schrijf je in!" />
-<meta property="og:description" content="De inschrijving is geopend! Tik op de link, kies je naam en doe mee. Vol = vol!" />
+<meta property="og:description" content="De inschrijving is geopend! Kies 9:00-11:30 of 11:30-12:00 en doe mee. Vol = vol!" />
 <meta property="og:type"        content="website" />
 <meta property="og:url"         content="https://tinyurl.com/padel-inschrijven" />
 <meta name="theme-color"        content="#c8410a" />
@@ -3476,7 +3476,13 @@ function copyWhatsApp() {
 function shareLink() {
   const titel  = currentSession?.title || "Padel";
   const tijd   = currentSession?.time  || "";
-  const tekst  = `🎾 ${titel} · ${tijd}\nDe inschrijving is geopend – schrijf je snel in, vol = vol!\nSign-up is open – register quickly, spots fill up fast!`;
+  let tekst;
+  if (isSplitSport()) {
+    const blokA = eventConfig.blokA, blokB = eventConfig.blokB;
+    tekst = `🎾 ${titel}\n${blokA.label.nl}\n${blokB.label.nl}\nDe inschrijving is geopend – schrijf je snel in, vol = vol!\nSign-up is open – register quickly, spots fill up fast!`;
+  } else {
+    tekst = `🎾 ${titel} · ${tijd}\nDe inschrijving is geopend – schrijf je snel in, vol = vol!\nSign-up is open – register quickly, spots fill up fast!`;
+  }
   const baseUrl = location.origin + location.pathname;
   const url = eventConfig.shareUrl
     || (urlEventType === DEFAULT_EVENT_TYPE ? baseUrl : `${baseUrl}?event=${urlEventType}`);
