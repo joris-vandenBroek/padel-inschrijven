@@ -28,6 +28,7 @@
     --border: #ddd8cc;
     --gold: #b8963a;
     --kolomlijn: #8a8371;
+    --vrij-tekst: #8f8875;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,6 +39,8 @@
     color: var(--ink);
     min-height: 100vh;
     padding: 0 0 80px;
+    max-width: 480px;
+    margin: 0 auto;
   }
 
   header {
@@ -138,7 +141,7 @@
   .slot-name { flex: 1; font-size: 15px; font-weight: 500; }
   .slot.filled .slot-name { color: var(--ink); }
   .slot.is-mine .slot-name { color: var(--mine); font-weight: 600; }
-  .slot.empty .slot-name { color: var(--border); font-style: italic; font-weight: 300; }
+  .slot.empty .slot-name { color: var(--vrij-tekst); font-style: italic; font-weight: 300; }
   .slot.reserve .slot-name { color: var(--ink-light); }
 
   .mine-tag {
@@ -916,18 +919,18 @@
       <div id="etSplitVelden" style="display:none;flex-direction:column;gap:10px;margin-top:12px;">
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--ink-light);margin-bottom:6px;">Blok A</div>
-          <input id="etBlokANaamNl" type="text" maxlength="60" autocomplete="off" placeholder="Label NL, bv. 9:00 - 11:30 (20 plekken)"
+          <input id="etBlokANaamNl" type="text" maxlength="60" autocomplete="off" placeholder="Label NL, bv. 9:00 - 11:30"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
-          <input id="etBlokANaamEn" type="text" maxlength="60" autocomplete="off" placeholder="Label EN, e.g. 9:00 - 11:30 (20 spots)"
+          <input id="etBlokANaamEn" type="text" maxlength="60" autocomplete="off" placeholder="Label EN, e.g. 9:00 - 11:30"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
           <input id="etBlokAMainSize" type="number" min="1" max="100" step="1" placeholder="Max plekken blok A"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--ink-light);margin-bottom:6px;">Blok B</div>
-          <input id="etBlokBNaamNl" type="text" maxlength="60" autocomplete="off" placeholder="Label NL, bv. 11:30 - 12:00 (12 plekken)"
+          <input id="etBlokBNaamNl" type="text" maxlength="60" autocomplete="off" placeholder="Label NL, bv. 11:30 - 12:00"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
-          <input id="etBlokBNaamEn" type="text" maxlength="60" autocomplete="off" placeholder="Label EN, e.g. 11:30 - 12:00 (12 spots)"
+          <input id="etBlokBNaamEn" type="text" maxlength="60" autocomplete="off" placeholder="Label EN, e.g. 11:30 - 12:00"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;margin-bottom:6px;" />
           <input id="etBlokBMainSize" type="number" min="1" max="100" step="1" placeholder="Max plekken blok B"
             style="width:100%;box-sizing:border-box;padding:10px 14px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);color:var(--ink);outline:none;" />
@@ -1900,30 +1903,29 @@ function renderSplit() {
 
   const verlopen = isLijstVerlopen();
   const container = document.getElementById("listContainer");
-  const joinBtnHtml = (blokKey, id) => verlopen ? "" :
-    `<button class="sport-join-btn padel" id="${id}" onclick="joinSplitFirstFree('${blokKey}')">${t("doeMeeBtn") || "Doe mee"}</button>`;
+  const joinBtnHtml = (blokKey, id, tijd) => verlopen ? "" :
+    `<button class="sport-join-btn ${cssBlokKlasse(blokKey)}" id="${id}" onclick="joinSplitFirstFree('${blokKey}')">${t("doeMeeBtn") || "Doe mee"} ${tijd}</button>`;
+  const labelA = blokA.label[lang] || blokA.label.nl, labelB = blokB.label[lang] || blokB.label.nl;
 
   container.innerHTML = `
     <div class="beide-kolommen" id="splitGrid">
       <div class="sport-header padel-header">
         <div class="sport-header-top">
           <div class="sport-header-label">
-            <span class="sport-header-name">${blokA.label[lang] || blokA.label.nl}</span>
-            <span class="sport-header-count" id="countBlokA">— / ${blokA.mainSize}</span>
+            <span class="sport-header-name">${labelA}</span>
           </div>
-          ${joinBtnHtml("a","joinBlokABtn")}
+          ${joinBtnHtml("a","joinBlokABtn", labelA)}
         </div>
         <div class="sport-stripe padel"></div>
       </div>
       <div class="sport-header tennis-header">
         <div class="sport-header-top">
           <div class="sport-header-label">
-            <span class="sport-header-name">${blokB.label[lang] || blokB.label.nl}</span>
-            <span class="sport-header-count" id="countBlokB">— / ${blokB.mainSize}</span>
+            <span class="sport-header-name">${labelB}</span>
           </div>
-          ${joinBtnHtml("b","joinBlokBBtn")}
+          ${joinBtnHtml("b","joinBlokBBtn", labelB)}
         </div>
-        <div class="sport-stripe padel"></div>
+        <div class="sport-stripe tennis"></div>
       </div>
     </div>`;
 
@@ -1959,8 +1961,6 @@ function renderSplit() {
   const filledA = mainA.filter(n => n && n.trim()).length;
   const filledB = mainB.filter(n => n && n.trim()).length;
   document.getElementById("countBadge").textContent = `${filledA + filledB} / ${blokA.mainSize + blokB.mainSize}`;
-  document.getElementById("countBlokA").textContent = `${filledA} / ${blokA.mainSize}`;
-  document.getElementById("countBlokB").textContent = `${filledB} / ${blokB.mainSize}`;
 }
 
 // Hergebruikt de bestaande .beide-slot-padel/.beide-divider-padel CSS-klassen (rechter rand)
