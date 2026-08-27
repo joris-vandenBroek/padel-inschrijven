@@ -3423,7 +3423,6 @@ function updateViewBanner() {
 function nieuweLijstAanmaken() {
   const datum = document.getElementById("adminFriday").value;
   const typeId = document.getElementById("adminEventType").value;
-  eventConfig = EVENT_TYPES[typeId] || EVENT_TYPES[DEFAULT_EVENT_TYPE];
   const title = datumNaarTitel(datum);
 
   closeModal("adminPanel");
@@ -3454,6 +3453,7 @@ function nieuweLijstAanmaken() {
     document.getElementById("confirmOkBtn").textContent = t("aanmakenKnop");
     document.getElementById("confirmOkBtn").onclick = () => {
       closeModal("confirmModal");
+      eventConfig = EVENT_TYPES[typeId] || EVENT_TYPES[DEFAULT_EVENT_TYPE];
       const _isSplit = eventConfig.sport === "split";
       const _tStart = (_isSplit && eventConfig.blokA?.startTijd) ? eventConfig.blokA.startTijd : eventConfig.startTijd;
       const _tEind  = (_isSplit && eventConfig.blokB?.eindTijd)  ? eventConfig.blokB.eindTijd  : eventConfig.eindTijd;
