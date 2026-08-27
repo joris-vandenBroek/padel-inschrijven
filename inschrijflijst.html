@@ -1039,6 +1039,7 @@ const TRANSLATIONS = {
     reserveLabel: "Reserve (max 4)",
     reserveLabelOnbeperkt: "Reserve",
     oudFormaatWaarschuwing: "Deze lijst heeft nog het oude formaat — maak een nieuwe lijst aan voor dit event type.",
+    datumConflictWaarschuwing: "Deze datum is al in gebruik door \"{anderType}\" — er kan geen lijst voor dit event type getoond worden. Neem contact op met een beheerder.",
     nogGeenReserves: "Nog geen reserves",
     beheerKnop: "⚙️ Beheer",
     aantalDeelnemers: "{filled} / {max} deelnemers",
@@ -1228,6 +1229,7 @@ const TRANSLATIONS = {
     reserveLabel: "Reserve (max 4)",
     reserveLabelOnbeperkt: "Reserve",
     oudFormaatWaarschuwing: "This list still has the old format — create a new list for this event type.",
+    datumConflictWaarschuwing: "This date is already in use by \"{anderType}\" — no list can be shown for this event type. Please contact an admin.",
     nogGeenReserves: "No reserves yet",
     beheerKnop: "⚙️ Admin",
     aantalDeelnemers: "{filled} / {max} participants",
@@ -1552,12 +1554,17 @@ db.ref(`instellingen/actiefPerType/${urlEventType}`).on("value", snap => {
   activeDatum = datum;
   // Niet overschrijven als beheerder bewust een andere lijst bekijkt
   if (!isAdmin || currentDate === null || currentDate === activeDatum) {
-    if (datum !== currentDate) switchToDatum(datum);
+    if (datum !== currentDate) switchToDatum(datum, urlEventType);
   }
   updateViewBanner();
 });
 
-function switchToDatum(datum) {
+// expectedEventType: alleen meegeven wanneer deze datum automatisch gekozen is
+// voor een specifiek event type (actieve lijst / terug naar actief) — dan wordt
+// gecontroleerd dat de gevonden sessie ook echt van dat type is, anders zou een
+// datumbotsing met een ander event type stilzwijgend de verkeerde lijst tonen.
+// Bewust browsen naar een andere lijst (andereLijstOpenen) geeft dit niet mee.
+function switchToDatum(datum, expectedEventType) {
   if (sessieListenerRef) sessieListenerRef.off();
   currentDate = datum;
   sessieListenerRef = db.ref(`sessies/${datum}`);
@@ -1566,6 +1573,12 @@ function switchToDatum(datum) {
     if (!data) {
       const time = `${eventConfig.startTijd} – ${eventConfig.eindTijd} uur`;
       initialiseerSessie(datum, datumNaarTitel(datum), time, eventConfig.id);
+    } else if (expectedEventType && data.eventType && data.eventType !== expectedEventType) {
+      const anderType = EVENT_TYPES[data.eventType]?.label?.[lang] || EVENT_TYPES[data.eventType]?.label?.nl || data.eventType;
+      console.warn(`Datum ${datum} is al in gebruik door event type "${data.eventType}", niet "${expectedEventType}" — lijst wordt niet automatisch geopend.`);
+      document.getElementById("loadingOverlay").style.display = "none";
+      document.getElementById("listContainer").innerHTML =
+        `<div class="divider-reserve" style="text-align:center;">${t("datumConflictWaarschuwing", { anderType })}</div>`;
     } else {
       eventConfig = EVENT_TYPES[data.eventType] || EVENT_TYPES[DEFAULT_EVENT_TYPE];
       currentSession = data;
@@ -2367,11 +2380,6 @@ function doRemoveTransaction(naam, listType, fromIdx, sport) {
       if (listType === "main" && snapshot) {
         const data = snapshot.val();
         const nieuweMain = data?.[mainKey] || {};
-        const nieuweReserve = data?.[reserveKey] || {};
-        // Vóór de transactie was de reserve niet leeg; daarna wél als iemand doorschoof
-        const reserveNaLeeg = !Object.values(nieuweReserve).some(n => n && n.trim());
-        const eersteMain = Object.keys(nieuweMain).sort((a,b)=>+a-+b)
-          .map(k => nieuweMain[k]).find(n => n && n.trim());
         // Bepaal promotee: staat niet op de originele main maar wel nu in main
         // Eenvoudigste aanpak: vergelijk met currentSession vóór commit
         const origineleMain = Object.values(currentSession?.[mainKey] || {}).filter(n=>n&&n.trim());
@@ -2669,7 +2677,7 @@ function logoutAdmin() {
   document.getElementById("adminBanner").style.display = "none";
   document.getElementById("viewBanner").style.display = "none";
   // Terugkeren naar actieve lijst bij uitloggen
-  if (currentDate !== activeDatum) switchToDatum(activeDatum);
+  if (currentDate !== activeDatum) switchToDatum(activeDatum, urlEventType);
   render();
   showToast(t("beheermodeUit"));
 }
@@ -2806,7 +2814,8 @@ function renderEventTypeLijst() {
     row.style.cssText = "display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:10px;";
     const naam = document.createElement("span");
     naam.style.cssText = "flex:1;font-size:14px;";
-    naam.textContent = `${et.label[lang] || et.label.nl} · ${DAGNAMEN[lang][et.dag]} · ${et.startTijd}–${et.eindTijd} · max ${et.mainSize}`;
+    const maxTekst = et.sport === "split" ? `max ${et.blokA?.mainSize} + ${et.blokB?.mainSize}` : `max ${et.mainSize}`;
+    naam.textContent = `${et.label[lang] || et.label.nl} · ${DAGNAMEN[lang][et.dag]} · ${et.startTijd}–${et.eindTijd} · ${maxTekst}`;
     const bewerkBtn = document.createElement("button");
     bewerkBtn.textContent = "✎";
     bewerkBtn.className = "btn-confirm";
@@ -3206,7 +3215,7 @@ function renderVdLijst(containerId, arr, sport) {
   arr.forEach((naam, i) => {
     const row = document.createElement("div");
     row.style.cssText = "display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;";
-    row.innerHTML = `<span style="flex:1;">${naam}</span><button onclick="verwijderVasteDeelnemer(${i},'${sport}')" style="background:transparent;border:none;color:var(--ink-light);cursor:pointer;font-size:16px;padding:0 4px;">✕</button>`;
+    row.innerHTML = `<span style="flex:1;">${naam}</span><button onclick="verwijderVasteDeelnemer(${i},${sport ? `'${sport}'` : "null"})" style="background:transparent;border:none;color:var(--ink-light);cursor:pointer;font-size:16px;padding:0 4px;">✕</button>`;
     el.appendChild(row);
   });
 }
@@ -3307,7 +3316,7 @@ function andereLijstOpenen() {
 }
 
 function terugNaarActief() {
-  if (currentDate !== activeDatum) switchToDatum(activeDatum);
+  if (currentDate !== activeDatum) switchToDatum(activeDatum, urlEventType);
   updateViewBanner();
   const details = document.getElementById("adminLogDetails");
   if (details && details.open) laadLogboek("adminLog");
@@ -3453,8 +3462,19 @@ function openModal(id) {
   document.getElementById(id).classList.add("open");
 }
 
+// Herstel eventConfig naar de daadwerkelijk geopende sessie — de admin-panel
+// dropdowns (nieuwe lijst / evenement type bewerken) zetten eventConfig
+// tijdelijk op een preview-waarde; zonder resync blijft die staan nadat het
+// paneel gesloten wordt zonder op te slaan.
+function resyncEventConfig() {
+  if (currentSession?.eventType) {
+    eventConfig = EVENT_TYPES[currentSession.eventType] || EVENT_TYPES[DEFAULT_EVENT_TYPE];
+  }
+}
+
 function closeModal(id) {
   document.getElementById(id).classList.remove("open");
+  resyncEventConfig();
 }
 
 function showToast(msg) {
@@ -3467,11 +3487,12 @@ function showToast(msg) {
 const ALL_MODALS = ["identityModal","confirmModal","adminPwModal","adminPanel","adminAddModal","andereModal","deelnemerHelpModal","adminHelpModal"];
 ALL_MODALS.forEach(id => {
   const m = document.getElementById(id);
-  if (m) m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); });
+  if (m) m.addEventListener("click", e => { if (e.target === m) { m.classList.remove("open"); resyncEventConfig(); } });
 });
 document.addEventListener("keydown", e => {
   if (e.key !== "Escape") return;
   ALL_MODALS.forEach(id => document.getElementById(id)?.classList.remove("open"));
+  resyncEventConfig();
 });
 
 document.getElementById("identityInput").addEventListener("keydown", e => {
@@ -3505,6 +3526,16 @@ function copyWhatsApp() {
     slotArray(currentSession.main_b, blokB.mainSize).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
     lines.push("— reserve —");
     reserveArray(currentSession.reserve_b).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+  } else if (isBeideSport()) {
+    const s = eventConfig.mainSize, r = eventConfig.reserveSize;
+    lines.push("— Padel —");
+    slotArray(currentSession.main_padel, s).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+    lines.push("— reserve —");
+    slotArray(currentSession.reserve_padel, r).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+    lines.push("", "— Tennis —");
+    slotArray(currentSession.main_tennis, s).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+    lines.push("— reserve —");
+    slotArray(currentSession.reserve_tennis, r).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
   } else {
     const main    = slotArray(currentSession.main,    eventConfig.mainSize);
     const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
@@ -3599,6 +3630,16 @@ async function maakScreenshot() {
     const resB = reserveArray(currentSession.reserve_b);
     if (!resB.length) appendGeenReserves();
     else resB.forEach((n, i) => appendRow(i, n, "#6b6555"));
+  } else if (isBeideSport()) {
+    const s = eventConfig.mainSize, r = eventConfig.reserveSize;
+    appendDivider("Padel");
+    slotArray(currentSession.main_padel, s).forEach((n, i) => appendRow(i, n, "#1a1810"));
+    appendDivider("Reserve");
+    slotArray(currentSession.reserve_padel, r).forEach((n, i) => appendRow(i, n, "#6b6555"));
+    appendDivider("Tennis");
+    slotArray(currentSession.main_tennis, s).forEach((n, i) => appendRow(i, n, "#1a1810"));
+    appendDivider("Reserve");
+    slotArray(currentSession.reserve_tennis, r).forEach((n, i) => appendRow(i, n, "#6b6555"));
   } else {
     const main    = slotArray(currentSession.main,    eventConfig.mainSize);
     const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
@@ -3652,6 +3693,16 @@ function downloadCsv() {
       .forEach((n, i) => rows.push([i + 1, n, labelB, lang === "en" ? "Main" : "Hoofdlijst"]));
     reserveArray(currentSession.reserve_b).filter(n => n && n.trim())
       .forEach((n, i) => rows.push([i + 1, n, labelB, "Reserve"]));
+  } else if (isBeideSport()) {
+    rows = [["Nr", "Naam", "Sport", "Lijst"]];
+    slotArray(currentSession.main_padel, eventConfig.mainSize).filter(n => n && n.trim())
+      .forEach((n, i) => rows.push([i + 1, n, "Padel", lang === "en" ? "Main" : "Hoofdlijst"]));
+    slotArray(currentSession.reserve_padel, eventConfig.reserveSize).filter(n => n && n.trim())
+      .forEach((n, i) => rows.push([i + 1, n, "Padel", "Reserve"]));
+    slotArray(currentSession.main_tennis, eventConfig.mainSize).filter(n => n && n.trim())
+      .forEach((n, i) => rows.push([i + 1, n, "Tennis", lang === "en" ? "Main" : "Hoofdlijst"]));
+    slotArray(currentSession.reserve_tennis, eventConfig.reserveSize).filter(n => n && n.trim())
+      .forEach((n, i) => rows.push([i + 1, n, "Tennis", "Reserve"]));
   } else {
     const main    = slotArray(currentSession.main,    eventConfig.mainSize).filter(n => n && n.trim());
     const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize).filter(n => n && n.trim());

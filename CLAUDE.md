@@ -25,7 +25,14 @@ id, label {nl, en}, eyebrow {nl, en}, dag, startTijd, eindTijd,
 verloopUur, mainSize, reserveSize, sport, shareUrl?
 ```
 
-`sport` can be `"padel"`, `"tennis"`, or `"beide"` (two-column layout).
+`sport` can be `"padel"`, `"tennis"`, `"beide"` (two-column padel/tennis layout, shared `mainSize`/`reserveSize`), or `"split"` (two-column layout where both columns are the same sport at different times/capacities). A `"split"` type has no top-level `mainSize`/`reserveSize` — instead:
+
+```
+blokA: { label {nl, en}, mainSize }
+blokB: { label {nl, en}, mainSize }
+```
+
+Reserve is uncapped for both blocks in `"split"` mode (unlike `"beide"`, where reserve is capped by `reserveSize`).
 
 ### Firebase data structure
 
@@ -40,6 +47,8 @@ instellingen/
     vrijdagochtend: ["Naam", …]
     dinsdag_losse_pols_padel: ["Naam", …]   ← beide-sport
     dinsdag_losse_pols_tennis: ["Naam", …]  ← beide-sport
+    vrijdagmorgen_2_blokken_a: ["Naam", …]  ← split-sport, blok A
+    vrijdagmorgen_2_blokken_b: ["Naam", …]  ← split-sport, blok B
   eventTypes/
     <id>/ { …config fields… }
 
@@ -52,7 +61,13 @@ sessies/
     reserve_padel/ …
     main_tennis/ …
     reserve_tennis/ …
+    main_a/ { 0..N: naam }         ← split-sport, blok A (reserve_a onbeperkt)
+    reserve_a/ …
+    main_b/ …                     ← split-sport, blok B (reserve_b onbeperkt)
+    reserve_b/ …
 ```
+
+Sessies zijn alleen op datum gesleuteld (`sessies/<YYYY-MM-DD>`), niet op event type — twee event types die op dezelfde dag vallen (zelfde `dag` waarde) delen dus dezelfde Firebase-node. `nieuweLijstAanmaken()` waarschuwt en blokkeert als een datum al in gebruik is door een ander event type; `switchToDatum(datum, expectedEventType)` doet dezelfde check bij het automatisch wisselen naar de actieve datum (zie Key flows).
 
 ### State variables (JS)
 
@@ -78,6 +93,9 @@ let sessieListenerRef  // actieve Firebase .on() listener — altijd .off() voor
 - **Lijst activeren**: `maakLijstActief()` → schrijft naar `instellingen/actiefPerType/<type>`
 - **Lijst verwijderen**: `verwijderHuidigeLijst()` → `.off()` listener eerst, dan `.remove()` — anders herschrijft de listener de sessie meteen
 - **Beide-sport render**: `renderBeide()` + `createBeideSlot()` — slots worden afwisselend (padel, tennis) als directe grid-children geplaatst zodat CSS Grid automatisch gelijke rijhoogte garandeert
+- **Split-sport render**: `renderSplit()` + `createSplitSlot()` — analoog aan beide-sport, maar beide kolommen zijn dezelfde sport op andere tijden/capaciteiten (`blokA`/`blokB`); reserve is onbeperkt (`reserveArray()` i.p.v. `slotArray()`)
+- **Deelnemers tellen**: `telDeelnemersSessie(session, prefix)` — helper die main/reserve telt over alle drie sessievormen (enkelvoudig, beide, split) heen, o.a. gebruikt in de admin-dropdowns voor "andere lijst openen"
+- **Datumbotsing tussen event types**: omdat sessies alleen op datum gesleuteld zijn, checkt `nieuweLijstAanmaken()` of de gekozen datum al in gebruik is door een ánder event type en blokkeert dan het overschrijven; `switchToDatum(datum, expectedEventType)` doet dezelfde check wanneer een sessie automatisch geopend wordt via de actieve-datum listener (niet bij bewust "andere lijst" browsen — dat geeft geen `expectedEventType` mee)
 
 ### Role-based access control
 
