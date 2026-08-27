@@ -2066,12 +2066,83 @@ function confirmIdentity() {
   closeModal("identityModal");
   render();
   showToast(t("welkom", { naam: name }));
-  if (pendingJoin) { pendingJoin = false; joinFirstFree(_pendingJoinSport); _pendingJoinSport = null; }
+  if (pendingJoin) {
+    pendingJoin = false;
+    if (typeof _pendingJoinSport === "string" && _pendingJoinSport.startsWith("split:")) {
+      joinSplitFirstFree(_pendingJoinSport.slice(6));
+    } else {
+      joinFirstFree(_pendingJoinSport);
+    }
+    _pendingJoinSport = null;
+  }
 }
 
 // ═══ INSCHRIJVEN ════════════════════════════════════════
 // sport = null (enkelvoudig), "padel" of "tennis" (beide)
 let _pendingJoinSport = null;
+
+function joinSplitFirstFree(blokKey) {
+  if (isLijstVerlopen() && !isAdmin) return;
+  if (!identity) { _pendingJoinSport = "split:" + blokKey; pendingJoin = true; openIdentityModal(); return; }
+  if (!currentSession) return;
+
+  if (isAdmin) {
+    pendingAdminSlot = { listType: "auto", sport: blokKey, split: true };
+    document.getElementById("adminAddDesc").textContent = t("adminAddTitle");
+    document.getElementById("adminAddInput").value = "";
+    openModal("adminAddModal");
+    setTimeout(() => document.getElementById("adminAddInput").focus(), 100);
+    return;
+  }
+
+  const mainKey = `main_${blokKey}`, reserveKey = `reserve_${blokKey}`;
+  const alles = [
+    ...Object.values(currentSession.main_a    || {}),
+    ...Object.values(currentSession.reserve_a || {}),
+    ...Object.values(currentSession.main_b    || {}),
+    ...Object.values(currentSession.reserve_b || {}),
+  ];
+  if (alles.some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase())) {
+    showToast(t("alOpLijst")); return;
+  }
+
+  const mainSize = eventConfig[blokKey === "a" ? "blokA" : "blokB"].mainSize;
+  const isReserve = !slotArray(currentSession[mainKey], mainSize).some(n => !n || !n.trim());
+  document.getElementById("confirmTitle").textContent = t("inschrijvenVraag");
+  document.getElementById("confirmMsg").textContent = isReserve
+    ? t("inschrijvenMsgReserve", { naam: identity, title: currentSession.title, time: currentSession.time })
+    : t("inschrijvenMsg",        { naam: identity, title: currentSession.title, time: currentSession.time });
+  openModal("confirmModal");
+  document.getElementById("confirmOkBtn").textContent = t("inschrijvenBevestig");
+  document.getElementById("confirmOkBtn").onclick = () => {
+    closeModal("confirmModal");
+    doJoinSplitTransaction(blokKey);
+  };
+}
+
+function doJoinSplitTransaction(blokKey) {
+  const mainKey = `main_${blokKey}`, reserveKey = `reserve_${blokKey}`;
+  const mainSize = eventConfig[blokKey === "a" ? "blokA" : "blokB"].mainSize;
+  db.ref(`sessies/${currentDate}`).transaction(session => {
+    if (!session) return;
+    for (let i = 0; i < mainSize; i++) {
+      if (!session[mainKey][i] || !session[mainKey][i].trim()) {
+        session[mainKey][i] = identity; return session;
+      }
+    }
+    const reserveLen = Object.keys(session[reserveKey] || {}).length;
+    if (!session[reserveKey]) session[reserveKey] = {};
+    session[reserveKey][reserveLen] = identity;
+    return session;
+  }, (error, committed, snapshot) => {
+    if (error)      { showToast(t("foutInschrijven")); return; }
+    if (!committed) { showToast(t("geenPlek")); return; }
+    const data = snapshot.val();
+    const pos = detectLijstPositie(data, identity, mainKey, reserveKey);
+    logEntry("ingeschreven", identity, identity, pos);
+    showToast(pos.lijstType === "reserve" ? t("opReservelijst") : t("ingeschreven"));
+  });
+}
 
 function joinFirstFree(sport) {
   if (isLijstVerlopen() && !isAdmin) return;
@@ -2293,6 +2364,44 @@ function adminRemove(listType, idx, naam, sport) {
 function confirmAdminAdd() {
   const naam  = document.getElementById("adminAddInput").value.trim();
   if (!naam) { document.getElementById("adminAddInput").focus(); return; }
+
+  if (pendingAdminSlot?.split) {
+    const blokKey = pendingAdminSlot.sport;
+    const mainKey = `main_${blokKey}`, reserveKey = `reserve_${blokKey}`;
+    const mainSize = eventConfig[blokKey === "a" ? "blokA" : "blokB"].mainSize;
+    const alles = [
+      ...Object.values(currentSession?.main_a    || {}),
+      ...Object.values(currentSession?.reserve_a || {}),
+      ...Object.values(currentSession?.main_b    || {}),
+      ...Object.values(currentSession?.reserve_b || {}),
+    ];
+    if (alles.some(n => (n || "").trim().toLowerCase() === naam.toLowerCase())) {
+      const inp = document.getElementById("adminAddInput");
+      inp.style.borderColor = "var(--accent)";
+      showToast(t("alOpLijstWaarschuwing", { naam }));
+      setTimeout(() => { inp.style.borderColor = ""; }, 2000);
+      inp.focus();
+      return;
+    }
+    db.ref(`sessies/${currentDate}`).transaction(session => {
+      if (!session) return;
+      for (let i = 0; i < mainSize; i++) {
+        if (!session[mainKey][i] || !session[mainKey][i].trim()) { session[mainKey][i] = naam; return session; }
+      }
+      const reserveLen = Object.keys(session[reserveKey] || {}).length;
+      if (!session[reserveKey]) session[reserveKey] = {};
+      session[reserveKey][reserveLen] = naam;
+      return session;
+    }, (error, committed, snapshot) => {
+      if (!committed) { showToast(t("geenVrijePlekken")); return; }
+      closeModal("adminAddModal");
+      const pos = snapshot ? detectLijstPositie(snapshot.val(), naam, mainKey, reserveKey) : {};
+      logEntry("ingeschreven", naam, adminNaam, pos);
+      showToast(`✓ ${naam} ingeschreven`);
+    });
+    return;
+  }
+
   const sport = pendingAdminSlot?.sport || null;
   const mainKey    = sport ? `main_${sport}`    : "main";
   const reserveKey = sport ? `reserve_${sport}` : "reserve";
