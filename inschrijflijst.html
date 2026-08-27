@@ -2518,13 +2518,13 @@ function confirmAdminAdd() {
     const blokKey = pendingAdminSlot.sport;
     const mainKey = `main_${blokKey}`, reserveKey = `reserve_${blokKey}`;
     const mainSize = eventConfig[blokKey === "a" ? "blokA" : "blokB"].mainSize;
-    const alles = [
-      ...Object.values(currentSession?.main_a    || {}),
-      ...Object.values(currentSession?.reserve_a || {}),
-      ...Object.values(currentSession?.main_b    || {}),
-      ...Object.values(currentSession?.reserve_b || {}),
+    // Alleen dubbele inschrijving binnen hetzelfde blok blokkeren — in het andere
+    // blok mag iemand al staan, zie joinSplitFirstFree().
+    const ditBlok = [
+      ...Object.values(currentSession?.[mainKey]    || {}),
+      ...Object.values(currentSession?.[reserveKey] || {}),
     ];
-    if (alles.some(n => (n || "").trim().toLowerCase() === naam.toLowerCase())) {
+    if (ditBlok.some(n => (n || "").trim().toLowerCase() === naam.toLowerCase())) {
       const inp = document.getElementById("adminAddInput");
       inp.style.borderColor = "var(--accent)";
       showToast(t("alOpLijstWaarschuwing", { naam }));
