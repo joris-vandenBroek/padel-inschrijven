@@ -372,6 +372,10 @@
   .beide-kolommen .slot-num { font-size: 11px; min-width: 14px; }
   .beide-kolommen .avatar { width: 26px; height: 26px; font-size: 9px; }
   .beide-kolommen .divider-reserve { padding: 5px 12px; font-size: 10px; }
+  /* .slot:last-child verwijdert de onderrand van het laatste DOM-kind — in een
+     2-koloms grid is dat altijd de rechterkolom, nooit de linker. Hier herstellen
+     we die rand zodat beide kolommen er hetzelfde uitzien. */
+  .beide-kolommen .slot:last-child { border-bottom: 1px solid var(--border); }
 
   .divider-reserve {
     background: #ede8dc;
