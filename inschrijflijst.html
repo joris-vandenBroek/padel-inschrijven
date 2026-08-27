@@ -3450,12 +3450,24 @@ document.getElementById("andereInput").addEventListener("keydown", e => {
 // ═══ SHARE ══════════════════════════════════════════════
 function copyWhatsApp() {
   if (!currentSession) return;
-  const main    = slotArray(currentSession.main,    eventConfig.mainSize);
-  const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
   let lines = [`${currentSession.title} · ${currentSession.time}:`, ""];
-  main.forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
-  lines.push("— reserve —");
-  reserve.forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+  if (isSplitSport()) {
+    const blokA = eventConfig.blokA, blokB = eventConfig.blokB;
+    lines.push(`— ${blokA.label[lang] || blokA.label.nl} —`);
+    slotArray(currentSession.main_a, blokA.mainSize).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+    lines.push("— reserve —");
+    reserveArray(currentSession.reserve_a).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+    lines.push("", `— ${blokB.label[lang] || blokB.label.nl} —`);
+    slotArray(currentSession.main_b, blokB.mainSize).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+    lines.push("— reserve —");
+    reserveArray(currentSession.reserve_b).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+  } else {
+    const main    = slotArray(currentSession.main,    eventConfig.mainSize);
+    const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
+    main.forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+    lines.push("— reserve —");
+    reserve.forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+  }
   navigator.clipboard.writeText(lines.join("\n"))
     .then(() => showToast(t("gekopieerd")))
     .catch(() => showToast(t("kopieerenMislukt")));
@@ -3496,36 +3508,46 @@ async function maakScreenshot() {
     <div style="font-size:13px;color:#b0a890;margin-top:4px;">${currentSession?.time || ""}</div>`;
   el.appendChild(header);
 
-  const main    = slotArray(currentSession.main,    eventConfig.mainSize);
-  const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
-
   const listEl = document.createElement("div");
   listEl.style.cssText = "background:#fffef9;border:1px solid #ddd8cc;border-top:none;border-radius:0 0 12px 12px;overflow:hidden;margin-bottom:12px;";
 
-  main.forEach((naam, i) => {
-    const row = document.createElement("div");
-    const filled = naam && naam.trim();
-    row.style.cssText = `display:flex;align-items:center;padding:10px 16px;gap:12px;border-bottom:1px solid #ddd8cc;background:${filled ? "#fffef9" : "#fffef9"};`;
-    row.innerHTML = `
-      <span style="font-size:13px;color:#6b6555;width:20px;text-align:right;">${i + 1}</span>
-      <span style="font-size:14px;font-weight:${filled ? 500 : 300};color:${filled ? "#1a1810" : "#ddd8cc"};font-style:${filled ? "normal" : "italic"};">${filled ? naam : "Vrij"}</span>`;
-    listEl.appendChild(row);
-  });
-
-  const divider = document.createElement("div");
-  divider.style.cssText = "text-align:center;padding:6px;font-size:11px;color:#6b6555;background:#f5f0e8;border-bottom:1px solid #ddd8cc;";
-  divider.textContent = "Reserve (max 4)";
-  listEl.appendChild(divider);
-
-  reserve.forEach((naam, i) => {
+  const appendRow = (i, naam, kleurFilled, kleurLeeg) => {
     const row = document.createElement("div");
     const filled = naam && naam.trim();
     row.style.cssText = `display:flex;align-items:center;padding:10px 16px;gap:12px;border-bottom:1px solid #ddd8cc;`;
     row.innerHTML = `
       <span style="font-size:13px;color:#6b6555;width:20px;text-align:right;">${i + 1}</span>
-      <span style="font-size:14px;font-weight:${filled ? 500 : 300};color:${filled ? "#6b6555" : "#ddd8cc"};font-style:${filled ? "normal" : "italic"};">${filled ? naam : "Vrij"}</span>`;
+      <span style="font-size:14px;font-weight:${filled ? 500 : 300};color:${filled ? kleurFilled : "#ddd8cc"};font-style:${filled ? "normal" : "italic"};">${filled ? naam : "Vrij"}</span>`;
     listEl.appendChild(row);
-  });
+  };
+  const appendDivider = (tekst) => {
+    const divider = document.createElement("div");
+    divider.style.cssText = "text-align:center;padding:6px;font-size:11px;color:#6b6555;background:#f5f0e8;border-bottom:1px solid #ddd8cc;";
+    divider.textContent = tekst;
+    listEl.appendChild(divider);
+  };
+
+  if (isSplitSport()) {
+    const blokA = eventConfig.blokA, blokB = eventConfig.blokB;
+    appendDivider(blokA.label[lang] || blokA.label.nl);
+    slotArray(currentSession.main_a, blokA.mainSize).forEach((n, i) => appendRow(i, n, "#1a1810"));
+    appendDivider("Reserve");
+    const resA = reserveArray(currentSession.reserve_a);
+    if (!resA.length) appendRow(0, "", "#6b6555");
+    else resA.forEach((n, i) => appendRow(i, n, "#6b6555"));
+    appendDivider(blokB.label[lang] || blokB.label.nl);
+    slotArray(currentSession.main_b, blokB.mainSize).forEach((n, i) => appendRow(i, n, "#1a1810"));
+    appendDivider("Reserve");
+    const resB = reserveArray(currentSession.reserve_b);
+    if (!resB.length) appendRow(0, "", "#6b6555");
+    else resB.forEach((n, i) => appendRow(i, n, "#6b6555"));
+  } else {
+    const main    = slotArray(currentSession.main,    eventConfig.mainSize);
+    const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
+    main.forEach((naam, i) => appendRow(i, naam, "#1a1810"));
+    appendDivider("Reserve (max 4)");
+    reserve.forEach((naam, i) => appendRow(i, naam, "#6b6555"));
+  }
 
   el.appendChild(listEl);
 
@@ -3558,13 +3580,25 @@ async function maakScreenshot() {
 
 function downloadCsv() {
   if (!currentSession) return;
-  const main    = slotArray(currentSession.main,    eventConfig.mainSize).filter(n => n && n.trim());
-  const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize).filter(n => n && n.trim());
-  const titel   = currentSession.title || currentDate;
-  const sep     = ";"; // puntkomma voor Nederlandse Excel
-  let rows = [["Nr", "Naam", "Lijst"]];
-  main.forEach((n, i)    => rows.push([i + 1, n, lang === "en" ? "Main" : "Hoofdlijst"]));
-  reserve.forEach((n, i) => rows.push([i + 1, n, lang === "en" ? "Reserve" : "Reserve"]));
+  const sep = ";"; // puntkomma voor Nederlandse Excel
+  let rows = [["Nr", "Naam", "Blok", "Lijst"]];
+  if (isSplitSport()) {
+    const blokA = eventConfig.blokA, blokB = eventConfig.blokB;
+    const labelA = blokA.label[lang] || blokA.label.nl, labelB = blokB.label[lang] || blokB.label.nl;
+    slotArray(currentSession.main_a, blokA.mainSize).filter(n => n && n.trim())
+      .forEach((n, i) => rows.push([i + 1, n, labelA, lang === "en" ? "Main" : "Hoofdlijst"]));
+    reserveArray(currentSession.reserve_a).filter(n => n && n.trim())
+      .forEach((n, i) => rows.push([i + 1, n, labelA, "Reserve"]));
+    slotArray(currentSession.main_b, blokB.mainSize).filter(n => n && n.trim())
+      .forEach((n, i) => rows.push([i + 1, n, labelB, lang === "en" ? "Main" : "Hoofdlijst"]));
+    reserveArray(currentSession.reserve_b).filter(n => n && n.trim())
+      .forEach((n, i) => rows.push([i + 1, n, labelB, "Reserve"]));
+  } else {
+    const main    = slotArray(currentSession.main,    eventConfig.mainSize).filter(n => n && n.trim());
+    const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize).filter(n => n && n.trim());
+    main.forEach((n, i)    => rows.push([i + 1, n, "", lang === "en" ? "Main" : "Hoofdlijst"]));
+    reserve.forEach((n, i) => rows.push([i + 1, n, "", "Reserve"]));
+  }
   const csv = "﻿" + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(sep)).join("\r\n");
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }));
