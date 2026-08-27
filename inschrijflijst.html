@@ -1158,6 +1158,8 @@ const TRANSLATIONS = {
     lijstAangemaaktToastN: "✓ Lijst aangemaakt voor {title} met {n} vaste deelnemer{s}",
     lijstBestaatAl: "Lijst bestaat al!",
     lijstBestaatAlMsg: "{title} heeft al {n} deelnemer{s}{reserve}. Wil je de bestaande lijst overschrijven met een lege lijst?",
+    datumInGebruikAnderType: "⚠️ Datum in gebruik door ander event type",
+    datumInGebruikAnderTypeMsg: "{title} heeft al een actieve lijst voor \"{anderType}\" met {n} deelnemer(s). Kies een andere datum — lijsten van verschillende event types kunnen niet dezelfde datum delen zonder elkaar te overschrijven.",
     nieuweLijstVraag: "Nieuwe lijst aanmaken?",
     legalListVoor: "Er wordt een lege lijst aangemaakt voor {title}.",
     aanmakenKnop: "Aanmaken ✓",
@@ -1336,6 +1338,8 @@ const TRANSLATIONS = {
     lijstAangemaaktToastN: "✓ List created for {title} with {n} regular participant{s}",
     lijstBestaatAl: "List already exists!",
     lijstBestaatAlMsg: "{title} already has {n} participant{s}{reserve}. Do you want to overwrite the existing list?",
+    datumInGebruikAnderType: "⚠️ Date already used by another event type",
+    datumInGebruikAnderTypeMsg: "{title} already has an active list for \"{anderType}\" with {n} participant(s). Choose a different date — lists for different event types cannot share the same date without overwriting each other.",
     nieuweLijstVraag: "Create new list?",
     legalListVoor: "An empty list will be created for {title}.",
     aanmakenKnop: "Create ✓",
@@ -3355,6 +3359,16 @@ function nieuweLijstAanmaken() {
   db.ref(`sessies/${datum}`).once("value").then(snap => {
     if (snap.exists()) {
       const s = snap.val();
+      if (s.eventType && s.eventType !== typeId) {
+        const anderType = EVENT_TYPES[s.eventType]?.label?.[lang] || EVENT_TYPES[s.eventType]?.label?.nl || s.eventType;
+        const aantalMain = telDeelnemersSessie(s, "main");
+        document.getElementById("confirmTitle").textContent = t("datumInGebruikAnderType");
+        document.getElementById("confirmMsg").textContent = t("datumInGebruikAnderTypeMsg", { title, anderType, n: aantalMain });
+        openModal("confirmModal");
+        document.getElementById("confirmOkBtn").textContent = t("sluiten");
+        document.getElementById("confirmOkBtn").onclick = () => closeModal("confirmModal");
+        return;
+      }
       const aantalMain    = telDeelnemersSessie(s, "main");
       const aantalReserve = telDeelnemersSessie(s, "reserve");
       const reserveTekst  = aantalReserve > 0 ? t("reserveCount", { n: aantalReserve }) : "";
