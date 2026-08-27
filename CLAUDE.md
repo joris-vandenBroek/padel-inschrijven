@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code when working with code in this repository.
 
+> ⚠️ **Working-directory check — do this first, before anything else.** If this
+> session's working directory is under `L:\ETV-Volley\padel-inschrijven` (or its UNC
+> form `\\192.168.1.21\Transmission\ETV-Volley\padel-inschrijven` /
+> `\\MyCloudEX2Ultra\Transmission\ETV-Volley\padel-inschrijven`), that is the **backup
+> destination only** (kept in sync by `scripts/backup.ps1`), not the working copy.
+> Immediately tell the user they appear to have started a session in the backup
+> location by accident, and ask them to restart in
+> `C:\Projecten\ETV-Volley\padel-inschrijven` instead. Do not make edits in the L:
+> copy — changes there get silently overwritten by the next scheduled backup run.
+
 ## Project overview
 
 Single-file standalone HTML app (`inschrijflijst.html`) for weekly padel/tennis sign-up sessions. No build step, no framework, no server. Hosted on GitHub Pages. Data lives in Firebase Realtime Database.
