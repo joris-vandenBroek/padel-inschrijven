@@ -7,14 +7,13 @@ metadata:
   originSessionId: 2863171c-4434-40e7-93bf-e3369c315a9a
 ---
 
-Bij een nieuwe laptop moeten de volgende Claude-bestanden handmatig worden gekopieerd van de oude laptop:
+Bij een nieuwe laptop:
 
-- `C:\Users\broek01\.claude\` — globale map met memory, instellingen en plugins
-- `C:\Users\broek01\.claude.json` — authenticatie/globale config
-- `C:\Users\broek01\.claude\settings.json` — globale instellingen
+- Projecten staan in git op `C:\projecten\` — na clonen direct beschikbaar.
+- Memory staat in de repo zelf (`memory/`-map per project) en is dus al in git.
+- Junctions aanmaken zodat Claude Code de memory vindt (zie Glassart and Design-sessie voor het mklink-commando per project).
+- `C:\Users\broek01\.claude.json` en `C:\Users\broek01\.claude\settings.json` handmatig meenemen voor globale instellingen en plugins.
 
-**Why:** Deze bestanden staan lokaal en gaan niet automatisch mee. Ze bevatten projectgeheugen, permissie-instellingen en plugins.
+**Why:** Memory stond vroeger alleen lokaal in `~/.claude/projects/`, maar is nu per project in git opgeslagen en via een junction gekoppeld — zie ook [[feedback-werklocatie]].
 
-**How to apply:** Wanneer de gebruiker vraagt welke bestanden gekopieerd moeten worden bij een nieuwe laptop, altijd deze bestanden noemen.
-
-De projecten zelf staan al op de NAS (`\\MyCloudEX2Ultra\Transmission\ETV-Volley\`) en zijn direct beschikbaar na installatie van Claude Code.
+**How to apply:** Bij laptopovergang: projecten clonen, junctions aanmaken, globale Claude-config kopiëren. De NAS is geen werklocatie meer.
