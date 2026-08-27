@@ -1131,6 +1131,8 @@ const TRANSLATIONS = {
     geenVrijePlekken: "Geen vrije plekken",
     opReservelijst: "✓ Op de reservelijst gezet",
     ingeschreven: "✓ Ingeschreven!",
+    ingeschrevenBeideBlokkenTitel: "✓ Ingeschreven",
+    ingeschrevenBeideBlokkenMsg: "Je bent ingeschreven voor {blok}. Je staat nu in beide tijdblokken ingeschreven.",
     uitschrijvenVraag: "{naam} uitschrijven?",
     doorschuiven: "'{promotee}' schuift dan door naar de hoofdlijst.",
     weetJeHetZeker: "Weet je het zeker?",
@@ -1314,6 +1316,8 @@ const TRANSLATIONS = {
     geenVrijePlekken: "No free spots",
     opReservelijst: "✓ Added to the reserve list",
     ingeschreven: "✓ Signed up!",
+    ingeschrevenBeideBlokkenTitel: "✓ Signed up",
+    ingeschrevenBeideBlokkenMsg: "You are signed up for {blok}. You are now registered for both time blocks.",
     uitschrijvenVraag: "Remove {naam}?",
     doorschuiven: "'{promotee}' will move up to the main list.",
     weetJeHetZeker: "Are you sure?",
@@ -2151,16 +2155,24 @@ function joinSplitFirstFree(blokKey) {
     return;
   }
 
+  // Al ingeschreven in dít blok? Blokkeer dubbele inschrijving in hetzelfde blok.
+  // In het andere blok mag je wel al staan — de blokken zijn opeenvolgend, niet
+  // gelijktijdig zoals bij beide-sport (padel/tennis op hetzelfde moment).
   const mainKey = `main_${blokKey}`, reserveKey = `reserve_${blokKey}`;
-  const alles = [
-    ...Object.values(currentSession.main_a    || {}),
-    ...Object.values(currentSession.reserve_a || {}),
-    ...Object.values(currentSession.main_b    || {}),
-    ...Object.values(currentSession.reserve_b || {}),
+  const ditBlok = [
+    ...Object.values(currentSession[mainKey]    || {}),
+    ...Object.values(currentSession[reserveKey] || {}),
   ];
-  if (alles.some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase())) {
+  if (ditBlok.some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase())) {
     showToast(t("alOpLijst")); return;
   }
+
+  const anderBlokKey = blokKey === "a" ? "b" : "a";
+  const anderBlok = [
+    ...Object.values(currentSession[`main_${anderBlokKey}`]    || {}),
+    ...Object.values(currentSession[`reserve_${anderBlokKey}`] || {}),
+  ];
+  const alInAnderBlok = anderBlok.some(n => (n || "").trim().toLowerCase() === identity.trim().toLowerCase());
 
   const mainSize = eventConfig[blokKey === "a" ? "blokA" : "blokB"].mainSize;
   const isReserve = !slotArray(currentSession[mainKey], mainSize).some(n => !n || !n.trim());
@@ -2172,11 +2184,11 @@ function joinSplitFirstFree(blokKey) {
   document.getElementById("confirmOkBtn").textContent = t("inschrijvenBevestig");
   document.getElementById("confirmOkBtn").onclick = () => {
     closeModal("confirmModal");
-    doJoinSplitTransaction(blokKey);
+    doJoinSplitTransaction(blokKey, alInAnderBlok);
   };
 }
 
-function doJoinSplitTransaction(blokKey) {
+function doJoinSplitTransaction(blokKey, alInAnderBlok) {
   const mainKey = `main_${blokKey}`, reserveKey = `reserve_${blokKey}`;
   const mainSize = eventConfig[blokKey === "a" ? "blokA" : "blokB"].mainSize;
   db.ref(`sessies/${currentDate}`).transaction(session => {
@@ -2196,7 +2208,17 @@ function doJoinSplitTransaction(blokKey) {
     const data = snapshot.val();
     const pos = detectLijstPositie(data, identity, mainKey, reserveKey);
     logEntry("ingeschreven", identity, identity, pos);
-    showToast(pos.lijstType === "reserve" ? t("opReservelijst") : t("ingeschreven"));
+    if (alInAnderBlok) {
+      const blok = eventConfig[blokKey === "a" ? "blokA" : "blokB"];
+      const blokLabel = blok.label[lang] || blok.label.nl;
+      document.getElementById("confirmTitle").textContent = t("ingeschrevenBeideBlokkenTitel");
+      document.getElementById("confirmMsg").textContent = t("ingeschrevenBeideBlokkenMsg", { blok: blokLabel });
+      document.getElementById("confirmOkBtn").textContent = t("sluiten");
+      document.getElementById("confirmOkBtn").onclick = () => closeModal("confirmModal");
+      openModal("confirmModal");
+    } else {
+      showToast(pos.lijstType === "reserve" ? t("opReservelijst") : t("ingeschreven"));
+    }
   });
 }
 
