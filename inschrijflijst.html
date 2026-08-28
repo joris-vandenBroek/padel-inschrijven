@@ -1608,10 +1608,11 @@ function switchToDatum(datum, expectedEventType) {
 }
 
 async function initialiseerSessie(datum, title, time, eventType) {
-  const s = eventConfig.mainSize, r = eventConfig.reserveSize;
+  const ec = eventConfig;
+  const s = ec.mainSize, r = ec.reserveSize;
   const leeg = (size) => { const o = {}; for (let i = 0; i < size; i++) o[i] = ""; return o; };
-  const beide = eventConfig.sport === "beide";
-  const split = eventConfig.sport === "split";
+  const beide = ec.sport === "beide";
+  const split = ec.sport === "split";
 
   // Laad vaste deelnemers voor het juiste event type
   const et = eventType || DEFAULT_EVENT_TYPE;
@@ -1644,9 +1645,9 @@ async function initialiseerSessie(datum, title, time, eventType) {
       main_padel, reserve_padel: leeg(r), main_tennis, reserve_tennis: leeg(r),
       aangemaaktOp: firebase.database.ServerValue.TIMESTAMP };
   } else if (split) {
-    const main_a = leeg(eventConfig.blokA.mainSize), main_b = leeg(eventConfig.blokB.mainSize);
-    vdA.slice(0, eventConfig.blokA.mainSize).forEach((naam, i) => { main_a[i] = naam; });
-    vdB.slice(0, eventConfig.blokB.mainSize).forEach((naam, i) => { main_b[i] = naam; });
+    const main_a = leeg(ec.blokA.mainSize), main_b = leeg(ec.blokB.mainSize);
+    vdA.slice(0, ec.blokA.mainSize).forEach((naam, i) => { main_a[i] = naam; });
+    vdB.slice(0, ec.blokB.mainSize).forEach((naam, i) => { main_b[i] = naam; });
     data = { title, time, eventType: eventType || DEFAULT_EVENT_TYPE,
       main_a, reserve_a: {}, main_b, reserve_b: {},
       aangemaaktOp: firebase.database.ServerValue.TIMESTAMP };
