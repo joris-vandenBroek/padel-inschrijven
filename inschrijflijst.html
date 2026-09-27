@@ -513,6 +513,12 @@
     <div id="adminLog" style="margin-top:8px;display:flex;flex-direction:column;gap:3px;max-height:200px;overflow-y:auto;"></div>
   </details>
 </div>
+<!-- In-app browser banner (iOS WKWebView – bv. WhatsApp/Facebook in-app) -->
+<div id="inAppBanner" style="display:none;margin:10px 16px 0;background:#fff7e0;border:1.5px solid #e8a000;border-radius:10px;padding:11px 14px;font-size:13px;line-height:1.55;color:#5a3e00;">
+  <strong>📱 Open in Safari voor de beste ervaring</strong><br>
+  Je opent deze pagina vanuit een app (bijv. WhatsApp). Inschrijven werkt hier mogelijk niet goed.<br>
+  <span style="color:#7a5500;">Tik op <strong>···</strong> rechtsboven → <strong>Openen in Safari</strong></span>
+</div>
 <!-- Viewbanner mode A: lijst nog niet actief -->
 <div id="viewBanner" style="display:none;margin:8px 16px 0;background:#e8f0ff;border:1.5px solid var(--mine);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--mine);font-weight:600;flex-direction:column;gap:8px;">
   <span id="viewBannerText">👁 Je bekijkt een andere lijst</span>
@@ -3618,9 +3624,16 @@ function shareLink() {
     || (eventConfig.id === DEFAULT_EVENT_TYPE ? baseUrl : `${baseUrl}?event=${eventConfig.id}`);
 
   if (navigator.share) {
-    navigator.share({ text: tekst, url });
+    navigator.share({ text: tekst, url }).catch(err => {
+      if (err.name !== "AbortError") {
+        // Echte fout (geen gebruiker-annulering): val terug op klembord
+        navigator.clipboard.writeText(tekst + "\n" + url)
+          .then(() => showToast(t("linkGekopieerd")))
+          .catch(() => showToast(t("kopieerenMislukt")));
+      }
+    });
   } else {
-    navigator.clipboard.writeText(tekst + '\n' + url)
+    navigator.clipboard.writeText(tekst + "\n" + url)
       .then(() => showToast(t("linkGekopieerd")));
   }
 }
@@ -3788,6 +3801,16 @@ async function deelScreenshot() {
   }
 }
 
+// ═══ IN-APP BROWSER ══════════════════════════════════════
+function isIOSInAppBrowser() {
+  const ua = navigator.userAgent;
+  if (!/iP(hone|od|ad)/i.test(ua)) return false;    // niet iOS → nooit blokkeren
+  if (window.navigator.standalone) return false;      // PWA-modus is prima
+  // Echte iOS-browsers herkennen we aan: window.safari (Safari), of CriOS/FxiOS/OPiOS/EdgiOS (Chrome/FF/Edge/Opera)
+  return typeof window.safari === "undefined"
+    && !/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua);
+}
+
 // ═══ INIT ═══════════════════════════════════════════════
 document.addEventListener("click", (e) => {
   if (!document.getElementById("langDropdown")?.contains(e.target)) closeLangDropdown();
@@ -3805,6 +3828,7 @@ window.addEventListener("load", () => {
   laadLeden();
   if (!identity) openIdentityModal();
   else document.getElementById("whoLabel").textContent = identity;
+  if (isIOSInAppBrowser()) document.getElementById("inAppBanner").style.display = "block";
 });
 </script>
 </body>
