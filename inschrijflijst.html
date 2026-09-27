@@ -3615,7 +3615,7 @@ function shareLink() {
   }
   const baseUrl = location.origin + location.pathname;
   const url = eventConfig.shareUrl
-    || (urlEventType === DEFAULT_EVENT_TYPE ? baseUrl : `${baseUrl}?event=${urlEventType}`);
+    || (eventConfig.id === DEFAULT_EVENT_TYPE ? baseUrl : `${baseUrl}?event=${eventConfig.id}`);
 
   if (navigator.share) {
     navigator.share({ text: tekst, url });
@@ -3707,7 +3707,7 @@ async function maakScreenshot() {
 
   const footer = document.createElement("div");
   footer.style.cssText = "text-align:center;font-size:11px;color:#6b6555;";
-  const shareUrl = eventConfig.shareUrl || (location.origin + location.pathname + "?event=" + urlEventType);
+  const shareUrl = eventConfig.shareUrl || (eventConfig.id === DEFAULT_EVENT_TYPE ? location.origin + location.pathname : location.origin + location.pathname + "?event=" + eventConfig.id);
   footer.textContent = shareUrl.replace(/^https?:\/\//, "");
   el.appendChild(footer);
 
