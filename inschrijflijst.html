@@ -1771,7 +1771,8 @@ function render() {
       <div class="divider-reserve"><span id="reserveDividerLabel">Reserve (max ${eventConfig.reserveSize})</span></div>
       <div class="list" id="reserveList"></div>`;
     const main    = slotArray(currentSession.main,    eventConfig.mainSize);
-    const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
+    const resFilledCount = Object.values(currentSession.reserve || {}).filter(n => n && n.trim()).length;
+    const reserve = slotArray(currentSession.reserve, Math.max(eventConfig.reserveSize, resFilledCount));
     renderList("mainList",    main,    "main",    null);
     renderList("reserveList", reserve, "reserve", null);
     const filled = main.filter(n => n && n.trim()).length;
@@ -1784,9 +1785,12 @@ function renderBeide() {
   const s = eventConfig.mainSize;
   const r = eventConfig.reserveSize;
   const mainP = slotArray(currentSession.main_padel,    s);
-  const resP  = slotArray(currentSession.reserve_padel, r);
   const mainT = slotArray(currentSession.main_tennis,   s);
-  const resT  = slotArray(currentSession.reserve_tennis,r);
+  const resFilledP = Object.values(currentSession.reserve_padel  || {}).filter(n => n && n.trim()).length;
+  const resFilledT = Object.values(currentSession.reserve_tennis || {}).filter(n => n && n.trim()).length;
+  const rEff = Math.max(r, resFilledP, resFilledT);
+  const resP  = slotArray(currentSession.reserve_padel, rEff);
+  const resT  = slotArray(currentSession.reserve_tennis,rEff);
 
   const verlopen = isLijstVerlopen();
   const container = document.getElementById("listContainer");
@@ -1839,7 +1843,7 @@ function renderBeide() {
   grid.appendChild(dT);
 
   // Reservelijst: idem afwisselend
-  for (let i = 0; i < r; i++) {
+  for (let i = 0; i < rEff; i++) {
     grid.appendChild(createBeideSlot(resP[i], i, "reserve", "padel",  verlopen));
     grid.appendChild(createBeideSlot(resT[i], i, "reserve", "tennis", verlopen));
   }
@@ -2599,12 +2603,18 @@ function confirmAdminAdd() {
 
   db.ref(`sessies/${currentDate}`).transaction(session => {
     if (!session) return;
+    if (!session[mainKey]) session[mainKey] = {};
     for (let i = 0; i < eventConfig.mainSize; i++) {
       if (!session[mainKey][i] || !session[mainKey][i].trim()) { session[mainKey][i] = naam; return session; }
     }
-    for (let i = 0; i < eventConfig.reserveSize; i++) {
-      if (!session[reserveKey][i] || !session[reserveKey][i].trim()) { session[reserveKey][i] = naam; return session; }
+    // Admins kunnen altijd op de reserve — geen cap op reserveSize
+    if (!session[reserveKey]) session[reserveKey] = {};
+    const rKeys = Object.keys(session[reserveKey]).map(Number).sort((a, b) => a - b);
+    for (const k of rKeys) {
+      if (!session[reserveKey][k] || !session[reserveKey][k].trim()) { session[reserveKey][k] = naam; return session; }
     }
+    session[reserveKey][rKeys.length > 0 ? rKeys[rKeys.length - 1] + 1 : 0] = naam;
+    return session;
   }, (error, committed, snapshot) => {
     if (!committed) { showToast(t("geenVrijePlekken")); return; }
     closeModal("adminAddModal");
@@ -3589,17 +3599,21 @@ function copyWhatsApp() {
     reserveArray(currentSession.reserve_b).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
   } else if (isBeideSport()) {
     const s = eventConfig.mainSize, r = eventConfig.reserveSize;
+    const cpResFilledP = Object.values(currentSession.reserve_padel  || {}).filter(n => n && n.trim()).length;
+    const cpResFilledT = Object.values(currentSession.reserve_tennis || {}).filter(n => n && n.trim()).length;
+    const cpREff = Math.max(r, cpResFilledP, cpResFilledT);
     lines.push("— Padel —");
     slotArray(currentSession.main_padel, s).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
     lines.push("— reserve —");
-    slotArray(currentSession.reserve_padel, r).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+    slotArray(currentSession.reserve_padel, cpREff).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
     lines.push("", "— Tennis —");
     slotArray(currentSession.main_tennis, s).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
     lines.push("— reserve —");
-    slotArray(currentSession.reserve_tennis, r).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
+    slotArray(currentSession.reserve_tennis, cpREff).forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
   } else {
     const main    = slotArray(currentSession.main,    eventConfig.mainSize);
-    const reserve = slotArray(currentSession.reserve, eventConfig.reserveSize);
+    const cpResFilledCount = Object.values(currentSession.reserve || {}).filter(n => n && n.trim()).length;
+    const reserve = slotArray(currentSession.reserve, Math.max(eventConfig.reserveSize, cpResFilledCount));
     main.forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
     lines.push("— reserve —");
     reserve.forEach((n, i) => lines.push(`${i+1}. ${n || ""}`));
