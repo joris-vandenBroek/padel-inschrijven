@@ -1492,7 +1492,8 @@ let identity       = localStorage.getItem(IDENTITY_KEY) || "";
 let isAdmin        = false;
 let adminNaam      = null;   // naam van de ingelogde beheerder
 let adminEventTypes = "*";  // "*" = superadmin (alles), anders string[] van toegestane event type IDs
-let activeDatum    = null;   // actieve datum in Firebase (voor alle gebruikers)
+let activeDatum    = null;   // actieve datum in Firebase (voor urlEventType)
+let activeDatumOverride = null; // actieve datum voor het event type van de bekeken sessie (als dat afwijkt van urlEventType)
 let currentDate    = null;   // datum die de beheerder lokaal bekijkt
 let currentSession = null;   // { title, time, main:{0..19:name}, reserve:{0..3:name} }
 let pendingJoin    = false;
@@ -1608,6 +1609,15 @@ function switchToDatum(datum, expectedEventType) {
       document.getElementById("headerTime").textContent  = (data.time || "").replace(/ uur$/, "") + t("uurSuffix");
       document.getElementById("headerEyebrow").textContent = eventConfig.eyebrow?.[lang] || t("eyebrow");
       document.getElementById("loadingOverlay").style.display = "none";
+      if (data.eventType && data.eventType !== urlEventType) {
+        history.replaceState(null, "", `?event=${data.eventType}`);
+        db.ref(`instellingen/actiefPerType/${data.eventType}`).once("value", s => {
+          activeDatumOverride = s.val() || null;
+          updateViewBanner();
+        });
+      } else {
+        activeDatumOverride = null;
+      }
       render();
     }
   });
@@ -3377,13 +3387,15 @@ function andereLijstOpenen() {
   updateViewBanner();
   // Log na switchToDatum zodat currentDate al op de nieuwe datum staat
   setTimeout(() => {
-    logEntry("geopend", adminNaam, adminNaam, { eventType: urlEventType });
+    logEntry("geopend", adminNaam, adminNaam, { eventType: currentSession?.eventType || urlEventType });
     const details = document.getElementById("adminLogDetails");
     if (details && details.open) laadLogboek("adminLog");
   }, 200);
 }
 
 function terugNaarActief() {
+  activeDatumOverride = null;
+  history.replaceState(null, "", `?event=${urlEventType}`);
   if (currentDate !== activeDatum) switchToDatum(activeDatum, urlEventType);
   updateViewBanner();
   const details = document.getElementById("adminLogDetails");
@@ -3427,7 +3439,8 @@ function sluitDeelBanner() {
 function updateViewBanner() {
   const viewBanner = document.getElementById("viewBanner");
   const deelBanner = document.getElementById("deelBanner");
-  if (!isAdmin || !activeDatum || currentDate === activeDatum) {
+  const effectiefActiveDatum = activeDatumOverride ?? activeDatum;
+  if (!isAdmin || !effectiefActiveDatum || currentDate === effectiefActiveDatum) {
     viewBanner.style.display = "none";
     return;
   }
