@@ -513,12 +513,6 @@
     <div id="adminLog" style="margin-top:8px;display:flex;flex-direction:column;gap:3px;max-height:200px;overflow-y:auto;"></div>
   </details>
 </div>
-<!-- In-app browser banner (iOS WKWebView – bv. WhatsApp/Facebook in-app) -->
-<div id="inAppBanner" style="display:none;margin:10px 16px 0;background:#fff7e0;border:1.5px solid #e8a000;border-radius:10px;padding:11px 14px;font-size:13px;line-height:1.55;color:#5a3e00;">
-  <strong>📱 Open in Safari voor de beste ervaring</strong><br>
-  Je opent deze pagina vanuit een app (bijv. WhatsApp). Inschrijven werkt hier mogelijk niet goed.<br>
-  <span style="color:#7a5500;">Tik op <strong>···</strong> rechtsboven → <strong>Openen in Safari</strong></span>
-</div>
 <!-- Viewbanner mode A: lijst nog niet actief -->
 <div id="viewBanner" style="display:none;margin:8px 16px 0;background:#e8f0ff;border:1.5px solid var(--mine);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--mine);font-weight:600;flex-direction:column;gap:8px;">
   <span id="viewBannerText">👁 Je bekijkt een andere lijst</span>
@@ -1504,110 +1498,125 @@ let ledenNamen      = [];       // array van namen (strings) voor validatie
 let ledenTimestamp  = null;
 let vasteDeelnemers = [];   // opgeslagen in Firebase /instellingen/vasteDeelnemers
 
+// ═══ IN-APP BROWSER ══════════════════════════════════════
+// Detecteer iOS WKWebView (bijv. WhatsApp/Facebook in-app) vóór Firebase-init
+// zodat we de database offline kunnen zetten en geen listeners registreren.
+function isIOSInAppBrowser() {
+  const ua = navigator.userAgent;
+  if (!/iP(hone|od|ad)/i.test(ua)) return false;
+  if (window.navigator.standalone) return false;
+  return typeof window.safari === "undefined"
+    && !/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua);
+}
+const IS_INAPP = isIOSInAppBrowser();
+
 // ═══ FIREBASE ═══════════════════════════════════════════
 firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
+if (IS_INAPP) db.goOffline(); // voorkom alle netwerkactiviteit in WKWebView
 
-// Verbindingstimeout: Firebase cachet de WebSocket-host in localStorage
-// (firebase:host:…). Als die waarde verouderd raakt (bijv. na iOS Safari-update),
-// probeert de SDK verbinding te maken met de verkeerde host en hangt voor eeuwig.
-// Na 12 sec wissen we de cache en herladen stil. Na een tweede mislukte poging
-// tonen we een foutmelding met een handmatige retry-knop.
-setTimeout(() => {
-  const overlay = document.getElementById("loadingOverlay");
-  if (!overlay || overlay.style.display === "none") return; // al verbonden
-  try {
-    Object.keys(localStorage)
-      .filter(k => k.startsWith("firebase:host:"))
-      .forEach(k => localStorage.removeItem(k));
-  } catch(e) {}
-  const n = +(sessionStorage.getItem("_fbRetry") || 0);
-  if (n < 1) {
-    sessionStorage.setItem("_fbRetry", "1");
-    location.reload();
-    return;
-  }
-  // Twee pogingen mislukt — toon foutmelding
-  sessionStorage.removeItem("_fbRetry");
-  overlay.innerHTML = `
-    <div style="text-align:center;padding:32px 20px;max-width:320px;margin:0 auto;">
-      <div style="font-size:36px;margin-bottom:12px;">⚠️</div>
-      <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--ink);">Verbinding mislukt</div>
-      <div style="font-size:13px;color:var(--ink-light);margin-bottom:20px;line-height:1.5;">Controleer je internetverbinding en probeer het opnieuw.</div>
-      <button onclick="location.reload()" style="padding:11px 28px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;">🔄 Opnieuw proberen</button>
-    </div>`;
-}, 8000);
+if (!IS_INAPP) {
+  // Verbindingstimeout: Firebase cachet de WebSocket-host in localStorage
+  // (firebase:host:…). Als die waarde verouderd raakt (bijv. na iOS Safari-update),
+  // probeert de SDK verbinding te maken met de verkeerde host en hangt voor eeuwig.
+  // Na 8 sec wissen we de cache en herladen stil. Na een tweede mislukte poging
+  // tonen we een foutmelding met een handmatige retry-knop.
+  setTimeout(() => {
+    const overlay = document.getElementById("loadingOverlay");
+    if (!overlay || overlay.style.display === "none") return; // al verbonden
+    try {
+      Object.keys(localStorage)
+        .filter(k => k.startsWith("firebase:host:"))
+        .forEach(k => localStorage.removeItem(k));
+    } catch(e) {}
+    const n = +(sessionStorage.getItem("_fbRetry") || 0);
+    if (n < 1) {
+      sessionStorage.setItem("_fbRetry", "1");
+      location.reload();
+      return;
+    }
+    // Twee pogingen mislukt — toon foutmelding
+    sessionStorage.removeItem("_fbRetry");
+    overlay.innerHTML = `
+      <div style="text-align:center;padding:32px 20px;max-width:320px;margin:0 auto;">
+        <div style="font-size:36px;margin-bottom:12px;">⚠️</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--ink);">Verbinding mislukt</div>
+        <div style="font-size:13px;color:var(--ink-light);margin-bottom:20px;line-height:1.5;">Controleer je internetverbinding en probeer het opnieuw.</div>
+        <button onclick="location.reload()" style="padding:11px 28px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;">🔄 Opnieuw proberen</button>
+      </div>`;
+  }, 8000);
 
-db.ref("instellingen").once("value", snap => {
-  const data = snap.val() || {};
-  if (data.admins) {
-    ADMINS = data.admins;
-    // Migreer oud flat-string format { "Naam": "ww" } naar nieuw { "Naam": { ww, eventTypes } }
-    let gemigreerd = false;
-    Object.entries(ADMINS).forEach(([naam, val]) => {
-      if (typeof val === "string") {
-        const isSuperadmin = naam === "Joris van den Broek";
-        ADMINS[naam] = { ww: val, eventTypes: isSuperadmin ? "*" : Object.keys(EVENT_TYPES || {}) };
-        gemigreerd = true;
-      }
-    });
-    if (gemigreerd) db.ref("instellingen/admins").set(ADMINS);
-  } else {
-    // Migreer oud enkelvoudig wachtwoord of gebruik standaard
-    const oudWw = data.adminWachtwoord || "padel";
-    ADMINS = { "Beheerder": { ww: oudWw, eventTypes: "*" } };
-    db.ref("instellingen/admins").set(ADMINS);
-    db.ref("instellingen/adminWachtwoord").remove();
-  }
-  // Migreer globale vasteDeelnemers naar vrijdagochtend-type (eenmalig)
-  if (data.vasteDeelnemers && Array.isArray(data.vasteDeelnemers) && data.vasteDeelnemers.length > 0) {
-    db.ref(`instellingen/vasteDeelnemersPerType/${DEFAULT_EVENT_TYPE}`).once("value", sp => {
-      if (!sp.val()) db.ref(`instellingen/vasteDeelnemersPerType/${DEFAULT_EVENT_TYPE}`).set(data.vasteDeelnemers);
-    });
-    db.ref("instellingen/vasteDeelnemers").remove();
-  }
+  db.ref("instellingen").once("value", snap => {
+    const data = snap.val() || {};
+    if (data.admins) {
+      ADMINS = data.admins;
+      // Migreer oud flat-string format { "Naam": "ww" } naar nieuw { "Naam": { ww, eventTypes } }
+      let gemigreerd = false;
+      Object.entries(ADMINS).forEach(([naam, val]) => {
+        if (typeof val === "string") {
+          const isSuperadmin = naam === "Joris van den Broek";
+          ADMINS[naam] = { ww: val, eventTypes: isSuperadmin ? "*" : Object.keys(EVENT_TYPES || {}) };
+          gemigreerd = true;
+        }
+      });
+      if (gemigreerd) db.ref("instellingen/admins").set(ADMINS);
+    } else {
+      // Migreer oud enkelvoudig wachtwoord of gebruik standaard
+      const oudWw = data.adminWachtwoord || "padel";
+      ADMINS = { "Beheerder": { ww: oudWw, eventTypes: "*" } };
+      db.ref("instellingen/admins").set(ADMINS);
+      db.ref("instellingen/adminWachtwoord").remove();
+    }
+    // Migreer globale vasteDeelnemers naar vrijdagochtend-type (eenmalig)
+    if (data.vasteDeelnemers && Array.isArray(data.vasteDeelnemers) && data.vasteDeelnemers.length > 0) {
+      db.ref(`instellingen/vasteDeelnemersPerType/${DEFAULT_EVENT_TYPE}`).once("value", sp => {
+        if (!sp.val()) db.ref(`instellingen/vasteDeelnemersPerType/${DEFAULT_EVENT_TYPE}`).set(data.vasteDeelnemers);
+      });
+      db.ref("instellingen/vasteDeelnemers").remove();
+    }
 
-  // Event types laden — seed met ingebouwde default als Firebase leeg is
-  if (data.eventTypes && Object.keys(data.eventTypes).length > 0) {
-    EVENT_TYPES = {};
-    Object.entries(data.eventTypes).forEach(([id, et]) => {
-      EVENT_TYPES[id] = { ...et, id };
-    });
-  } else {
-    db.ref("instellingen/eventTypes").set({ [BUILTIN_EVENT_TYPE.id]: BUILTIN_EVENT_TYPE });
-  }
-  // Stel eventConfig in op basis van URL-param
-  eventConfig = EVENT_TYPES[urlEventType] || Object.values(EVENT_TYPES)[0] || BUILTIN_EVENT_TYPE;
+    // Event types laden — seed met ingebouwde default als Firebase leeg is
+    if (data.eventTypes && Object.keys(data.eventTypes).length > 0) {
+      EVENT_TYPES = {};
+      Object.entries(data.eventTypes).forEach(([id, et]) => {
+        EVENT_TYPES[id] = { ...et, id };
+      });
+    } else {
+      db.ref("instellingen/eventTypes").set({ [BUILTIN_EVENT_TYPE.id]: BUILTIN_EVENT_TYPE });
+    }
+    // Stel eventConfig in op basis van URL-param
+    eventConfig = EVENT_TYPES[urlEventType] || Object.values(EVENT_TYPES)[0] || BUILTIN_EVENT_TYPE;
 
-  updateBeheerderFooter();
-});
+    updateBeheerderFooter();
+  });
 
-db.ref("instellingen/huidigeDatum").once("value", s => { if (s.val()) db.ref("instellingen/huidigeDatum").remove(); });
+  db.ref("instellingen/huidigeDatum").once("value", s => { if (s.val()) db.ref("instellingen/huidigeDatum").remove(); });
 
-// Migreer datumActieveLijst → actiefPerType/vrijdagochtend (eenmalig)
-db.ref("instellingen/datumActieveLijst").once("value", s => {
-  if (s.val()) {
-    db.ref(`instellingen/actiefPerType/${DEFAULT_EVENT_TYPE}`).once("value", sp => {
-      if (!sp.val()) db.ref(`instellingen/actiefPerType/${DEFAULT_EVENT_TYPE}`).set(s.val());
-    });
-    db.ref("instellingen/datumActieveLijst").remove();
-  }
-});
+  // Migreer datumActieveLijst → actiefPerType/vrijdagochtend (eenmalig)
+  db.ref("instellingen/datumActieveLijst").once("value", s => {
+    if (s.val()) {
+      db.ref(`instellingen/actiefPerType/${DEFAULT_EVENT_TYPE}`).once("value", sp => {
+        if (!sp.val()) db.ref(`instellingen/actiefPerType/${DEFAULT_EVENT_TYPE}`).set(s.val());
+      });
+      db.ref("instellingen/datumActieveLijst").remove();
+    }
+  });
 
-db.ref(`instellingen/vasteDeelnemersPerType/${urlEventType}`).on("value", snap => {
-  vasteDeelnemers = Array.isArray(snap.val()) ? snap.val() : [];
-});
+  db.ref(`instellingen/vasteDeelnemersPerType/${urlEventType}`).on("value", snap => {
+    vasteDeelnemers = Array.isArray(snap.val()) ? snap.val() : [];
+  });
 
-db.ref(`instellingen/actiefPerType/${urlEventType}`).on("value", snap => {
-  const datum = snap.val() || volgendeSessiedag(eventConfig.dag);
-  if (!snap.val()) db.ref(`instellingen/actiefPerType/${urlEventType}`).set(datum);
-  activeDatum = datum;
-  // Niet overschrijven als beheerder bewust een andere lijst bekijkt
-  if (!isAdmin || currentDate === null || currentDate === activeDatum) {
-    if (datum !== currentDate) switchToDatum(datum, urlEventType);
-  }
-  updateViewBanner();
-});
+  db.ref(`instellingen/actiefPerType/${urlEventType}`).on("value", snap => {
+    const datum = snap.val() || volgendeSessiedag(eventConfig.dag);
+    if (!snap.val()) db.ref(`instellingen/actiefPerType/${urlEventType}`).set(datum);
+    activeDatum = datum;
+    // Niet overschrijven als beheerder bewust een andere lijst bekijkt
+    if (!isAdmin || currentDate === null || currentDate === activeDatum) {
+      if (datum !== currentDate) switchToDatum(datum, urlEventType);
+    }
+    updateViewBanner();
+  });
+}
 
 // expectedEventType: alleen meegeven wanneer deze datum automatisch gekozen is
 // voor een specifiek event type (actieve lijst / terug naar actief) — dan wordt
@@ -3858,16 +3867,6 @@ async function deelScreenshot() {
   }
 }
 
-// ═══ IN-APP BROWSER ══════════════════════════════════════
-function isIOSInAppBrowser() {
-  const ua = navigator.userAgent;
-  if (!/iP(hone|od|ad)/i.test(ua)) return false;    // niet iOS → nooit blokkeren
-  if (window.navigator.standalone) return false;      // PWA-modus is prima
-  // Echte iOS-browsers herkennen we aan: window.safari (Safari), of CriOS/FxiOS/OPiOS/EdgiOS (Chrome/FF/Edge/Opera)
-  return typeof window.safari === "undefined"
-    && !/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua);
-}
-
 // ═══ INIT ═══════════════════════════════════════════════
 document.addEventListener("click", (e) => {
   if (!document.getElementById("langDropdown")?.contains(e.target)) closeLangDropdown();
@@ -3882,10 +3881,28 @@ window.addEventListener("load", () => {
   if (langFlag) langFlag.src = lang === "nl" ? "https://flagcdn.com/nl.svg" : "https://flagcdn.com/gb.svg";
   if (langCode) langCode.textContent = lang === "nl" ? "NL" : "EN";
   if (lang !== "nl") applyLang();
+
+  if (IS_INAPP) {
+    // Vervang loadingOverlay door een blokkerend "Open in Safari" scherm.
+    // Geen Firebase, geen modals — het toestel mag niet hangen.
+    document.getElementById("loadingOverlay").innerHTML = `
+      <div style="text-align:center;padding:40px 24px;max-width:300px;margin:0 auto;">
+        <div style="font-size:52px;margin-bottom:16px;">📱</div>
+        <div style="font-size:18px;font-weight:700;margin-bottom:10px;color:var(--ink);">Open in Safari</div>
+        <div style="font-size:14px;color:var(--ink-light);line-height:1.6;margin-bottom:20px;">
+          Je opent deze pagina vanuit een app (bijv. WhatsApp).<br>
+          Inschrijven werkt hier niet.
+        </div>
+        <div style="font-size:15px;font-weight:600;color:var(--ink);line-height:1.8;">
+          Tik op <strong>···</strong> rechtsboven<br>→ <strong>Openen in Safari</strong>
+        </div>
+      </div>`;
+    return;
+  }
+
   laadLeden();
   if (!identity) openIdentityModal();
   else document.getElementById("whoLabel").textContent = identity;
-  if (isIOSInAppBrowser()) document.getElementById("inAppBanner").style.display = "block";
 });
 </script>
 </body>
