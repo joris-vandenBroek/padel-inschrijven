@@ -1536,7 +1536,7 @@ setTimeout(() => {
       <div style="font-size:13px;color:var(--ink-light);margin-bottom:20px;line-height:1.5;">Controleer je internetverbinding en probeer het opnieuw.</div>
       <button onclick="location.reload()" style="padding:11px 28px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;">🔄 Opnieuw proberen</button>
     </div>`;
-}, 12000);
+}, 8000);
 
 db.ref("instellingen").once("value", snap => {
   const data = snap.val() || {};
