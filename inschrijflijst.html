@@ -1508,6 +1508,36 @@ let vasteDeelnemers = [];   // opgeslagen in Firebase /instellingen/vasteDeelnem
 firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
 
+// Verbindingstimeout: Firebase cachet de WebSocket-host in localStorage
+// (firebase:host:…). Als die waarde verouderd raakt (bijv. na iOS Safari-update),
+// probeert de SDK verbinding te maken met de verkeerde host en hangt voor eeuwig.
+// Na 12 sec wissen we de cache en herladen stil. Na een tweede mislukte poging
+// tonen we een foutmelding met een handmatige retry-knop.
+setTimeout(() => {
+  const overlay = document.getElementById("loadingOverlay");
+  if (!overlay || overlay.style.display === "none") return; // al verbonden
+  try {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith("firebase:host:"))
+      .forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
+  const n = +(sessionStorage.getItem("_fbRetry") || 0);
+  if (n < 1) {
+    sessionStorage.setItem("_fbRetry", "1");
+    location.reload();
+    return;
+  }
+  // Twee pogingen mislukt — toon foutmelding
+  sessionStorage.removeItem("_fbRetry");
+  overlay.innerHTML = `
+    <div style="text-align:center;padding:32px 20px;max-width:320px;margin:0 auto;">
+      <div style="font-size:36px;margin-bottom:12px;">⚠️</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--ink);">Verbinding mislukt</div>
+      <div style="font-size:13px;color:var(--ink-light);margin-bottom:20px;line-height:1.5;">Controleer je internetverbinding en probeer het opnieuw.</div>
+      <button onclick="location.reload()" style="padding:11px 28px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;">🔄 Opnieuw proberen</button>
+    </div>`;
+}, 12000);
+
 db.ref("instellingen").once("value", snap => {
   const data = snap.val() || {};
   if (data.admins) {
