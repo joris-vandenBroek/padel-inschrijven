@@ -1505,8 +1505,10 @@ function isIOSInAppBrowser() {
   const ua = navigator.userAgent;
   if (!/iP(hone|od|ad)/i.test(ua)) return false;
   if (window.navigator.standalone) return false;
-  return typeof window.safari === "undefined"
-    && !/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua);
+  if (/CriOS|FxiOS|OPiOS|EdgiOS/.test(ua)) return false;
+  // Echte Safari en SFSafariViewController bevatten altijd "Version/X.X" in de UA.
+  // WKWebView (bijv. WhatsApp/Facebook in-app browser) niet — dat is de betrouwbare discriminator.
+  return !/Version\//.test(ua);
 }
 const IS_INAPP = isIOSInAppBrowser();
 
