@@ -3893,9 +3893,12 @@ window.addEventListener("load", () => {
           Je opent deze pagina vanuit een app (bijv. WhatsApp).<br>
           Inschrijven werkt hier niet.
         </div>
-        <div style="font-size:15px;font-weight:600;color:var(--ink);line-height:1.8;">
-          Tik op <strong>···</strong> rechtsboven<br>→ <strong>Openen in Safari</strong>
+        <div style="font-size:14px;font-weight:600;color:var(--ink);line-height:1.8;margin-bottom:20px;">
+          Tik op het <strong>deel-icoon</strong> of <strong>···</strong><br>→ <strong>Openen in Safari</strong>
         </div>
+        <div style="font-size:12px;color:var(--ink-light);margin-bottom:10px;">Zie je die knop niet?</div>
+        <button onclick="(async()=>{try{await navigator.clipboard.writeText(location.href);this.textContent='✓ Gekopieerd!';}catch(e){this.textContent=location.href;}})()" style="padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;word-break:break-all;">📋 Kopieer link</button>
+        <div style="font-size:11px;color:var(--ink-light);margin-top:8px;">Open Safari en plak de link in de adresbalk</div>
       </div>`;
     return;
   }
