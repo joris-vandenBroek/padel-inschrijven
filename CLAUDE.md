@@ -122,6 +122,18 @@ krijgen. **Voeg hier dus nooit een automatische reload toe.**
   verbergt `#connBanner`. De lijst blijft zichtbaar en bruikbaar als de verbinding wegvalt.
 - Na 10 seconden zonder eerste verbinding vervangt `#loadingOverlay` zijn inhoud door een
   foutmelding met een handmatige knop.
+- **Transport**: Firebase gebruikt standaard een WebSocket. Sommige netwerken en
+  iCloud Private Relay laten die niet door — hij opent nooit en meldt geen fout.
+  Firebase valt dan zelf terug op long-polling over HTTPS, maar doet daar 10 tot 30
+  seconden over. Precies dat maakte de oude reload na 8 seconden zo schadelijk: die
+  brak de terugval telkens af, waardoor de verbinding nooit tot stand kwam. Lukte de
+  eerste verbinding trager dan `TRAAG_MS`, dan onthoudt `onthoudTransport()` dat in
+  `padel_longpolling_sinds` en start het volgende bezoek meteen met
+  `db.INTERNAL.forceLongPolling()`. Na een week vervalt dat, zodat iemand die Private
+  Relay uitzet weer op WebSockets uitkomt.
+- Tijdlijn van het laadscherm: 8 s → tekst "duurt langer dan normaal" (de terugval
+  loopt nog), 35 s → foutmelding met handmatige knop. Verhoog die 35 s niet zonder
+  reden en verlaag hem zeker niet onder ~30 s.
 - `store.lokaal` / `store.sessie` — wrapper om localStorage/sessionStorage die nooit gooit.
   In Lockdown Mode en sommige in-app browsers gooien die APIs; een ongevangen fout sloopte
   het hele script. Gebruik altijd deze wrapper, nooit `localStorage` direct.

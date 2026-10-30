@@ -475,7 +475,7 @@
 
 <div id="loadingOverlay">
   <div class="spinner"></div>
-  <span>Verbinden…</span>
+  <span id="loadingText">Verbinden…</span>
 </div>
 
 <header>
@@ -1201,6 +1201,7 @@ const TRANSLATIONS = {
     opnieuwProberen: "Opnieuw proberen",
     verbindenBezig: "Verbinden…",
     verbindingVerbroken: "⚠️ Verbinding verbroken — de lijst kan verouderd zijn",
+    verbindingDuurtLang: "Dit duurt langer dan normaal — we proberen een andere verbinding…",
     linkGekopieerd: "📋 Link gekopieerd",
     kopieerLinkBtn: "📋 Kopieer link",
     inappWaarschuwing: "⚠️ Je bekijkt deze pagina in {app}. Werkt inschrijven niet goed? Open de link dan in Safari of Chrome.",
@@ -1393,6 +1394,7 @@ const TRANSLATIONS = {
     opnieuwProberen: "Try again",
     verbindenBezig: "Connecting…",
     verbindingVerbroken: "⚠️ Connection lost — the list may be out of date",
+    verbindingDuurtLang: "This is taking longer than usual — trying a different connection…",
     linkGekopieerd: "📋 Link copied",
     kopieerLinkBtn: "📋 Copy link",
     inappWaarschuwing: "⚠️ You are viewing this page in {app}. Sign-up not working? Open the link in Safari or Chrome.",
@@ -1567,6 +1569,34 @@ function inAppBrowserNaam() {
 firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
 
+// ═══ TRANSPORT ══════════════════════════════════════════
+// Firebase praat standaard via een WebSocket. Sommige netwerken en iCloud
+// Private Relay laten die niet door: hij opent dan nooit en meldt ook geen fout.
+// Firebase valt uiteindelijk zelf terug op long-polling over gewoon HTTPS, maar
+// doet daar 10 tot 30 seconden over. De oude automatische herlaadpoging na 8
+// seconden brak die terugval telkens af — daardoor kwam de verbinding op zulke
+// toestellen nooit tot stand. Viel een vorig bezoek terug, dan slaan we het
+// wachten nu meteen over; na een week proberen we het weer met een WebSocket,
+// zodat iemand die Private Relay uitzet er niet aan vastzit.
+const TRANSPORT_KEY       = "padel_longpolling_sinds";
+const TRANSPORT_GELDIG_MS = 7 * 24 * 60 * 60 * 1000;
+const TRAAG_MS            = 6000;  // trager verbinden = WebSocket vrijwel zeker geblokkeerd
+
+const startMoment  = Date.now();
+const lpSinds      = +(store.lokaal.get(TRANSPORT_KEY) || 0);
+const forceertLongPolling = lpSinds > 0 && (Date.now() - lpSinds) < TRANSPORT_GELDIG_MS;
+if (forceertLongPolling) {
+  try { db.INTERNAL.forceLongPolling(); }
+  catch (e) { console.warn("long-polling forceren mislukt:", e); }
+}
+
+// Onthoud hoe de eerste verbinding tot stand kwam, zodat het volgende bezoek
+// meteen de werkende route kiest.
+function onthoudTransport(duurMs) {
+  if (duurMs > TRAAG_MS) store.lokaal.set(TRANSPORT_KEY, String(Date.now()));
+  else if (!forceertLongPolling) store.lokaal.del(TRANSPORT_KEY);
+}
+
 // ═══ VERBINDINGSSTATUS ══════════════════════════════════
 // De pagina herlaadt zichzelf bewust nooit meer automatisch. Zo'n herlaadpoging
 // maakte van een trage of stilgevallen verbinding een eindeloze lus: elke acht
@@ -1620,6 +1650,7 @@ function herverbind(knop) {
 db.ref(".info/connected").on("value", snap => {
   isVerbonden = snap.val() === true;
   if (isVerbonden) {
+    if (!heeftOoitVerbonden) onthoudTransport(Date.now() - startMoment);
     heeftOoitVerbonden = true;
     verbergConnBanner();
   } else if (heeftOoitVerbonden) {
@@ -1627,7 +1658,15 @@ db.ref(".info/connected").on("value", snap => {
   }
 });
 
-// Komt er na 10 seconden nog niets binnen, dan een scherm met een handmatige knop.
+// Firebase heeft 10 tot 30 seconden nodig om terug te vallen op long-polling.
+// Daarom eerst geruststellen dat het nog loopt, en pas ruim daarna een foutmelding
+// — anders jagen we mensen weg terwijl de verbinding nog gewoon tot stand komt.
+setTimeout(() => {
+  if (heeftOoitVerbonden) return;
+  const el = document.getElementById("loadingText");
+  if (el) el.textContent = t("verbindingDuurtLang");
+}, 8000);
+
 setTimeout(() => {
   if (heeftOoitVerbonden) return;
   const overlay = document.getElementById("loadingOverlay");
@@ -1639,7 +1678,7 @@ setTimeout(() => {
       <div style="font-size:13px;color:var(--ink-light);margin-bottom:20px;line-height:1.5;">${t("geenVerbindingUitleg")}</div>
       <button onclick="herverbind(this)" style="padding:11px 28px;background:var(--accent);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;">🔄 ${t("opnieuwProberen")}</button>
     </div>`;
-}, 10000);
+}, 35000);
 
 db.ref("instellingen").once("value", snap => {
   const data = snap.val() || {};
