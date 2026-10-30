@@ -107,6 +107,33 @@ let sessieListenerRef  // actieve Firebase .on() listener — altijd .off() voor
 - **Deelnemers tellen**: `telDeelnemersSessie(session, prefix)` — helper die main/reserve telt over alle drie sessievormen (enkelvoudig, beide, split) heen, o.a. gebruikt in de admin-dropdowns voor "andere lijst openen"
 - **Datumbotsing tussen event types**: omdat sessies alleen op datum gesleuteld zijn, checkt `nieuweLijstAanmaken()` of de gekozen datum al in gebruik is door een ánder event type en blokkeert dan het overschrijven; `switchToDatum(datum, expectedEventType)` doet dezelfde check wanneer een sessie automatisch geopend wordt via de actieve-datum listener (niet bij bewust "andere lijst" browsen — dat geeft geen `expectedEventType` mee)
 
+### Verbinding en herstel (belangrijk)
+
+De pagina herlaadt zichzelf **nooit** automatisch. Een eerdere versie deed dat na een
+verbindingstimeout (`location.reload()`); bij een stilgevallen verbinding werd dat een
+eindeloze lus — elke 8 seconden opnieuw ~600 KB aan scripts. Op iOS is zo'n lus
+nauwelijks te verlaten omdat Safari en de WhatsApp-browser de pagina bij het heropenen
+herstellen, waardoor gebruikers hun geschiedenis moesten wissen om hun toestel terug te
+krijgen. **Voeg hier dus nooit een automatische reload toe.**
+
+- `herverbind(knop?)` — wist de `firebase:host:`-cache en doet `goOffline()` + `goOnline()`,
+  zonder de pagina te herladen. Dit is de enige herstelroute.
+- `db.ref(".info/connected")` stuurt `isVerbonden` / `heeftOoitVerbonden` en toont of
+  verbergt `#connBanner`. De lijst blijft zichtbaar en bruikbaar als de verbinding wegvalt.
+- Na 10 seconden zonder eerste verbinding vervangt `#loadingOverlay` zijn inhoud door een
+  foutmelding met een handmatige knop.
+- `store.lokaal` / `store.sessie` — wrapper om localStorage/sessionStorage die nooit gooit.
+  In Lockdown Mode en sommige in-app browsers gooien die APIs; een ongevangen fout sloopte
+  het hele script. Gebruik altijd deze wrapper, nooit `localStorage` direct.
+
+### In-app browsers
+
+`inAppBrowserNaam()` herkent WhatsApp, Facebook, Instagram, LINE, Snapchat en LinkedIn en
+toont een **zachte, wegklikbare** banner (`#inappBanner`) — het blokkeert niets. Detectie
+via de user agent is principieel onbetrouwbaar: de iOS-UA van WhatsApp bevat gewoon
+`Version/16.3`, en SFSafariViewController is per ontwerp niet van echte Safari te
+onderscheiden. Bouw hier dus nooit een blokkade op; de app moet het overal gewoon doen.
+
 ### Role-based access control
 
 Admins hebben een `eventTypes` veld: `"*"` = superadmin (Joris van den Broek), array van IDs = beperkte toegang. Helper `heeftToegang(id)` controleert dit. Secties "Beheerders" en "Evenement types" zijn alleen zichtbaar voor superadmin (`.superadmin-only` class). Dropdowns voor nieuwe lijst, andere lijst openen en vaste deelnemers worden gefilterd op `heeftToegang()`.
